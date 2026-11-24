@@ -1,0 +1,43 @@
+[Unit]
+Description=Radar de ofertas (busca en la Biblioteca de Anuncios de Meta y registra en la planilla)
+After=network-online.target
+Wants=network-online.target
+# Maximo 4 arranques por ventana de 4 horas (el del horario + hasta 3 reintentos): no insiste sin fin
+StartLimitIntervalSec=4h
+StartLimitBurst=4
+
+[Service]
+Type=oneshot
+User=radar
+Group=radar
+WorkingDirectory=/opt/radar-de-ofertas
+# Las fechas que escribe en la planilla salen en hora de Bogota, no en UTC
+Environment=TZ=America/Bogota
+ExecStart=/opt/radar-codigo/correr_radar.sh
+TimeoutStartSec=45min
+# Si Meta limito la IP y no hubo resultados (codigo 3), reintenta 25 minutos despues
+Restart=on-failure
+RestartSec=25min
+# Aislamiento: solo puede escribir en su propia carpeta, sin privilegios y con los archivos nuevos solo para el
+# (sin UMask el token de Google, que se reescribe en cada renovacion, quedaba legible por todos)
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+ReadWritePaths=/opt/radar-de-ofertas
+# El codigo esta en /opt/radar-codigo (de root; ProtectSystem=strict ya lo deja de solo lectura y aqui se repite) y la carpeta
+# de datos no esta en la ruta de Python: ningun servicio del radar puede reescribir lo que corre ni plantar un .py que se ejecute.
+# Tampoco el entorno de Python (venv) ni .env. El programa de Claude, si se instala, va en /opt/radar-codigo/claude-home. (El "-" ignora lo que no exista.)
+ReadOnlyPaths=/opt/radar-codigo -/opt/radar-de-ofertas/venv -/opt/radar-de-ofertas/.env -/opt/radar-de-ofertas/duenos.txt
+InaccessiblePaths=-/opt/radar-de-ofertas/.claude_token

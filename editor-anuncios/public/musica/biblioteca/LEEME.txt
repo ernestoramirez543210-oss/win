@@ -1,0 +1,4 @@
+MÚSICA DE FONDO (la subes tú). Archivos .mp3 libres de derechos (solo música que tengas derecho a usar en anuncios).
+Puedes separarla en subcarpetas por estilo: alegre, calmada, energetica. Claude solo usa música de esta biblioteca.
+Si no subes nada: `python scripts/crear_musica.py` crea pistas propias (sintetizadas por codigo, sin licencia de terceros) en las subcarpetas calida, energica, emotiva y navidad, y las anota en LICENCIAS.txt.
+La biblioteca tambien vive en Drive (MI NEGOCIO > BIBLIOTECA MUSICAL): `python scripts/crear_musica.py` baja de alla lo que falte aqui y sube lo nuevo; con --sincronizar solo trae y lleva, sin crear pistas.

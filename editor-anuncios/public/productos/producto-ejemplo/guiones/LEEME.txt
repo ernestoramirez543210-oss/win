@@ -1,0 +1,2 @@
+Tú subes: el guion de cada anuncio con el nombre del anuncio: AD1.txt, AD2.txt... Es obligatorio en los anuncios con IA.
+En los TikTok sirve si no tienes la voz grabada: Claude genera la voz a partir del guion.

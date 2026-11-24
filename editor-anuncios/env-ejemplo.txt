@@ -1,0 +1,18 @@
+# Plantilla del archivo .env del editor. El instalador la copia como .env (si no existe).
+# El archivo .env es privado: no se comparte, no se sube a ningun lado y lo que trae NO se pega en el chat.
+
+# CONEXION CON EL DASH - obligatoria para generar con IA. Desde la version 2026.11.10-2 el editor YA NO usa la llave de APIMart: las imagenes,
+# los clips, el texto (guion, gancho) y la voz se piden POR EL DASH con estas dos lineas; el dash pone el tope por anuncio y anota el costo en
+# "Costo por proyecto". Sin ellas el editor no genera nada que cueste: lo dice y no gasta.
+# No las escribas a mano: en el dash, menu Herramientas > Editor de anuncios > "Descargar conexion", y despues doble clic en Conectar-Editor.cmd
+# (o vuelve a correr Instalar-Editor.cmd): las pone aqui solas, quita la llave vieja de APIMart y borra el archivo bajado.
+# Esa llave tambien abre la cola de la Fabrica: no la compartas. DASH_URL es siempre https://tu_proyecto.pages.dev
+# DASH_URL=https://tu_proyecto.pages.dev
+# DASH_CLAVE_EDITOR=
+
+# OPCIONAL Y YA NO HACE FALTA - la busqueda de b-roll en TikTok por palabra (python scripts/broll_tiktok.py traer <producto> --consulta "...") es GRATIS (lista publica
+# de TikTok). Esta llave solo sirve para el proveedor de pago (--proveedor scrapecreators). TikTok solo
+# contesta busquedas a quien tiene la sesion iniciada, asi que se hace por un proveedor (ScrapeCreators: se registra con un correo,
+# 100 busquedas gratis y despues paga por uso). Pega su llave despues del signo = en UNA sola linea, sin espacios ni comillas, y NO la pegues
+# en el chat. Sin ella, broll_tiktok.py sigue sirviendo con --cuenta (cuentas de TikTok) y --enlaces (enlaces que ya tienes).
+SCRAPECREATORS_API_KEY=

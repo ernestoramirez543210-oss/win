@@ -1,0 +1,42 @@
+{
+  "_nota": "Que ofertas trae el VPS y que busca en cada una. Este archivo vive en el repo (editor-anuncios/vps/ofertas.json) y se sube con desplegar-vps.sh: no se edita en el servidor. Para sumar una oferta: una entrada nueva en 'ofertas' con su 'producto' (nombre corto, minusculas, el mismo del editor), el enlace de su carpeta de Drive en 'drive' (el que guarda la tarjeta del tablero) y al menos una fuente: 'consultas' o 'hashtags' (busqueda por palabra: gratis, con la lista publica de TikTok; solo contesta para frases de busqueda comunes, asi que conviene probar varias y dejar las que den videos: python scripts/broll_tiktok.py proveedor), o 'cuentas' (usuarios de TikTok, sin llave). La subcarpeta B-rolls se crea sola dentro de esa carpeta. La oferta de abajo es un EJEMPLO: cambiala por las tuyas.",
+  "tope_videos_corrida": 100,
+  "tope_creditos_corrida": 100,
+  "minutos_max": 70,
+  "conservar_dias": 14,
+  "texto_quemado": {
+    "activo": true,
+    "modo": "descartar",
+    "min_limpio_seg": 5
+  },
+  "fabrica": {
+    "_nota": "La Fabrica de ofertas (scripts/fabrica_broll.py, cada hora): por cada oferta nueva halla o crea MI NEGOCIO > OFERTAS LATAM > <NOMBRE DE LA OFERTA> (con B-rolls y REFERENCIA), baja y transcribe los anuncios originales mas antiguos del anunciante y trae b-rolls de TikTok. 'carpeta_ofertas' es tu carpeta OFERTAS LATAM en Drive; 'ofertas_activas_max' cuantas ofertas de la Fabrica entran a la corrida semanal (las mas recientes); 'dias_guardar_referencia' cuanto se guardan en el servidor los videos de referencia ya subidos a Drive.",
+    "carpeta_ofertas": "https://drive.google.com/drive/folders/ID_DE_TU_CARPETA_OFERTAS_LATAM",
+    "pais_biblioteca": "BR",
+    "referencias": 3,
+    "max_consultas": 8,
+    "proyectos_por_vuelta": 2,
+    "ofertas_activas_max": 6,
+    "videos_por_oferta": 15,
+    "dias_guardar_referencia": 30
+  },
+  "ofertas": [
+    {
+      "producto": "producto-ejemplo",
+      "nombre": "Oferta de ejemplo",
+      "activa": false,
+      "drive": "https://drive.google.com/drive/folders/ID_DE_TU_CARPETA_DE_LA_OFERTA",
+      "consultas": ["recetas faciles", "postres sin horno"],
+      "hashtags": [],
+      "cuentas": [],
+      "filtro_desc": ["receta", "postre"],
+      "max": 10,
+      "min_seg": 4,
+      "max_seg": 120,
+      "region": "",
+      "paginas": 2,
+      "relacionadas": 1,
+      "max_creditos": 16
+    }
+  ]
+}

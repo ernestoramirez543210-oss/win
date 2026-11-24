@@ -1,0 +1,79 @@
+# Secretos: NUNCA al repositorio
+.env
+.env.*
+.dev.vars
+*.pem
+*.key
+data/facebook-tokens.json*
+data/*-config.json
+radar/client_secret*.json
+radar/token_sheets.json
+radar/*token*.json
+
+# Datos de tus clientes: se bajan de tu hoja en cada refresco y NO se guardan en GitHub
+data/*.csv
+data/*.xlsx
+data/source-ids.json
+data/libros-de-ventas.json
+data/lineas-whatsapp.json
+data/zapdata-instancias.json
+data/metodos-log.txt
+
+# Lo que se arma en cada refresco
+dist/
+dashboard-*.html
+socio-*.html
+reglas.html
+radar.html
+data/snapshot.json
+data/salud.json
+data/unmatched-post-ids.log
+data/refresh-status.json
+data/ventas-de-prueba.json
+data/reglas-auto-pendientes.json
+data/montos-en-revision.json
+order-bumps-sin-medir.json
+# las herramientas (scripts/Armar-Suite.ps1)
+tablero.html
+pdf.html
+modelar-pdf.html
+apis.html
+ofertas.html
+fabrica.html
+editor-anuncios.html
+editor-anuncios.zip
+data/offers.json
+
+# El editor de anuncios: sus llaves, videos, voces y productos NO van a GitHub (editor-anuncios/.gitignore lo detalla)
+editor-anuncios/.env
+editor-anuncios/conexion-editor.txt
+editor-anuncios/_paquete/
+
+# El ejemplo con datos inventados (Ver-Ejemplo.cmd)
+_ejemplo/
+
+# Estado y salidas del radar
+radar/state.json
+radar/out/
+radar/logs/
+radar/debug/
+radar/informes/
+radar/respaldos/
+radar/ia_uso.json
+radar/flujo.json
+radar/flujo_antes.json
+radar/seen_planilla.csv
+radar/planilla_*.csv
+radar/.candado*
+radar/ajustes.json
+radar/seguimiento.json
+radar/venv/
+
+# Herramientas
+node_modules/
+scripts/jsdom-pin/node_modules/
+__pycache__/
+*.pyc
+*.tmp
+.claude/settings.local.json
+.claude/worktrees/

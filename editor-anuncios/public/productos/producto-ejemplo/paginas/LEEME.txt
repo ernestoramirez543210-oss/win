@@ -1,0 +1,2 @@
+Aquí no subes nada. Claude saca del ebook.pdf las páginas como imágenes (p001.jpg, p002.jpg...), hojas de contacto en _hojas/ y un resumen.
+Sirven para mostrar el ebook por dentro en el anuncio y como referencia para que la IA dibuje bien el producto.

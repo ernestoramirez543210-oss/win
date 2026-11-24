@@ -1,0 +1,59 @@
+[Unit]
+# PLANTILLA (se instala como /etc/systemd/system/editor-puerta@.service; una instancia por persona: editor-puerta@beto.service). Asi el limite de arranques de una persona no frena a las demas.
+Description=Puerta de Drive del equipo de video para %i: sube sus anuncios y copias de trabajo y baja el material de las ofertas, sin darle la llave de Drive a nadie
+After=network-online.target
+Wants=network-online.target
+# La lanza editor-puerta@%i.path cuando aparece una peticion. Como mucho 20 arranques por hora por persona (un bucle por error no puede acabar con el servidor)
+StartLimitIntervalSec=1h
+StartLimitBurst=20
+
+[Service]
+Type=oneshot
+User=puerta
+Group=puerta
+# El grupo de la persona (para leer sus peticiones y dejarle los resultados)
+SupplementaryGroups=ed-%i
+WorkingDirectory=/srv/editor/estado
+Environment=TZ=America/Bogota
+Environment=HOME=/srv/editor/estado
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/broll-tiktok/venv/bin/python -I -B -X utf8 /opt/anuncios/scripts/puerta_editor.py servir --persona %i
+# El permiso de Drive lo ve SOLO esta unidad (llega en $CREDENTIALS_DIRECTORY/google); la persona del editor nunca lo recibe
+LoadCredential=google:/opt/broll-tiktok/secretos/google.json
+TimeoutStartSec=3h
+# Es trabajo de fondo: no le quita aire al radar, al runner ni al corredor
+Nice=10
+IOSchedulingClass=idle
+CPUWeight=20
+CPUQuota=50%
+MemoryHigh=700M
+MemoryMax=1G
+MemorySwapMax=0
+TasksMax=128
+# 2 = alguna peticion no se pudo hacer (el resultado dice por que): no es una falla del servicio. 4 = Drive sin permiso, 1 = configuracion mala: esas si se ven en systemctl --failed
+SuccessExitStatus=2 3
+# Aislamiento: solo escribe en /srv/editor; no ve el radar, el runner, las llaves de otros servicios ni los datos del corredor ni del b-roll
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/srv/editor
+InaccessiblePaths=-/opt/radar-de-ofertas -/opt/actions-runner -/root -/home -/opt/broll-tiktok/public -/opt/broll-tiktok/estado -/opt/broll-tiktok/logs -/opt/broll-tiktok/secretos -/opt/anuncios/secretos -/opt/anuncios/estado -/opt/anuncios/drive -/opt/anuncios/public -/opt/anuncios/anuncios -/run/docker.sock

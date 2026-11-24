@@ -1,0 +1,10 @@
+[Unit]
+Description=Radar de ofertas cada 2 horas (horas impares de Bogota: 01, 03, ... 23; antes del 2026-11-03 era cada 4 horas)
+
+[Timer]
+OnCalendar=*-*-* 01/2:00:00 America/Bogota
+Persistent=true
+RandomizedDelaySec=90
+
+[Install]
+WantedBy=timers.target

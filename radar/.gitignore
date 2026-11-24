@@ -1,0 +1,50 @@
+# Secretos: nunca al repositorio
+.env
+.env.*
+client_secret*.json
+token_sheets.json
+gemini.key
+gemini.key.*
+*.key
+*token*.json
+.claude_token
+claude_token*
+
+# Estado y salidas del radar (se regeneran o son datos privados del negocio)
+state.json
+app_state.json
+out/
+logs/
+debug/
+informes/
+respaldos/
+ajustes_historial.jsonl
+ia_uso.json
+flujo.json
+revivir.json
+revision.simular
+revision.saltada
+.candado
+.candado-estados
+.candado-revivir
+duenos.txt
+planilla_*.csv
+seen_planilla.csv
+raw_ads_results.json
+dashboard_ofertas.html*
+
+# Claude (carpetas de trabajo y configuracion del revisor; el token vive en .claude_token)
+claude-work/
+claude-config/
+claude-home/
+
+# Temporales de escritura atomica
+*.tmp
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Cuando --sync-estados pidio al dash el resultado de las pruebas por ultima vez (radar.RUTA_PRUEBAS_MARCA)
+pruebas.marca

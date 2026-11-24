@@ -1,0 +1,113 @@
+<!-- Los colores de la suite, en un solo sitio.
+     Se inyecta antes que el menu en las 16 paginas, asi que cualquier pagina puede usar
+     estas variables sin declararlas.
+
+     Existe porque habia DOS paletas peleando. El dashboard pintaba #020916 con tarjetas
+     #061026 y texto calido; la torre, las voces y las APIs pintaban #020916 con tarjetas
+     #061026 y texto frio. Pasar de una pestana a otra cambiaba el fondo, el color de las
+     tarjetas y el tinte del texto, y eso se siente como cambiar de programa, no de pestana.
+
+     Los nombres son por SIGNIFICADO, no por tono. --critical dice que hacer con el numero;
+     --pink solo dice de que color pintarlo, y el dia que el rosa se use tambien para
+     decorar, nadie sabe cual de los dos usos hay que cambiar. Los tonos crudos se quedan
+     abajo, para lo decorativo. -->
+<style>
+  :root {
+    /* --- Superficies: del fondo hacia arriba --- */
+    --page:            #020916;   /* el lienzo */
+    --surface-1:       #061026;   /* tarjeta sobre el lienzo */
+    --surface-2:       #0d1a37;   /* algo elevado dentro de una tarjeta */
+    --surface-hover:   rgba(255,255,255,.045);
+    --line:            #12254e;   /* borde visible */
+    --hairline:        rgba(255,255,255,.07);  /* separador dentro de una tarjeta */
+
+    /* --- Texto: tres niveles y no mas. Un cuarto nivel nadie lo distingue --- */
+    --text-primary:    #f3f5fa;
+    --text-secondary:  #bbc7e1;
+    --text-muted:      #7289bf;
+
+    /* --- Significado. Lo que el numero dice que hay que hacer --- */
+    --positive:        #34d399;   /* va bien, no toques */
+    --warning:         #f0b429;   /* vigilalo */
+    --critical:        #f2607a;   /* actua */
+    --neutral:         #7289bf;   /* sin dato, ni bueno ni malo */
+
+    /* Fondos suaves de los mismos estados, para filas y pastillas. Se declaran aparte y no
+       con color-mix(): color-mix no pinto de forma fiable en el motor del artefacto. */
+    --positive-wash:   rgba(52,211,153,.15);
+    --warning-wash:    rgba(240,180,41,.16);
+    --critical-wash:   rgba(242,96,122,.16);
+    --critical-strong: rgba(242,96,122,.32);
+
+    /* --- Las tres magnitudes del negocio. Mismo color en KPI, grafica y tabla --- */
+    --money:           #4d8bff;   /* lo que entra */
+    --spend:           #17a67a;   /* lo que sale */
+    --efficiency:      #9085e9;   /* ROAS: cuanto rinde */
+    --volume:          #7289bf;   /* pedidos, unidades: cuenta, no vale */
+
+    /* --- Accion: "esto se pulsa" ---
+       Aparte del azul del dinero a proposito. Si el boton de guardar fuera del mismo azul
+       que la facturacion, el color dejaria de significar una cosa sola y habria que mirar
+       la forma para saber si un elemento es un dato o un control. */
+    --accion:          #2f6bff;
+    --accion-hover:    #5b8fff;
+    --accion-texto:    #ffffff;
+
+    /* --- Marca. El degradado vive AQUI y solo aqui ---
+       Un boton con degradado compite con los datos: en una pantalla de cifras, el elemento
+       mas llamativo deberia ser un numero, no el boton de guardar. */
+    --marca-a:         #f5b544;
+    --marca-b:         #e0761f;
+    --marca-c:         #a8410f;
+
+    /* --- Forma --- */
+    --radio:           8px;
+    --radio-card:      12px;
+  }
+
+  /* Cifras de ancho fijo donde hay numeros que se comparan.
+     Sin esto un 1 ocupa menos que un 8 y una columna de dinero queda con las comas
+     bailando: "$1.234" y "$8.888" no alinean, y el ojo pierde la magnitud, que es lo unico
+     que se busca al barrer una columna. Va sobre las clases que llevan cifras y no sobre
+     body: en un parrafo las cifras tabulares se ven demasiado sueltas. */
+  .kpi-tile .value, .kpi-tile .sub,
+  .kpi .v,
+  .tabla .num,
+  table.data-table td {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Las banderas de los paises, que Windows no sabe dibujar.
+     Un emoji de bandera son dos letras indicadoras -CO, MX- y Windows no trae el dibujo:
+     Chrome las pinta como dos letras en una cajita, asi que "banderita" salia "CO". Esta
+     fuente solo cubre ese rango de caracteres (unicode-range), asi que el resto del texto
+     lo sigue dibujando la fuente de siempre; pesa 78 KB y vive en el repo, no en un CDN,
+     igual que todo lo demas de la suite. Dibujos de Twemoji (CC-BY 4.0, Twitter).
+     Si algun dia falta el archivo, las banderas vuelven a ser dos letras: se degrada a lo
+     que habia, no a un cuadro vacio. */
+  @font-face {
+    font-family: 'Banderas';
+    src: url('/banderas.woff2') format('woff2');
+    unicode-range: U+1F1E6-1F1FF;
+    font-display: swap;
+  }
+  /* 'html body' y no 'body': estos tokens se inyectan ANTES de la hoja de cada pagina, y
+     casi todas declaran su propio body{font:...}. Con la misma especificidad ganaba la de
+     la pagina y la fuente de banderas no llegaba a aplicarse nunca. Como solo cubre el
+     rango de las banderas, el resto del texto sigue saliendo con la fuente de la pagina.
+     El <select> se nombra aparte porque los controles de formulario no heredan la fuente:
+     el filtro de paises es justo uno de ellos. */
+  html body, html body select, html body option {
+    font-family: 'Banderas', ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* Micro-etiquetas: las que rotulan una cifra o una columna.
+     En versalitas con tracking se leen como rotulo y no compiten con el dato que rotulan,
+     que es justo lo que se les pide. */
+  .kpi-tile .label, .kpi .k, .tabla th {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,243 @@
+  /* ---------- Reglas v3 (ver reglas-modulo.js y reglas-ui.js). Todo cuelga de #rg-root. ---------- */
+  #rg-root { min-width: 0; }
+  /* La tarjeta de reglas es larga: ni se levanta al pasar el mouse (transform) ni recorta (overflow). Con cualquiera de las dos, un hijo position:fixed se
+     pegaba a la tarjeta en vez de a la pantalla y la barra de Guardar (sticky) nunca se quedaba abajo: habia que bajar 3 pantallas para encontrarla. */
+  #rg-card, #rg-card:hover { transform: none; overflow: visible; }
+  #rg-card::before { border-radius: var(--radio-card) var(--radio-card) 0 0; }
+  :is(#rg-root, #rg-modal-raiz) input[type="text"], :is(#rg-root, #rg-modal-raiz) input[type="number"], :is(#rg-root, #rg-modal-raiz) input[type="search"], :is(#rg-root, #rg-modal-raiz) input[type="date"], :is(#rg-root, #rg-modal-raiz) select {
+    background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--line); border-radius: var(--radio);
+    padding: 7px 10px; font-size: 13px; min-width: 0; width: 100%; box-sizing: border-box; min-height: 40px; }
+  :is(#rg-root, #rg-modal-raiz) input:focus, :is(#rg-root, #rg-modal-raiz) select:focus { outline: none; border-color: var(--series-sales); box-shadow: 0 0 0 3px rgba(47, 107, 255, .25); }
+  .rg-tabs { display: flex; gap: 6px; margin: 0 0 12px; overflow-x: auto; padding-bottom: 2px; }
+  .rg-tab { flex: 1 0 auto; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+            color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .rg-tab.on { background: linear-gradient(135deg, #2f6bff, #5b8cff); color: #fff; border-color: transparent; box-shadow: 0 0 16px rgba(47, 107, 255, .45); }
+  .rg-barra { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; }
+  .rg-barra input[type="search"] { flex: 1 1 180px; width: auto; }
+  :is(#rg-root, #rg-modal-raiz) .rg-pais-sel { flex: 0 1 190px; width: auto; }
+  .rg-barra-lista .btn-primary { flex: 0 0 auto; }
+  .rg-barra button, .rg-acciones button, .rg-lote button, .rg-acc button, .rg-ed-pie button, .rg-modal-cab button { min-height: 40px; }
+  .rg-chk { display: flex; gap: 8px; align-items: center; min-height: 40px; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
+  .rg-chk input { width: 20px !important; height: 20px; min-height: 0 !important; flex: 0 0 auto; padding: 0 !important; }
+  .rg-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 8px; }
+  .rg-campos label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--text-secondary); min-width: 0; }
+  .rg-campos-1 { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--text-secondary); min-width: 0; flex: 1 1 240px; }
+  /* lista de reglas */
+  .rg-regla { border: 1px solid var(--line); border-radius: var(--radio-card); padding: 12px; margin-bottom: 10px; min-width: 0;
+              background: linear-gradient(180deg, rgba(47, 107, 255, .07), transparent 60%), var(--surface-1); transition: box-shadow .2s, transform .2s; }
+  .rg-regla:hover { box-shadow: 0 0 18px rgba(47, 107, 255, .22); transform: translateY(-1px); }
+  .rg-regla.apagada { opacity: .65; }
+  .rg-reg-top { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+  .rg-reg-info { min-width: 0; flex: 1 1 auto; }
+  .rg-tit { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+  .rg-frase { font-size: 12px; color: var(--text-secondary); margin-top: 3px; overflow-wrap: anywhere; }
+  .rg-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .rg-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .rg-sw { position: relative; flex: 0 0 auto; width: 52px; height: 40px; display: flex; align-items: center; cursor: pointer; }
+  .rg-sw input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .rg-sw-ui { width: 44px; height: 24px; border-radius: 999px; background: var(--grid); border: 1px solid var(--line); position: relative; transition: background .2s, box-shadow .2s; }
+  .rg-sw-ui::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .rg-sw input:checked + .rg-sw-ui { background: linear-gradient(135deg, #2f6bff, #5b8cff); box-shadow: 0 0 12px rgba(47, 107, 255, .6); border-color: transparent; }
+  .rg-sw input:checked + .rg-sw-ui::after { transform: translateX(20px); }
+  /* propuestas y registro */
+  .rg-resumen { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+  .rg-lote { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+  .rg-item, .rg-fila { border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radio); padding: 10px 12px; margin-bottom: 8px; min-width: 0; background: var(--surface-1); }
+  .rg-fila { border-left-color: var(--accent); }
+  .rg-item.pausa { border-left-color: var(--critical); }
+  .rg-item.sube { border-left-color: var(--positive); }
+  .rg-item.duplica { border-left-color: var(--series-sales); }
+  .rg-item.aviso { border-left-color: var(--warning); }
+  .rg-cab { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+  .rg-nombre { font-weight: 600; margin: 4px 0 2px; overflow-wrap: anywhere; }
+  .rg-razon { font-size: 12.5px; color: var(--text-secondary); overflow-wrap: anywhere; }
+  .rg-mut { color: var(--text-muted); font-size: 11.5px; }
+  .rg-acc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .rg-vacio { color: var(--text-muted); font-size: 12.5px; padding: 8px 0; }
+  .rg-cuenta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .rg-asig-vis { margin: 6px 0 0; font-size: 12px; color: var(--text-secondary); }
+  /* borrador: el aviso de que lo que trae una regla nueva es un ejemplo para editar */
+  /* alcance por pais, y lo que cubre cada regla */
+  .rg-asig-paises { margin: 0 0 8px; }
+  .rg-lbl { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; display: flex; gap: 6px; align-items: center; }
+  .rg-chips-pais { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rg-chip-pais { min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text-secondary); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .rg-chip-pais small { color: var(--text-muted); font-weight: 500; font-size: 10.5px; }
+  .rg-chip-pais:hover { border-color: var(--series-sales); color: var(--text-primary); }
+  .rg-chip-pais.on { background: linear-gradient(135deg, #2f6bff, #5b8cff); color: #fff; border-color: transparent; box-shadow: 0 0 12px rgba(47, 107, 255, .45); }
+  .rg-chip-pais.on small { color: rgba(255, 255, 255, .85); }
+  .rg-aviso .btn-secondary { margin-top: 6px; min-height: 40px; }
+  .rg-aviso + .rg-resumen, .rg-aviso + .rg-lote { margin-top: 8px; }
+  .rg-aviso { margin: 8px 0 0; padding: 8px 10px; border-radius: var(--radio); border: 1px solid rgba(240, 180, 41, .45); background: rgba(240, 180, 41, .08); font-size: 12px; color: var(--text-secondary); overflow-wrap: anywhere; }
+  .rg-ayuda { margin: 6px 0 0; font-size: 11.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+  .rg-cubre-btn { font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; min-height: 40px; padding: 4px 14px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(47, 107, 255, .55); background: rgba(47, 107, 255, .12); color: var(--text-primary); border-radius: 999px; text-align: left; max-width: 100%; overflow-wrap: anywhere; }
+  .rg-cubre-btn:hover { border-color: var(--series-sales); box-shadow: 0 0 12px rgba(47, 107, 255, .35); }
+  .rg-cubre-btn.warn { color: var(--warning); border-color: rgba(240, 180, 41, .55); background: rgba(240, 180, 41, .08); }
+  .rg-cubre { margin-top: 8px; border: 1px solid var(--line); border-radius: var(--radio); background: var(--surface-2); padding: 4px 0; max-height: 50vh; overflow-y: auto; overscroll-behavior: contain; }
+  .rg-cubre-pais { padding: 8px 10px 4px; font-size: 12px; color: var(--text-secondary); }
+  .rg-cubre-fila { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 12.5px; min-width: 0; }
+  .rg-cubre-nom { overflow-wrap: anywhere; min-width: 0; }
+  .rg-cubre-mas { padding: 4px 10px 6px; margin: 0; }
+  @media (max-height: 560px) { .rg-modal-caja.asignar .rg-modal-cuerpo { overflow-y: auto; } .rg-modal-caja.asignar .rg-asig-lista { max-height: none; } }
+  /* En el celular la nota de abajo le quita lugar a la lista (lo importante); el ⓘ de «País donde aplica» ya dice lo mismo. */
+  @media (max-width: 720px) { .rg-modal-caja.asignar .rg-modal-cuerpo > .card-sub { display: none; } }
+  .rg-banner { margin: 0 0 12px; padding: 10px 12px; border: 1px solid rgba(240, 180, 41, .45); border-left-width: 3px; border-radius: var(--radio); background: rgba(240, 180, 41, .08); font-size: 12.5px; color: var(--text-secondary); overflow-wrap: anywhere; }
+  .rg-banner b { color: var(--text-primary); }
+  /* cobertura del informe: lo que NO se miro (cuentas caidas, ids que los datos no ven, campañas sin regla). Se ve aunque la tarjeta este abierta en el celular: el texto se parte, no se corta. */
+  .rg-informe .rg-aviso-cob { margin: 6px 0; padding: 7px 10px; border-left: 3px solid rgba(240, 180, 41, .6); background: rgba(240, 180, 41, .07); border-radius: var(--radio); font-size: 12px; color: var(--text-secondary); overflow-wrap: anywhere; }
+  .rg-informe .rg-aviso-cob b { color: var(--text-primary); }
+  .rg-plantilla .rg-ini { margin-top: 2px; padding-top: 6px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--text-muted); overflow-wrap: anywhere; }
+  /* propuestas: presupuesto editable antes de aprobar */
+  .rg-edit { margin-top: 8px; }
+  .rg-edit label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--text-secondary); max-width: 260px; }
+  .rg-edit small { color: var(--text-muted); }
+  .rg-estado { min-height: 18px; font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  /* editor */
+  .rg-ed-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .rg-bloque { border: 1px solid var(--line); border-radius: var(--radio-card); padding: 12px; margin-bottom: 12px; background: var(--surface-1); min-width: 0; }
+  .rg-bloque h3 { margin: 0 0 4px; font-size: 14px; }
+  .rg-bloque h4 { margin: 14px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
+  .rg-ed-frase { margin-top: 6px; padding: 8px 10px; border-radius: var(--radio); background: var(--surface-2); }
+  .rg-aplica-res { font-size: 13px; font-weight: 600; margin: 2px 0 4px; overflow-wrap: anywhere; }
+  .rg-tarea-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .rg-accion, .rg-cond { border: 1px dashed var(--line); border-radius: var(--radio); padding: 8px 10px 10px; margin-top: 8px; min-width: 0; }
+  .rg-grupo { border: 1px solid var(--line); border-radius: var(--radio); padding: 8px 10px 10px; margin-top: 8px; min-width: 0; background: rgba(47, 107, 255, .05); }
+  .rg-grupo-cab { font-size: 12px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .rg-union { text-align: center; font-size: 12px; font-weight: 700; color: var(--series-sales); margin: 6px 0 0; text-transform: uppercase; letter-spacing: .1em; }
+  .rg-grupo > .btn-secondary, .rg-tarea > .btn-secondary, #rg-root .rg-accion + .btn-secondary { margin-top: 8px; min-height: 40px; }
+  .rg-x { background: transparent; border: 0; color: var(--critical); font-size: 12px; cursor: pointer; min-height: 40px; padding: 0 6px; }
+  .rg-ed-pie { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; bottom: 0; padding: 10px 0; background: linear-gradient(180deg, transparent, #020916 35%); }
+  .rg-err { flex: 1 1 100%; color: var(--critical); font-size: 12.5px; }
+  .rg-err:empty { display: none; }
+  /* modales */
+  html.rg-modal-abierto { overflow: hidden; }
+  .rg-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(2, 9, 22, .8); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .rg-modal-caja { width: 100%; max-width: 640px; max-height: 100%; display: flex; flex-direction: column; background: var(--surface-1); border: 1px solid var(--border);
+                   border-radius: var(--radio-card); box-shadow: 0 0 40px rgba(47, 107, 255, .3), 0 20px 60px rgba(0, 0, 0, .6); min-width: 0; }
+  .rg-modal-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--hairline); }
+  .rg-modal-cab b { overflow-wrap: anywhere; min-width: 0; }
+  .rg-modal-cuerpo { padding: 12px 14px 16px; overflow-y: auto; min-width: 0; overscroll-behavior: contain; }
+  .rg-modal-caja:focus { outline: none; }
+  /* Asignar campañas: el cuadro no se desplaza, solo la lista (antes habia dos barras de scroll, una dentro de la otra). */
+  .rg-modal-caja.asignar .rg-modal-cuerpo { display: flex; flex-direction: column; overflow: hidden; }
+  .rg-modal-caja.asignar .rg-asig-lista { flex: 0 1 auto; min-height: 140px; max-height: none; }
+  .rg-galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .rg-plantilla { text-align: left; display: flex; flex-direction: column; gap: 4px; min-height: 40px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radio);
+                  background: var(--surface-2); color: var(--text-primary); cursor: pointer; font: inherit; transition: box-shadow .2s, transform .2s, border-color .2s; }
+  .rg-plantilla:hover { border-color: var(--series-sales); box-shadow: 0 0 16px rgba(47, 107, 255, .35); transform: translateY(-2px); }
+  .rg-plantilla b { font-size: 13px; }
+  .rg-plantilla span { font-size: 11.5px; color: var(--text-secondary); }
+  .rg-asig-lista { margin-top: 8px; border: 1px solid var(--line); border-radius: var(--radio); max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
+  .rg-asig-pais { position: sticky; top: 0; background: var(--surface-2); padding: 6px 10px; font-size: 12px; font-weight: 700; z-index: 1; }
+  .rg-asig-fila { display: grid; grid-template-columns: 22px 1fr; column-gap: 10px; align-items: center; min-height: 44px; padding: 6px 10px; border-top: 1px solid var(--hairline); cursor: pointer; min-width: 0; }
+  .rg-asig-fila.off { opacity: .55; }
+  .rg-asig-fila input { width: 20px !important; height: 20px; min-height: 0 !important; padding: 0 !important; }
+  .rg-asig-nom { font-size: 13px; overflow-wrap: anywhere; min-width: 0; }
+  .rg-asig-sub { grid-column: 2; font-size: 11px; color: var(--text-muted); }
+  .rg-cuenta { font-size: 12px; color: var(--text-secondary); align-self: center; }
+  @media (max-width: 720px) {
+    .rg-modal { padding: 0; align-items: flex-end; }
+    .rg-modal-caja { max-width: none; max-height: 94vh; max-height: 94dvh; border-radius: var(--radio-card) var(--radio-card) 0 0; }
+    .rg-asig-lista { max-height: 50vh; }
+    .rg-campos { grid-template-columns: 1fr 1fr; }
+    .rg-campos > label:only-child { grid-column: 1 / -1; }
+    .rg-barra-lista .btn-primary { flex: 1 1 100%; }
+  }
+  @media (max-width: 420px) {
+    .rg-tab { padding: 8px 9px; font-size: 12px; }
+    /* Dos columnas tambien en el celular: lo largo (metrica, ambito, accion, frecuencia) ocupa la fila entera; lo corto va de a dos. */
+    .rg-campos { grid-template-columns: 1fr 1fr; }
+    .rg-campos > label:only-child, .rg-cond .rg-campos > label:nth-child(-n+2), .rg-accion .rg-campos > label:first-child, .rg-accion .rg-campos > label:last-child { grid-column: 1 / -1; }
+    .rg-bloque { padding: 10px; }
+    .rg-grupo, .rg-cond, .rg-accion { padding: 6px 8px 8px; }
+  }
+  /* nivel (Campaña | Conjunto | Anuncio) como botones segmentados, igual que en AdsCook */
+  .rg-nivel { margin-top: 8px; }
+  .rg-nivel-lbl { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 4px; display: flex; gap: 6px; align-items: center; }
+  .rg-info { display: inline-flex; width: 15px; height: 15px; border: 1px solid var(--text-muted); border-radius: 50%; font-size: 10px; align-items: center; justify-content: center; color: var(--text-muted); cursor: help; }
+  .rg-seg { display: inline-flex; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radio); overflow: hidden; background: var(--surface-2); }
+  .rg-seg button { min-height: 40px; padding: 0 22px; border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--text-secondary); font: inherit; font-weight: 600; font-size: 13px; cursor: pointer; flex: 1 1 auto; transition: background .2s, color .2s, box-shadow .2s; }
+  .rg-seg button:last-child { border-right: 0; }
+  .rg-seg button:hover { color: var(--text-primary); background: var(--hover-wash); }
+  .rg-seg button.on { color: #fff; background: linear-gradient(135deg, rgba(47, 107, 255, .55), rgba(91, 140, 255, .35)); box-shadow: inset 0 0 0 1px var(--series-sales), 0 0 14px rgba(47, 107, 255, .45); }
+  .rg-seg-vista { margin: 0 0 10px; }
+  .rg-seg-vista .pill { margin-left: 6px; }
+  /* pestaña Campañas */
+  .rg-bulk { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radio); background: var(--surface-2); }
+  .rg-bulk-n { font-size: 12.5px; color: var(--text-secondary); flex: 1 1 200px; }
+  /* Con campañas marcadas, la barra de acciones se queda pegada arriba mientras se baja por la lista (escritorio). En el celular es demasiado alta para
+     pegarla: ahi queda el boton flotante .rg-chip, abajo, que sube hasta ella. */
+  .rg-chip { display: none; }
+  @media (min-width: 721px) {
+    .rg-bulk.sel { position: sticky; top: 0; z-index: 6; background: #0b1a3d; border-color: var(--series-sales); box-shadow: 0 8px 24px rgba(0, 0, 0, .55), 0 0 18px rgba(47, 107, 255, .3); }
+  }
+  @media (max-width: 720px) {
+    .rg-chip { display: flex; align-items: center; justify-content: center; gap: 6px; position: sticky; bottom: 12px; z-index: 6; margin: 10px auto 0; min-height: 44px; padding: 0 20px;
+               border: 0; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;
+               background: linear-gradient(135deg, #2f6bff, #5b8cff); box-shadow: 0 6px 22px rgba(47, 107, 255, .55); }
+  }
+  .rg-bulk button, .rg-bulk select { min-height: 40px; }
+  #rg-root .rg-bulk select { width: auto; max-width: 100%; flex: 1 1 160px; }
+  .rg-camp { border: 1px solid var(--line); border-radius: var(--radio-card); margin-bottom: 8px; background: var(--surface-1); min-width: 0; transition: box-shadow .2s; }
+  .rg-camp:hover, .rg-camp.abierta { box-shadow: 0 0 16px rgba(47, 107, 255, .2); }
+  .rg-camp-top { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; min-width: 0; }
+  .rg-camp-chk { flex: 0 0 auto; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: -6px 0 0 -8px; }
+  .rg-camp-chk input { width: 20px !important; height: 20px; min-height: 0 !important; padding: 0 !important; }
+  .rg-camp-info { flex: 1 1 auto; min-width: 0; }
+  .rg-camp-nom { font-weight: 600; font-size: 13px; overflow-wrap: anywhere; }
+  .rg-camp-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 3px; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .rg-camp-met { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+  .rg-regbadge { flex: 0 0 auto; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .rg-regbadge.on { color: #fff; border-color: transparent; background: linear-gradient(135deg, #2f6bff, #5b8cff); box-shadow: 0 0 12px rgba(47, 107, 255, .5); }
+  .rg-regbadge.off { color: var(--text-primary); border-color: var(--series-sales); }
+  .rg-camp-panel { border-top: 1px solid var(--hairline); padding: 6px 12px 10px 14px; }
+  @media (max-width: 720px) { .rg-seg { display: flex; width: 100%; } .rg-seg button { padding: 0 8px; } .rg-camp-top { flex-wrap: wrap; } .rg-regbadge { margin-left: 50px; } }
+  .rg-cobertura { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; font-size: 12.5px; color: var(--text-secondary); }
+  .rg-cobertura b { color: var(--text-primary); }
+  .rg-idc { font-size: 11px; font-weight: 400; color: var(--text-muted); white-space: nowrap; }
+  .rg-seg button:focus-visible, .rg-tab:focus-visible, .rg-regbadge:focus-visible { outline: 2px solid #8fb0ff; outline-offset: 2px; position: relative; z-index: 2; }
+  /* programacion de la regla (cada cuanto se revisa y entre que fechas): el intervalo ocupa la fila en celular y el numero y la unidad van de a dos; las dos fechas, siempre de a dos */
+  .rg-prog .rg-seg { margin: 0 0 8px; }
+  .rg-prog-campos, .rg-prog-fechas { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+  .rg-prog-campos small, .rg-prog-fechas small { color: var(--text-muted); }
+  .rg-rev-linea { margin-top: 6px; font-size: 11.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+  /* «Revisión automática (prueba) · cada 1 h 30 min» es largo: la etiqueta baja de renglon en vez de salirse de la tarjeta (las demas etiquetas del dash no se parten, esta si) */
+  .rg-meta .pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  @media (max-width: 590px) {
+    .rg-prog-campos { grid-template-columns: 1fr 1fr; }
+    .rg-prog-campos > label:first-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 420px) { .rg-prog-fechas { grid-template-columns: 1fr 1fr; } }
+  /* a 320 px dos campos de fecha de 107 px cortaban el año: una columna */
+  @media (max-width: 340px) { .rg-prog-fechas { grid-template-columns: 1fr; } }
+  /* horario del dia (desde que hora hasta que hora): dos listas, siempre de a dos salvo en pantallas muy angostas; y el aviso de reglas que se contradicen */
+  .rg-prog-horas { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+  .rg-prog-horas select { min-height: 40px; }
+  @media (max-width: 420px) { .rg-prog-horas { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 300px) { .rg-prog-horas { grid-template-columns: 1fr; } }
+  .rg-choque b { color: var(--text-primary); }
+  .rg-choque ul { margin: 6px 0 0; padding-left: 18px; }
+  .rg-choque li { margin: 6px 0; }
+  .rg-choque .rg-mut { display: block; margin-top: 2px; }
+  /* fin reglas */
+  /* cifras de una revision: que se miro y el numero exacto de cada condicion (Revisar ahora, Ver que haria ahora, Registro) */
+  .rg-informe { margin-top: 8px; min-width: 0; }
+  .rg-inf-regla { margin-bottom: 14px; min-width: 0; }
+  .rg-inf-tit { font-weight: 700; font-size: 13.5px; overflow-wrap: anywhere; margin-bottom: 4px; }
+  .rg-inf-tarea { margin: 6px 0 0; min-width: 0; }
+  .rg-inf-res { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; overflow-wrap: anywhere; }
+  .rg-inf-res b { color: var(--text-primary); }
+  .rg-inf-fila { border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radio); padding: 8px 10px; margin-bottom: 6px; min-width: 0; background: var(--surface-1); }
+  .rg-inf-fila.cumple { border-left-color: var(--positive); }
+  .rg-inf-cond { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+  .rg-inf-cond li { display: flex; gap: 6px; align-items: baseline; font-size: 12.5px; color: var(--text-secondary); overflow-wrap: anywhere; min-width: 0; font-variant-numeric: tabular-nums; }
+  .rg-inf-cond li > span:last-child { min-width: 0; }
+  .rg-inf-cond li.si { color: var(--text-primary); }
+  .rg-inf-cond li.si .rg-inf-marca { color: var(--positive); }
+  .rg-inf-cond li.no .rg-inf-marca { color: var(--text-muted); }
+  .rg-inf-marca { flex: 0 0 auto; font-weight: 700; }
+  .rg-inf-o { margin: 6px 0 0; font-size: 11px; font-weight: 700; color: var(--series-sales); text-transform: uppercase; letter-spacing: .08em; }
+  .rg-inf-acc { margin-top: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+  .rg-inf-fila .rg-razon { margin-top: 4px; }
+  .rg-inf-mas > summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--series-sales); }
+  .rg-inf-panel { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); min-width: 0; }

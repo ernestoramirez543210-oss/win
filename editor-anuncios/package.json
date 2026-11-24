@@ -1,0 +1,25 @@
+{
+  "name": "editor-anuncios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Editor de anuncios verticales 9:16 (Remotion). Lo maneja Claude; las reglas estan en CLAUDE.md.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "tipos": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "5.3.0",
+    "@remotion/bundler": "4.0.535",
+    "@remotion/cli": "4.0.535",
+    "@remotion/renderer": "4.0.535",
+    "@remotion/tailwind-v4": "4.0.535",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.535",
+    "tailwindcss": "4.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "5.9.3"
+  }
+}

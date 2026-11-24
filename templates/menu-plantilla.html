@@ -1,0 +1,52 @@
+<!-- Menu de la plantilla: una barra arriba con todas las herramientas. scripts\Armar-Suite.ps1 lo pega en TODAS las paginas (junto con
+     templates\suite-tokens.html, los colores que usan las paginas) entre las marcas MENU-PLANTILLA. Para sumar o quitar una herramienta,
+     cambia la lista HERRAMIENTAS de abajo y vuelve a armar. En el celular la barra se desliza de lado (nada se corta). -->
+<style>
+  .menu-plantilla { position: relative; z-index: 50; display: flex; align-items: center; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 6px 10px; background: linear-gradient(90deg, #06142e, #0b2350); border-bottom: 1px solid rgba(143, 176, 255, .18);
+    font: 600 13px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: thin; box-sizing: border-box; width: 100%; }
+  .menu-plantilla a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px;
+    color: #c9d7ff; text-decoration: none; white-space: nowrap; }
+  .menu-plantilla a:hover { background: rgba(143, 176, 255, .12); color: #fff; }
+  .menu-plantilla a.activa { background: #2453c7; color: #fff; }
+  .menu-plantilla .salir { margin-left: auto; color: #8fa3cc; }
+  @media print { .menu-plantilla { display: none !important; } }
+</style>
+<script>
+  (function () {
+    var HERRAMIENTAS = [
+      ['/', 'Dashboard'], ['/reglas', 'Reglas'], ['/radar', 'Radar'], ['/tablero', 'Tablero'],
+      ['/pdf', 'Crear ebook'], ['/modelar-pdf', 'Modelar PDF'], ['/ofertas', 'Flujos ZapData'], ['/fabrica', 'Fábrica'],
+      ['/editor-anuncios', 'Editor de anuncios'], ['/apis', 'APIs']
+    ];
+    function poner() {
+      if (!document.body || document.querySelector('.menu-plantilla')) return;
+      var aqui = location.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+      if (/^\/dashboard-/.test(aqui)) aqui = '/';
+      var nav = document.createElement('nav');
+      nav.className = 'menu-plantilla';
+      nav.setAttribute('aria-label', 'Herramientas');
+      // Abierta desde el disco (el ejemplo de Ver-Ejemplo): los enlaces van a los archivos de al lado.
+      var local = location.protocol === 'file:';
+      if (local) aqui = '/' + (location.pathname.split('/').pop() || '').replace(/\.html$/, '').replace(/^dashboard-.*$/, '');
+      HERRAMIENTAS.forEach(function (h) {
+        var a = document.createElement('a');
+        a.href = local ? (h[0] === '/' ? 'dashboard-ventas.html' : h[0].slice(1) + '.html') : h[0];
+        a.textContent = h[1];
+        if (h[0] === aqui) { a.className = 'activa'; a.setAttribute('aria-current', 'page'); }
+        nav.appendChild(a);
+      });
+      var salir = document.createElement('a');
+      salir.href = '#';
+      salir.className = 'salir';
+      salir.textContent = 'Salir';
+      salir.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).catch(function () {}).then(function () { location.href = '/'; });
+      });
+      nav.appendChild(salir);
+      document.body.insertBefore(nav, document.body.firstChild);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', poner); else poner();
+  })();
+</script>

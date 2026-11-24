@@ -1,0 +1,89 @@
+EDITOR DE ANUNCIOS 9:16 CON CLAUDE
+==================================
+
+Produce anuncios verticales (1080x1920) de dos tipos:
+  - TIKTOK: tu locución + videos de stock del producto, cortados al ritmo de lo que se dice (no usa IA generativa).
+  - IA: un guion + la foto de un avatar -> imágenes, clips y voz generados con APIMart (pedidos por el dash) -> anuncio terminado.
+
+CÓMO SE USA
+  1. En la app de Claude, pestaña Code, abre ESTA carpeta (la de la instalación; por defecto D:\editor-anuncios) como proyecto.
+     Importante: abre la carpeta del proyecto, no una subcarpeta, para que Claude lea CLAUDE.md y la skill editor-video.
+  2. Sube tus archivos a public/ (mapa abajo) y pídele a Claude lo que necesites (tabla "Uso diario").
+  3. Recoge el video terminado en anuncios/[producto]/tiktok/[anuncio]/final/ o anuncios/[producto]/ia/[anuncio]/final/.
+
+LO QUE SUBES TÚ  (todo dentro de public/, más el archivo .env)
+  public/musica/biblioteca/              Música de fondo mp3 libre de derechos. Puedes separarla por estilo: alegre, calmada, energetica.
+  public/productos/[producto]/           Una carpeta por producto (nombre corto, minúsculas, sin espacios: velas). Dentro:
+    ebook.pdf                              El ebook o material que se vende. Es lo único que necesitas del producto.
+    avatares/[nombre]/                     El presentador de los anuncios con IA: de 1 a 3 fotos de frente, buena luz, sin recortar.
+    broll-tiktok/                          TODOS los videos de TikTok o de stock de ese producto, cuantos más mejor (mínimo 4 a 6).
+    voces/                                 La locución de cada anuncio TikTok: AD1.mp3, AD2.mp3...
+    guiones/                               El guion de cada anuncio: AD1.txt, AD2.txt... (obligatorio en los de IA).
+  .env                                   La conexión con el dash: dos líneas, DASH_URL y DASH_CLAVE_EDITOR. No se escriben a mano: en el dash,
+                                         Herramientas > Editor de anuncios > «Descargar conexión», y doble clic en Conectar-Editor.cmd.
+                                         Es privada: no se comparte ni se pega en el chat. Ya no lleva la clave de APIMart.
+  Para un producto nuevo: copia public/productos/producto-ejemplo y cámbiale el nombre, o pídeselo a Claude.
+
+LO QUE GENERA CLAUDE  (aquí no subes nada)
+  public/sfx/                            Efectos de sonido (LICENCIAS.txt dice de dónde salió cada uno).
+  Dentro de cada producto:               portada.jpg, paginas/, ebook.txt, producto.json, avatares/[nombre]/avatar.json, broll-tiktok/indice.json.
+  anuncios/[producto]/tiktok/[anuncio]/  El trabajo de un anuncio TikTok. final/ = el video terminado (lo único que recoges).
+  anuncios/[producto]/ia/[anuncio]/      El trabajo de un anuncio con IA: cuadros/, clips/ y final/.
+  anuncios/[producto]/historial.json     Gancho, colores, estilo y tomas de cada anuncio, para no repetir.
+  costos.jsonl                           Lo que costó cada generación de APIMart y a qué anuncio pertenece. Desde la versión 2026.11.10-2 todo lo de APIMart se pide POR EL DASH (el editor ya no tiene la clave de APIMart): el dash pone el tope de US$ 0,50 por anuncio, no deja repetir un clip pagado y anota el costo (el dueño lo ve por proyecto). Sin la conexión con el dash en .env, o si el dash no contesta, no se genera nada que cueste.
+  CLAUDE.md y .claude/skills/            Tus reglas y la skill editor-video (con preferencias.md: cada corrección tuya queda anotada).
+
+USO DIARIO
+  Quieres                    Subes                                   Le dices a Claude
+  Anuncio estilo TikTok      La voz en voces/ (AD3.mp3).             "Haz el AD3 de [producto], estilo TikTok."
+  Anuncio TikTok AUTOMÁTICO  La voz en voces/ (AD3.mp3) y el b-roll.  "Haz el AD3 de [producto] automático." (sin gastar tokens: lo hace un script; o tú mismo: python scripts/montaje_auto.py [producto] AD3)
+  Anuncio de la Fábrica, TODO automático   Nada (el pedido y el b-roll).   "Hazme el AD1 de la Fábrica automático." (guion con python scripts/guion_auto.py, voz de los flujos con python scripts/voz_auto.py y montaje; cada uno pide el OK de gasto: unos centavos; el guion lo escribe un modelo: léelo antes de gastar en anuncios)
+  Anuncio completo con IA    El guion en guiones/ (AD4.txt).         "Haz el AD4 de [producto] con IA, avatar [nombre]."
+  Sumar videos de TikTok     Los videos nuevos en broll-tiktok/.     "Agregué videos en broll-tiktok de [producto], añádelos al índice."
+  Que Claude traiga b-roll   La carpeta de Drive de la oferta (la     "Trae b-roll de [producto] desde TikTok: [qué tomas]. Déjalo en la carpeta de Drive de la oferta, en B-rolls."
+                             ruta en tu PC) y, si hay, la llave de
+                             búsqueda en .env (env-ejemplo.txt).
+  Un gancho nuevo con IA     El anuncio que se modela en             "Haz el gancho nuevo del AD1 de [producto] con IA. Cuesta unos 3 centavos de
+                             referencia/ (AD1_referencia.mp4) y la   análisis más 0,0085 por imagen y 0,08 por clip: dime el costo y espera mi OK."
+                             ficha del producto.
+  Un producto nuevo          Su carpeta con ebook.pdf, fotos del     "Hay un producto nuevo en public/productos/[producto], arma su ficha."
+                             avatar y videos de TikTok.
+  Corregir algo              Nada.                                   "En el AD3 cambia [lo que sea] y anótalo en mis preferencias."
+  Cambiar una regla          Nada.                                   "De ahora en adelante [regla nueva]. Actualiza la skill y CLAUDE.md."
+  Repetir un clip de IA      Nada.                                   "Repite solo el clip [número] del AD4 con este cambio: [cambio]."
+
+SI ALGO FALLA
+  "No se reconoce python, node o ffmpeg"  -> cierra y abre la app de Claude (o reinicia el PC).
+  El render se queda sin memoria          -> cierra otros programas y pide: "renderiza con menos concurrencia".
+  El anuncio automático dice "No alcanza el b-roll limpio" -> faltan videos sin texto quemado: trae más (broll_tiktok.py) y repite. Mira siempre evidencia.png (una miniatura por corte): el automático NO detecta niños. Si ves uno en la toma 7, dile a Claude "marca la toma 7 del AD3 de [producto]: se ve un niño" (python scripts/emparejar_tomas.py [producto] --marcar-toma AD3 7) y vuelve a montar: esa toma no se usa nunca más.
+  Claude no sigue tus reglas              -> comprueba que abriste la carpeta del proyecto y no una subcarpeta; pide: "lee CLAUDE.md y la skill editor-video antes de seguir".
+  El avatar cambia de cara o de ropa      -> "regenera los cuadros usando el ancla y la foto del avatar como referencia".
+  La IA dibuja mal el producto            -> pide que use otras páginas del ebook como referencia y reescriba la descripcion_ia; si el ebook no trae buenas fotos, sube 3 o 4 fotos reales.
+  El clip se come o cambia palabras       -> "baja ese clip a unas 24 palabras o repártelo en dos".
+  La voz suena distinta entre clips       -> los bloques VOICE y ACCENT deben copiarse tal cual de avatar.json.
+  Dice que el editor no está conectado o que la llave no sirve -> en el dash: Herramientas > Editor de anuncios > «Descargar conexión», y doble clic en Conectar-Editor.cmd.
+  Dice que el editor está viejo (426)     -> baja el instalador nuevo del dash y corre Instalar-Editor.cmd.
+  Dice que se acabó el tope (402 o 429)   -> ese anuncio (US$ 0,50) o ese día ya gastó lo permitido: tapa con stock o una imagen con movimiento, o pregúntale al dueño. No se gastó nada.
+  APIMart dice que falta saldo            -> avísale al dueño: la cuenta de APIMart es la del dash.
+
+TRES IDEAS PARA SACARLE PROVECHO
+  - Corrige siempre. Las primeras ediciones salen genéricas; después de 10 o 15 correcciones anotadas Claude edita con tu estilo.
+  - Explica el porqué: "subtítulos más grandes porque mi público es mayor de 40" le sirve más que "más grandes".
+  - Pide el costo antes de generar. La edición usa tu plan de Claude; las imágenes, los clips y la voz de IA los paga la cuenta del dueño, por el dash y con tope por anuncio.
+
+INSTALAR, ACTUALIZAR Y PROBAR
+  - Esta carpeta es una INSTALACIÓN. El código fuente vive en el repo del dash (carpeta editor-anuncios/) y se instala en cada PC con
+    Instalar-Editor.cmd (doble clic): instala Node.js, Python 3.12 y ffmpeg si faltan, las librerías en un entorno propio (.venv), el
+    navegador de Remotion, el modelo de transcripción, los modelos de CLIP del anuncio automático (~300 MB) y los efectos de sonido. Pasos para el PC del editor: INSTALAR.txt.
+  - Actualizar = volver a correr Instalar-Editor.cmd desde la versión nueva: no toca tus productos, videos, música ni preferencias.md (en .env solo pone la conexión con el dash si la bajaste).
+  - Conectar con el dash = bajar la conexión del dash (Herramientas > Editor de anuncios > «Descargar conexión») y doble clic en Conectar-Editor.cmd. Sin eso no se genera nada con IA.
+  - Probar = doble clic en Probar-Editor.cmd (o: python scripts/prueba_rapida.py): produce un anuncio de mentira de punta a punta, no gasta nada.
+  - El instalador se baja del dash: menú Herramientas > Editor de anuncios (lo ven el dueño y el editor de video). Ese .zip (~330 KB, solo código y
+    plantillas, sin claves ni videos) lo arma Build-Suite.ps1 en cada refresco con Empaquetar-Editor.ps1, que también sirve a mano para llevarlo a otro PC.
+  - Esta carpeta NO es un repositorio git a propósito: aquí viven videos y modelos pesados, y las sesiones que trabajan en una copia (worktree) no los verían.
+
+NOTAS
+  - Transcripción: faster-whisper (modelo small por defecto) en lugar de openai-whisper, porque el PC del dueño no tiene GPU; el resultado es el mismo JSON palabra por palabra.
+  - Render: un PC de 2 núcleos es lento; un anuncio de un minuto puede tardar bastante. Claude te avisa antes de cada render largo.
+  - Videos de TikTok o de stock: úsalos solo si tienes derecho a usarlos en anuncios pagos. Avatar: solo fotos de personas que autorizaron su cara y su voz.
+  - Remotion (el motor de video) es gratis para individuos y empresas pequeñas; las empresas de más de 3 personas necesitan licencia de empresa (remotion.pro/license).

@@ -1,0 +1,11 @@
+# PLANTILLA (se instala como /etc/systemd/system/editor-puerta@.path; hay una instancia por persona: editor-puerta@beto.path). Cada instancia vigila UNA carpeta concreta: systemd no
+# se entera de los archivos nuevos cuando el comodin esta en una carpeta del medio de la ruta (medido el 2026-10-29: una peticion en la cola no despertaba a nadie).
+[Unit]
+Description=Vigila las peticiones de %i a la puerta de Drive del equipo de video (una peticion nueva en /srv/editor/personas/%i/cola arranca editor-puerta@%i.service)
+
+[Path]
+PathExistsGlob=/srv/editor/personas/%i/cola/*.json
+Unit=editor-puerta@%i.service
+
+[Install]
+WantedBy=multi-user.target

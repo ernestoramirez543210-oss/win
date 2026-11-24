@@ -1,0 +1,5 @@
+Tú subes: de 1 a 3 fotos de frente del presentador, con buena luz y sin recortar (foto1.jpg, foto2.jpg, foto3.jpg).
+Claude escribe aquí avatar.json (aspecto, voz, acento y casa_base). Esos textos se copian idénticos en todos los prompts.
+
+Para que el SERVIDOR del dueño haga anuncios de avatar solo: en Drive, MI NEGOCIO > OFERTAS LATAM > <OFERTA> > AVATAR, pon esas mismas fotos y este avatar.json lleno, con "genero" (mujer u hombre) y "autorizado": true.
+Solo fotos de personas que autorizaron su cara y su voz en anuncios. Sin esa carpeta (o con autorizado en false) el servidor no empieza el pedido y le deja una nota al dash.

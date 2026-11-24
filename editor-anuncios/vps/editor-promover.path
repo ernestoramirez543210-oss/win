@@ -1,0 +1,10 @@
+# PLANTILLA (se instala como /etc/systemd/system/editor-promover@.path; una instancia por persona: editor-promover@beto.path). Cada instancia vigila UNA carpeta concreta (igual que la puerta de Drive).
+[Unit]
+Description=Vigila los paquetes de mejoras de %i (uno nuevo en /srv/editor/personas/%i/mejoras arranca editor-promover@%i.service)
+
+[Path]
+PathExistsGlob=/srv/editor/personas/%i/mejoras/*.tar
+Unit=editor-promover@%i.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2206 @@
+﻿<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Producción — Suite</title>
+<style>
+  body { margin:0; background:#020916; color:#f3f5fa;
+         font:13px/1.5 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { padding:20px 18px 60px; }
+  h1 { font-size:20px; font-weight:800; letter-spacing:-.4px; margin:0 0 2px; }
+  .sub { color:#90a2cd; font-size:12px; margin:0 0 16px; }
+  button { border:0; border-radius:7px; padding:8px 14px; cursor:pointer; font:12px inherit; font-weight:650; }
+  .primario { background:var(--accion); color:var(--accion-texto); }
+  .primario:disabled { opacity:.5; cursor:default; }
+  .sec { background:#0d1b39; color:#d3daeb; }
+  .sec:hover { background:#0e1d3d; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:2px; margin-bottom:16px; background:#040b1b; border-radius:10px; padding:3px;
+          width:fit-content; max-width:100%; flex-wrap:wrap; box-sizing:border-box; }  /* a 360 px con el menu se salia 9 px (medido 2026-11-17) */
+  .tabs button { background:none; color:#6982bb; border-radius:8px; padding:8px 16px; }
+  .tabs button.activo { background:#0d1b39; color:#f3f5fa; }
+
+  /* Kanban */
+  .kanban { display:flex; gap:10px; overflow-x:auto; padding-bottom:12px; min-height:60vh; }
+  .columna { min-width:220px; width:220px; flex:0 0 220px; background:#040b1b; border-radius:12px;
+             display:flex; flex-direction:column; max-height:calc(100vh - 140px); }
+  .col-head { padding:12px 12px 8px; font-size:11px; font-weight:700; text-transform:uppercase;
+              letter-spacing:.08em; color:#6982bb; display:flex; align-items:center; gap:6px;
+              border-bottom:1px solid #0d1b39; }
+  .col-head .cnt { background:#0d1b39; border-radius:99px; padding:1px 7px; font-size:10px; }
+  .col-body { flex:1; overflow-y:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .col-body:empty::after { content:'Sin tarjetas'; color:#182b52; font-size:11px; text-align:center;
+                           padding:20px 0; display:block; }
+
+  /* Cards */
+  .tarj { background:#061026; border:1px solid #112247; border-radius:10px; padding:10px 11px;
+          cursor:grab; user-select:none; }
+  .tarj:active { cursor:grabbing; }
+  .tarj.drag-over { border-color:#4d8bff; background:#09152f; }
+  /* Verde = "lista para la siguiente etapa", no "en la etapa correcta": la marca la pone
+     quien termino su parte, para que quien abra el tablero despues no tenga que preguntar. */
+  .tarj.listo { border-color:#3ecf8e; background:#0f2018; }
+  .tarj .btn-listo { margin-top:7px; width:100%; font-size:10.5px; padding:4px 0;
+    border-radius:7px; border:1px solid #102146; background:#0a1836; color:#90a2cd;
+    cursor:pointer; font-weight:600; }
+  .tarj .btn-listo:hover { border-color:#3ecf8e; color:#3ecf8e; }
+  .tarj.listo .btn-listo { border-color:#3ecf8e; background:rgba(62,207,142,.12); color:#3ecf8e; }
+  .tarj .nombre { font-size:13px; font-weight:650; margin-bottom:3px; word-break:break-word; }
+  .tarj .meta { font-size:10.5px; color:#6982bb; display:flex; gap:8px; flex-wrap:wrap; }
+  .tarj .meta a { color:#4d8bff; text-decoration:none; }
+  .tarj .meta a:hover { text-decoration:underline; }
+  .tarj .prog { margin-top:5px; height:3px; background:#0d1b39; border-radius:2px; overflow:hidden; }
+  .tarj .prog-bar { height:100%; background:#4d8bff; border-radius:2px; transition:width .2s; }
+  .pais-tag { font-size:9.5px; padding:1px 6px; border-radius:99px; background:#0d1b39; color:#90a2cd; font-weight:600; }
+
+  /* Minitarjetas: un pais por fila dentro de la tarjeta, arrastrables una por una.
+     Se ven como tarjetas pequenas y no como etiquetas a proposito: una etiqueta no invita
+     a arrastrarse, y arrastrarlas es justo lo que hay que hacer con ellas. */
+  .minis { margin-top:8px; display:flex; flex-direction:column; gap:4px; }
+  .mini { display:flex; align-items:center; gap:6px; cursor:grab;
+          background:#091530; border:1px solid #12254e; border-left:2px solid #192b53;
+          border-radius:7px; padding:4px 7px; }
+  .mini:active { cursor:grabbing; }
+  .mini:hover { border-color:#4d8bff; }
+  .mini-nom { flex:1; font-size:11px; text-transform:capitalize; color:#d3daeb; font-weight:600; }
+  .mini-ok { background:none; border:1px solid #112247; color:#6982bb; border-radius:99px;
+             width:19px; height:19px; line-height:1; font-size:11px; cursor:pointer; padding:0; }
+  .mini-ok:hover { border-color:#3ecf8e; color:#3ecf8e; }
+  .mini.listo { border-left-color:#3ecf8e; background:#0f2018; }
+  .mini.listo .mini-nom { color:#3ecf8e; }
+  .mini.listo .mini-ok { border-color:#3ecf8e; color:#3ecf8e; background:rgba(62,207,142,.12); }
+
+  /* Los paises en el editor: chips que se marcan, no un campo de texto donde cada quien
+     escribia el nombre a su manera -"Mexico", "MX", "mexico"- y nada cuadraba despues. */
+  .paises-list { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+  .pais-chk { display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;
+              background:#061026; border:1px solid #12254e; border-radius:99px; padding:5px 11px 5px 8px;
+              font-size:11.5px; text-transform:capitalize; color:#90a2cd; }
+  .pais-chk.on { border-color:#4d8bff; color:#e5e9f1; background:#09152f; }
+  .pais-chk input { margin:0; }
+  .pais-chk em { font-style:normal; font-size:9.5px; color:#6982bb; text-transform:none;
+                 background:#0d1b39; border-radius:99px; padding:1px 6px; }
+  .ayuda { font-size:11px; color:#6982bb; margin:2px 0 7px; line-height:1.4; }
+  /* Cada enlace se ve como lo que es. Con area de toque propia: en la tarjeta compiten con
+     el arrastre de la tarjeta entera, y un enlace de 10px de alto se falla mas de lo que
+     se acierta con el dedo. */
+  .tarj .meta a.link-tag { font-size:9.5px; padding:2px 7px; border-radius:99px;
+    background:#0f2b31; color:#4d8bff; font-weight:600; text-decoration:none; }
+  .tarj .meta a.link-tag:hover { background:#164049; text-decoration:none; }
+  /* El WhatsApp del competidor (2026-11-13): verde y primero, para que Ana entre a su WhatsApp y vea los entregables sin abrir la tarjeta. */
+  .tarj .meta a.link-tag.wa { background:linear-gradient(135deg,#0b6e37,#128c4a); color:#fff; font-weight:750; }
+  .tarj .meta a.link-tag.wa:hover { filter:brightness(1.1); }
+  .modal a.wa-boton { display:flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:42px; padding:8px 14px; margin:0 0 12px; border-radius:10px;
+    background:linear-gradient(135deg,#0b6e37,#128c4a); color:#fff; font-weight:750; font-size:13.5px; text-decoration:none; box-shadow:0 0 14px rgba(37,211,102,.25); }
+  .modal a.wa-boton:hover { filter:brightness(1.1); }
+
+  /* Modal */
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:100; display:grid; place-items:center; }
+  .modal { background:#061026; border:1px solid #132751; border-radius:14px; padding:22px;
+           width:min(94vw,440px); max-height:90vh; overflow-y:auto; }
+  .modal h2 { margin:0 0 14px; font-size:17px; font-weight:800; }
+  .modal label { display:block; font-size:11px; color:#90a2cd; margin:10px 0 3px; font-weight:600; }
+  .modal input, .modal select, .modal textarea { width:100%; padding:9px 11px; border-radius:8px;
+           border:1px solid #132751; background:#091530; color:#f3f5fa; font:13px inherit; }
+  .modal textarea { resize:vertical; min-height:60px; }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { outline:none; border-color:#4d8bff; }
+  .modal .btns { display:flex; gap:8px; margin-top:16px; justify-content:flex-end; }
+  .modal .btns .borrar { background:#2a1420; color:#ff8fb0; margin-right:auto; }
+  .modal .btns .borrar:hover { background:#3a1a2a; }
+
+  /* Tasks inside modal */
+  .tarea { display:flex; flex-wrap:wrap; align-items:center; gap:7px; padding:4px 0; }
+  .tarea input[type=checkbox] { flex:0 0 16px; accent-color:#4d8bff; }
+  .tarea input[type=text] { flex:1; }
+  .tarea .quitar { background:none; border:0; color:#6982bb; cursor:pointer; padding:2px 6px; font-size:14px; }
+  .tarea .quitar:hover { color:#ff8fb0; }
+  .tareas-list { margin:6px 0; }
+  /* Un enlace escrito en el modal se abre desde ahi mismo. Es un <a> de verdad, no un
+     boton con window.open: asi funcionan tambien el clic del medio, el "abrir en pestana
+     nueva" del navegador y ver el destino abajo antes de pulsar. Se apaga mientras la
+     casilla no tenga un http(s): una flecha que no lleva a ningun lado se pulsa una vez
+     y ya no se vuelve a creer. */
+  .abrir { flex:0 0 100%; order:9; color:#4d8bff; text-decoration:none; font-size:11px;
+           word-break:break-all; padding:3px 2px 0; line-height:1.35; }
+  .abrir:hover { text-decoration:underline; }
+  .abrir.off { display:none; }
+  .campo-link { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+  .campo-link input { flex:1; }
+
+  /* Expansion LATAM y Variaciones de anuncios */
+  .exp-cab { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .exp-cab p { margin:0; color:#90a2cd; font-size:12px; max-width:780px; line-height:1.5; }
+  .exp-cab b { color:#d3daeb; }
+  .exp-paneles { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr)); gap:10px; margin-bottom:14px; }  /* min(): a 360 px con el menu quedan 268 px (medido 2026-11-17) */
+  .exp-panel { background:#040b1b; border:1px solid #0d1b39; border-radius:12px; padding:10px 12px; min-width:0; }
+  .exp-panel h3 { margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6982bb; display:flex; align-items:center; gap:6px; }
+  .exp-panel h3 .cnt { background:#0d1b39; border-radius:99px; padding:1px 7px; font-size:10px; }
+  .exp-panel .vacio { color:#3d5388; font-size:12px; padding:6px 0; }
+  .exp-item { display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px solid #0d1b39; flex-wrap:wrap; }
+  .exp-item:first-of-type { border-top:0; }
+  .exp-item .t { flex:1 1 170px; min-width:0; font-size:12.5px; overflow-wrap:anywhere; }
+  .exp-item .t b { display:block; font-weight:650; }
+  .exp-item .t span { color:#6982bb; font-size:11px; }
+  .exp-item .t span + span { display:block; }
+  .exp-item a.ref-anuncio { display:inline-flex; align-items:center; min-height:40px; color:#8fb0ff; }
+  .exp-item .acc { display:flex; gap:6px; flex-wrap:wrap; }
+  .exp-item button { min-height:40px; padding:6px 11px; }
+  .exp-scroll { overflow-x:auto; border:1px solid #0d1b39; border-radius:12px; background:#040b1b; }
+  table.exp { border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; }
+  table.exp th, table.exp td { padding:6px 5px; border-bottom:1px solid #0d1b39; text-align:center; font-size:11.5px; vertical-align:middle; }
+  table.exp thead th { color:#6982bb; font-weight:700; text-transform:capitalize; background:#040b1b; }
+  table.exp thead .fase { text-transform:none; font-size:10.5px; letter-spacing:.05em; color:#90a2cd; border-left:1px solid #12254e; }
+  table.exp .of { text-align:left; position:sticky; left:0; background:#061026; z-index:1; min-width:160px; max-width:210px; border-right:1px solid #12254e; padding-left:10px; }
+  table.exp thead .of { background:#040b1b; }
+  table.exp .of b { display:block; font-size:12.5px; overflow-wrap:anywhere; }
+  table.exp .of small { display:block; color:#6982bb; font-size:10.5px; line-height:1.35; }
+  table.exp .of .ed { background:none; border:0; color:#6982bb; padding:4px 6px; font-size:12px; min-height:32px; }
+  table.exp td.f1, table.exp td.f2, table.exp td.f3, table.exp th.f2, table.exp th.f3 { border-left:1px solid #0d1b39; }
+  .celda { width:100%; min-width:88px; min-height:42px; padding:5px 6px; border-radius:9px; border:1px solid #12254e; background:#061026; color:#4a6199; font-size:11px; font-weight:650; line-height:1.2; }
+  .celda:hover { border-color:#4d8bff; color:#d3daeb; }
+  .celda.e-flujos { border-color:#f0b429; color:#f0b429; background:rgba(240,180,41,.1); }
+  .celda.e-listo { border-color:#3ecf8e; color:#3ecf8e; background:rgba(62,207,142,.14); }
+  .celda.e-prog { border-color:#4d8bff; color:#8fb0ff; background:rgba(77,139,255,.14); }
+  .celda.e-test { border-color:#2dd4bf; color:#2dd4bf; background:rgba(45,212,191,.12); }
+  .celda.e-func { border-color:#f5b544; color:#ffd97a; background:rgba(245,181,68,.16); }
+  .celda.e-tablas { border-color:#7289bf; color:#bbc7e1; background:rgba(114,137,191,.14); }
+  .celda.e-no { border-color:#f2607a; color:#f2607a; background:rgba(242,96,122,.12); }
+  .celda.cerrada { opacity:.5; border-style:dashed; }
+  .leyenda { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .leyenda span { font-size:11px; border:1px solid #12254e; border-radius:99px; padding:3px 9px; color:#90a2cd; }
+  .vacio-gr { color:#3d5388; text-align:center; padding:28px 0; font-size:12.5px; }
+  .var-grupo { background:#040b1b; border:1px solid #0d1b39; border-radius:12px; padding:10px 12px; margin-bottom:10px; }
+  .var-grupo > h3 { margin:0 0 4px; font-size:13px; display:flex; align-items:center; gap:8px; }
+  .var-grupo > h3 .cnt { background:#0d1b39; border-radius:99px; padding:1px 8px; font-size:10px; color:#90a2cd; font-weight:600; }
+  .var { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0; border-top:1px solid #0d1b39; }
+  .var:first-of-type { border-top:0; }
+  .var .t { flex:1 1 200px; min-width:0; }
+  .var .t b { display:block; font-size:13px; overflow-wrap:anywhere; }
+  .var .t .m { display:flex; gap:6px; flex-wrap:wrap; margin-top:3px; font-size:10.5px; color:#6982bb; align-items:center; }
+  .var .t .m a { color:#4d8bff; text-decoration:none; background:#0f2b31; border-radius:99px; padding:2px 8px; font-weight:600; }
+  .chip-e { font-size:10.5px; border-radius:99px; padding:3px 9px; border:1px solid #12254e; color:#90a2cd; font-weight:650; white-space:nowrap; }
+  .chip-e.idea { color:#90a2cd; } .chip-e.produccion { color:#f0b429; border-color:#f0b429; } .chip-e.lista { color:#3ecf8e; border-color:#3ecf8e; }
+  .chip-e.subida { color:#8fb0ff; border-color:#4d8bff; } .chip-e.ganadora { color:#ffd97a; border-color:#f5b544; } .chip-e.descartada { color:#f2607a; border-color:#f2607a; }
+  .var .acc { display:flex; gap:6px; flex-wrap:wrap; }
+  .var .acc button { min-height:40px; padding:6px 11px; }
+  .dato-estado { color:#6982bb; font-size:10.5px; }
+  .opcion-estado { display:flex; align-items:flex-start; gap:9px; padding:8px 10px; border:1px solid #12254e; border-radius:9px; margin:5px 0; cursor:pointer; }
+  .opcion-estado.on { border-color:#4d8bff; background:#09152f; }
+  .opcion-estado input { margin-top:3px; width:auto; }
+  .opcion-estado b { display:block; font-size:12.5px; }
+  .opcion-estado span { color:#6982bb; font-size:11px; }
+
+  /* Revivir ofertas (pestaña Variaciones): las que vendieron y se apagaron, lo que el radar hallo afuera y las ideas de otras industrias */
+  .rev { background:#040b1b; border:1px solid #0d1b39; border-radius:12px; padding:12px; margin-bottom:14px; min-width:0; }
+  /* La busqueda de ideas va plegada por defecto (2026-11-17, Beto: «mete muchísimo texto y ruido visual cuando solo vengo a producir»); cada equipo recuerda si la dejo abierta. */
+  .rev-plegar { display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; min-height:44px; padding:4px 2px; margin:0;
+                background:none; color:#f3f5fa; text-align:left; font:inherit; border-radius:8px; }
+  .rev-plegar:hover { background:#061026; }
+  .rev-plegar-t { min-width:0; }
+  .rev-plegar-t b { display:block; font-size:14px; font-weight:800; }
+  .rev-plegar-t small { display:block; color:#90a2cd; font-size:12px; font-weight:400; line-height:1.45; margin-top:2px; }
+  .rev-flecha { flex:0 0 auto; color:#8fb0ff; font-size:12px; font-weight:650; white-space:nowrap; }
+  #rev-cuerpo { margin-top:10px; }
+  .var-todas { margin:4px 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6982bb; }
+  /* La cola de Beto (2026-11-17): la que falta numerar y el boton de copiar la orden recien usado. */
+  .exp-item .t span.num-falta { color:#ffcf6b; }
+  .num-aviso { display:flex; align-items:center; gap:8px 10px; flex-wrap:wrap; margin:2px 0 8px; padding:8px 10px; border-radius:9px; border:1px solid #5a4410; background:rgba(240,180,41,.07);
+               font-size:12px; color:#d3daeb; line-height:1.45; }
+  .num-aviso span { flex:1 1 200px; min-width:0; overflow-wrap:anywhere; }
+  .num-aviso b { color:#ffcf6b; }
+  .num-aviso button { min-height:40px; }
+  button.copiada { background:rgba(62,207,142,.14); color:#3ecf8e; }
+  .rev-cab h3 { margin:0 0 4px; font-size:14px; font-weight:800; }
+  .rev-cab p { margin:0 0 8px; color:#90a2cd; font-size:12px; line-height:1.5; max-width:820px; }
+  .rev-acc { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .rev-acc button, .rev-pie button { min-height:40px; }
+  .rev-of { border-top:1px solid #0d1b39; padding:9px 0; min-width:0; }
+  .rev-fila { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .rev-fila .t { flex:1 1 220px; min-width:0; }
+  .rev-fila .t b { font-size:13px; overflow-wrap:anywhere; }
+  .rev-chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+  .chip-p { font-size:10.5px; border-radius:99px; padding:2px 8px; border:1px solid #12254e; color:#90a2cd; white-space:nowrap; }
+  .chip-p.apagada { border-color:#f2607a; color:#ff8fb0; }
+  .chip-p.manual { border-color:#4d8bff; color:#8fb0ff; }
+  .rev-est { display:block; font-size:11px; color:#6982bb; margin-top:4px; }
+  .rev-est.vivo { color:#f0b429; } .rev-est.listo { color:#3ecf8e; } .rev-est.malo { color:#ff8fb0; }
+  .spark { display:flex; align-items:flex-end; gap:1px; height:30px; width:104px; flex:0 0 104px; }
+  .spark i { flex:1; background:#4d8bff; opacity:.75; min-height:1px; border-radius:1px 1px 0 0; }
+  .rev-fila .acc { display:flex; gap:6px; flex-wrap:wrap; }
+  .rev-fila .acc button { min-height:40px; }
+  .rev-det { margin-top:8px; padding:10px; background:#061026; border:1px solid #112247; border-radius:10px; min-width:0; }
+  .rev-det h4 { margin:14px 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#6982bb; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .rev-det h4:first-child { margin-top:0; }
+  .rev-det h4 .cnt { background:#0d1b39; border-radius:99px; padding:1px 7px; font-size:10px; }
+  .rev-pais { font-size:12px; color:#d3daeb; margin:3px 0; line-height:1.45; overflow-wrap:anywhere; }
+  .rev-pais b { color:#f3f5fa; }
+  .rev-msg { font-size:12px; color:#90a2cd; margin:4px 0; overflow-wrap:anywhere; }
+  .rev-cons { font-size:11px; color:#6982bb; margin:4px 0; overflow-wrap:anywhere; }
+  .rev-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr)); gap:8px; }
+  .rev-card { background:#091530; border:1px solid #12254e; border-radius:9px; padding:9px 10px; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .rev-card .ang { font-weight:700; font-size:12.5px; color:#f3f5fa; overflow-wrap:anywhere; }
+  .rev-card .de { font-size:10.5px; color:#6982bb; overflow-wrap:anywhere; }
+  .rev-card .gan { font-size:12px; color:#d3daeb; font-style:italic; overflow-wrap:anywhere; }
+  .rev-card .por { font-size:11px; color:#90a2cd; overflow-wrap:anywhere; }
+  .rev-card .lnk { display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; padding-top:4px; }
+  .rev-card .lnk a { display:inline-flex; align-items:center; min-height:40px; padding:0 10px; border-radius:7px; background:#0f2b31; color:#8fb0ff; text-decoration:none; font-size:11px; font-weight:600; }
+  .rev-card .lnk button { min-height:40px; padding:0 10px; font-size:11px; }
+  .rev-card .lnk .hecha { background:rgba(62,207,142,.12); color:#3ecf8e; border:1px solid #3ecf8e; }
+  .chip-pal { font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; border-radius:99px; padding:1px 7px; background:#0d1b39; color:#f0b429; width:fit-content; }
+  .rev-pie { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .rev-vacio { color:#3d5388; font-size:12px; padding:8px 0; }
+  /* Nuestros anuncios que mas vendieron (la base de cada variacion, 2026-11-12) */
+  .rev-card.base-top { border-color:#f0b429; }
+  .rev-card .prox { font-size:11.5px; color:#3ecf8e; font-weight:650; }
+  .rev-ojo { font-size:11px; color:#ffcf6b; overflow-wrap:anywhere; }
+  .rev-plan { margin:8px 0 2px; padding:8px 10px; border-radius:9px; background:#08180f; border:1px solid #1d5a3c; font-size:12px; color:#d3daeb; line-height:1.45; overflow-wrap:anywhere; }
+  .rev-plan b { color:#3ecf8e; }
+  .rev-plan ol { margin:5px 0 6px; padding-left:20px; }
+  .rev-plan li { margin:2px 0; }
+  .rev-card .cambia { font-size:11px; color:#3ecf8e; overflow-wrap:anywhere; }
+  .exp-item .t span.cambia-var, .var .m .cambia-var { color:#3ecf8e; }
+  .exp-item .t span.gancho-var, .var .m .gancho-var { color:#d3daeb; font-style:italic; }
+  .modal #vo-txt { min-height:220px; font-size:12px; line-height:1.45; white-space:pre-wrap; }
+  .rev-bases { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .modal .rev-base-op { display:flex; align-items:flex-start; gap:9px; min-height:40px; margin:0; padding:9px 10px; border:1px solid #12254e; border-radius:8px; cursor:pointer;
+                        font-size:12px; font-weight:400; color:#d3daeb; line-height:1.4; box-sizing:border-box; }
+  .modal .rev-base-op.on { border-color:#4d8bff; background:#09152f; }
+  .modal .rev-base-op input { width:auto; margin:2px 0 0; padding:0; flex:0 0 auto; }
+  .modal .rev-base-op span { min-width:0; overflow-wrap:anywhere; }
+  .modal .rev-base-op b { color:#f3f5fa; }
+  /* «Hacerla en el servidor» (2026-11-13): el original en Drive, lo que va haciendo el servidor y el boton del dueño. Con «span.» para ganarle a «.exp-item .t span» (gris, 11 px). */
+  .exp-item a.ve-abrir, .exp-item a.ve-drive { display:inline-flex; align-items:center; min-height:40px; color:#8fb0ff; font-size:12px; }
+  .t span.ve-orig, .exp-item .t span.ve-orig { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; min-width:0; }
+  .t span.ve-orig small, .t span.ve-nada { color:#6982bb; font-size:10.5px; overflow-wrap:anywhere; min-width:0; }
+  .t span.ve-chip { display:inline-block; width:fit-content; max-width:100%; box-sizing:border-box; margin:3px 0; padding:3px 9px; border-radius:8px; border:1px solid #12254e;
+                    font-size:11px; line-height:1.4; color:#90a2cd; overflow-wrap:anywhere; }
+  .t span.ve-chip.vivo { color:#f0b429; border-color:#5a4410; background:rgba(240,180,41,.08); }
+  .t span.ve-chip.listo { color:#3ecf8e; border-color:#1d5a3c; background:rgba(62,207,142,.08); }
+  .t span.ve-chip.malo { color:#ff8fb0; border-color:#5a1f33; background:rgba(242,96,122,.08); }
+  .t span.ve-aviso { color:#ffcf6b; font-size:11px; overflow-wrap:anywhere; }
+  button.ve-pedir { border:1px solid #4d8bff; }
+  .modal .ve-off { color:#ffcf6b; font-size:12px; line-height:1.45; margin:8px 0; }
+  .modal .ve-msg { color:#ff8fb0; font-size:11.5px; margin:4px 0 0; }
+  .modal .ve-msg:empty { display:none; }
+  .guia ol { padding-left:20px; margin:6px 0; }
+  .guia li { margin:7px 0; font-size:12.5px; color:#d3daeb; line-height:1.5; }
+  .guia li b { color:#f3f5fa; }
+  .guia p { color:#90a2cd; font-size:12px; margin:6px 0; line-height:1.5; }
+  .modal.ancho { width:min(94vw,640px); }
+
+  .aviso { padding:10px 14px; border-radius:9px; font-size:12px; margin-bottom:14px; display:none; }
+  .aviso.malo { background:#2a1420; color:#ff8fb0; display:block; }
+
+  @media (max-width:700px) {
+    /* El ancho de las ventanas (94vw) no contaba su relleno: en un celular de 375 px median 396 y se cortaban por los lados (medido el 2026-11-11 con la guia de «Revivir ofertas»). */
+    .modal { box-sizing:border-box; }
+    .columna { min-width:180px; width:180px; flex:0 0 180px; }
+    /* Areas de toque de dedo: el tablero se abre desde el celular y estos botones median entre 19 y 31 px. */
+    .primario, .sec, .tabs button { min-height:40px; }
+    .tabs button { padding:8px 11px; }
+    .mini-ok { width:36px; height:36px; font-size:14px; }
+    .tarj .btn-listo { min-height:38px; font-size:11.5px; }
+    .tarj .meta a.link-tag, .var .t .m a { padding:10px 12px; font-size:11px; }
+    /* El WhatsApp es el boton que mas se toca desde el celular: 40 px de alto (medido el 2026-11-13: los demas enlaces quedan en 37). */
+    .tarj .meta a.link-tag.wa { display:inline-flex; align-items:center; box-sizing:border-box; min-height:40px; }
+    .var .t .m a.ref-anuncio, .var .t .m a.drive-var { display:inline-flex; align-items:center; box-sizing:border-box; min-height:40px; }
+    .var .t .m a.ve-abrir, .var .t .m a.ve-drive { display:inline-flex; align-items:center; box-sizing:border-box; min-height:40px; }
+    .modal #ve-num { box-sizing:border-box; min-height:40px; }
+    table.exp .of .ed { min-height:40px; }
+  }
+</style>
+
+<div class="wrap">
+  <h1>Producción</h1>
+  <p class="sub">Tablero de ofertas y tareas del equipo</p>
+  <div class="aviso" id="aviso"></div>
+
+  <div class="tabs">
+    <button class="activo" data-tab="kanban">Tablero</button>
+    <button data-tab="expansion">Expansión LATAM</button>
+    <button data-tab="variaciones">Variaciones de anuncios</button>
+  </div>
+
+  <div id="tab-kanban">
+    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="primario" id="btn-nueva">+ Nueva tarjeta</button>
+      <button class="sec" id="btn-etapas">Editar etapas</button>
+    </div>
+    <div class="kanban" id="kanban"></div>
+  </div>
+
+  <div id="tab-expansion" style="display:none">
+    <div class="exp-cab">
+      <p><b>Primero Colombia, después México y Venezuela, después el resto.</b> Cada oferta es una fila y cada país una casilla. Ana marca <b>Flujos listos</b> cuando termina un país y a Carla le sale ahí mismo lo que ya puede programar. La fase 2 se abre cuando Colombia funciona o queda en tablas; la fase 3, cuando México y Venezuela funcionan. Toca una casilla para cambiar su estado.</p>
+      <button class="primario" id="btn-exp-nueva">+ Oferta a expandir</button>
+    </div>
+    <div class="exp-paneles" id="exp-paneles"></div>
+    <div class="exp-scroll"><table class="exp" id="exp-tabla"></table></div>
+    <div class="leyenda" id="exp-leyenda"></div>
+  </div>
+
+  <div id="tab-variaciones" style="display:none">
+    <!-- 2026-11-17, pedido de Beto (el editor): «lo primero que necesito ver arriba apenas entro es mi lista de Por producir». Orden de la pestaña: la cola de Beto y lo de
+         Carla arriba; la busqueda de ideas (Revivir ofertas: cifras por pais, angulos, quien la vende afuera) plegada en una barra; la lista completa por oferta al final. -->
+    <div class="exp-cab">
+      <p><b>Arriba, lo que hay que hacer.</b> Beto copia la <b>Orden</b>, hace la variación con su Claude, la sube a Drive y la marca <b>Lista</b>: ahí le sale a Carla para subirla. Las ideas nuevas se buscan más abajo, en «Buscar ideas para variaciones».</p>
+      <button class="primario" id="btn-var-nueva">+ Variación</button>
+    </div>
+    <div class="exp-paneles" id="var-paneles"></div>
+    <div class="rev" id="rev">
+      <button type="button" class="rev-plegar" id="rev-plegar" aria-expanded="false" aria-controls="rev-cuerpo">
+        <span class="rev-plegar-t"><b>♻️ Buscar ideas para variaciones</b><small>Ofertas que ya vendieron, sus cifras por país, ángulos de otras industrias y quién la vende hoy afuera.</small></span>
+        <span class="rev-flecha">Mostrar ▾</span>
+      </button>
+      <div id="rev-cuerpo" hidden>
+        <div class="rev-cab">
+          <p id="rev-intro"></p>
+          <div class="rev-acc"><button class="sec" id="rev-otra">+ Revivir otra oferta</button><button class="sec" id="rev-guia">🧨 Cómo volverla dinamita</button></div>
+        </div>
+        <div id="rev-lista"><div class="rev-vacio">Cargando…</div></div>
+        <div class="rev-pie" id="rev-pie"></div>
+      </div>
+    </div>
+    <h3 class="var-todas">📚 Todas las variaciones, por oferta</h3>
+    <div id="var-lista"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>__REVIVIR_OFERTAS_JS__</script>
+<script>
+(function () {
+  // Las etapas las manda el servidor (viven en KV y se editan aqui). Esta lista es solo
+  // el respaldo para que el tablero se dibuje si la peticion falla.
+  var ETAPAS = [
+    { key:'idea',       label:'Ideas' },
+    { key:'diseno',     label:'Diseño' },
+    { key:'grabacion',  label:'Grabación' },
+    { key:'edicion',    label:'Edición' },
+    { key:'landing',    label:'Landing' },
+    { key:'anuncios',   label:'Anuncios' },
+    { key:'activa',     label:'Activa' },
+    { key:'pausada',    label:'Pausada' },
+  ];
+
+  // Los paises donde se opera. Cada uno es una minitarjeta dentro de la tarjeta de la
+  // oferta, porque el flujo del bot se arma pais por pais: el de Mexico puede estar listo
+  // y el de Peru sin empezar. Antes eso se llevaba como TAREAS -"Flujo listo Mexico",
+  // "Flujo listo Colombia"- y por eso la oferta entera tenia que quedarse en una sola
+  // columna: no habia forma de decir que Mexico ya paso a testeo y Peru sigue en flujos.
+  var PAISES = ['mexico', 'venezuela', 'colombia', 'peru', 'guatemala', 'argentina', 'ecuador', 'bolivia'];
+
+  // Las minitarjetas de una tarjeta, normalizadas.
+  //
+  // Las tarjetas viejas traen el pais como texto suelto ("Guatemala, Colombia") y una sola
+  // etapa. Se parten aqui y arrancan todas en la etapa de la tarjeta, asi que el tablero
+  // se ve bien desde el primer render sin migrar nada. La forma nueva se guarda la primera
+  // vez que alguien mueva o edite esa tarjeta.
+  function sinTildes(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i')
+      .replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u');
+  }
+  // "Flujo listo en Guatemala", "flujo listo en Peru", "Flujo Listo en Venezuela": asi es
+  // como el equipo venia anotando el avance por pais. Se reconoce ese texto tal cual esta
+  // escrito -con y sin "en", con mayusculas de cualquier forma, con y sin tilde- porque lo
+  // escribieron seis veces a mano y no hay dos iguales.
+  function paisDeTarea(txt) {
+    var n = sinTildes(txt);
+    if (!/flujo\s+listo/.test(n)) return '';
+    for (var i = 0; i < PAISES.length; i++) { if (n.indexOf(PAISES[i]) !== -1) return PAISES[i]; }
+    return '';
+  }
+  function paisesDe(t) {
+    if (Array.isArray(t.paises) && t.paises.length) {
+      return t.paises.map(function (p) {
+        return { pais: p.pais, etapa: p.etapa || t.etapa, listo: !!p.listo };
+      });
+    }
+    var desdePais = String(t.pais || '').split(',').map(function (s) { return sinTildes(s.trim()); })
+      .filter(Boolean)
+      .map(function (nombre) { return { pais: nombre, etapa: t.etapa, listo: false }; });
+    if (desdePais.length) return desdePais;
+    // Y si tampoco hay campo de pais, se leen las tareas de "flujo listo en X": es la misma
+    // informacion, escrita donde cabia antes. El tick de la tarea es el "listo" del pais.
+    var vistos = {};
+    return (t.tareas || []).map(function (x) {
+      var p = paisDeTarea(x.texto);
+      if (!p || vistos[p]) return null;
+      vistos[p] = 1;
+      return { pais: p, etapa: t.etapa, listo: !!x.hecho };
+    }).filter(Boolean);
+  }
+  // Las tareas que NO se convirtieron en minitarjeta. Sin esto la misma cosa se veria dos
+  // veces: como pais arriba y como tarea abajo, cada una con su propio tick.
+  function tareasDe(t) {
+    if (Array.isArray(t.paises) && t.paises.length) return t.tareas || [];
+    if (String(t.pais || '').trim()) return t.tareas || [];
+    return (t.tareas || []).filter(function (x) { return !paisDeTarea(x.texto); });
+  }
+
+  var tarjetas = [];
+  var expansion = [];      // filas de la pestana Expansion LATAM
+  var variaciones = [];    // filas de la pestana Variaciones de anuncios
+  var variacionesCargadas = false;   // ya llego la lista (para numerar solas las que no tienen numero: autoNumerar)
+  var dragId = null;
+  var dragPais = null;   // si se esta arrastrando una minitarjeta, cual pais
+  var dragCol = null;    // de que columna se arrastro la tarjeta entera
+
+  function el(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m];
+    });
+  }
+  function avisar(t) { var a = el('aviso'); a.className = 'aviso malo'; a.textContent = t; }
+
+  // Tabs
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (x) { x.classList.remove('activo'); });
+      b.classList.add('activo');
+      ['kanban', 'expansion', 'variaciones'].forEach(function (t) { el('tab-' + t).style.display = b.dataset.tab === t ? '' : 'none'; });
+    });
+  });
+
+  // /tablero#variaciones (o #expansion) abre esa pestaña: asi el dash puede llevar directo a la variacion que acaba de pedir.
+  (function () {
+    var h = (location.hash || '').replace('#', ''), b = ['expansion', 'variaciones'].indexOf(h) !== -1 ? document.querySelector('.tabs button[data-tab="' + h + '"]') : null;
+    if (b) b.click();
+  })();
+
+  // ================= Expansion LATAM =================
+  // Una fila por oferta, una casilla por pais. Fase 1 = Colombia (donde se prueba), fase 2 = Mexico y Venezuela, fase 3 = el resto.
+  var FASES = [
+    { n: 1, txt: 'Fase 1 · Prueba', paises: ['colombia'] },
+    { n: 2, txt: 'Fase 2 · México y Venezuela', paises: ['mexico', 'venezuela'] },
+    { n: 3, txt: 'Fase 3 · El resto', paises: ['guatemala', 'peru', 'argentina', 'ecuador', 'bolivia', 'elsalvador', 'uruguay'] },
+  ];
+  var NOMBRE_PAIS = { colombia: 'Colombia', mexico: 'México', venezuela: 'Venezuela', guatemala: 'Guatemala', peru: 'Perú', argentina: 'Argentina', ecuador: 'Ecuador', bolivia: 'Bolivia', elsalvador: 'El Salvador', uruguay: 'Uruguay' };
+  var EST = {
+    '':         { txt: '—',              cls: '',         ayuda: 'Sin empezar' },
+    flujos:     { txt: 'Flujos…',        cls: 'e-flujos', ayuda: 'Ana está armando los flujos de este país.' },
+    listo:      { txt: '✓ Flujos listos', cls: 'e-listo',  ayuda: 'Los flujos del país ya están: Carla puede programar campañas.' },
+    programada: { txt: '📣 Programada',   cls: 'e-prog',   ayuda: 'Carla ya programó la campaña.' },
+    testeo:     { txt: '🧪 En testeo',    cls: 'e-test',   ayuda: 'La oferta está corriendo y se está midiendo.' },
+    funciona:   { txt: '🏆 Funciona',     cls: 'e-func',   ayuda: 'Funciona bien. Habilita la siguiente fase.' },
+    tablas:     { txt: '≈ Tablas',        cls: 'e-tablas', ayuda: 'Queda en tablas (ni gana ni pierde). Cuenta para abrir la fase 2.' },
+    no:         { txt: '✖ No funciona',   cls: 'e-no',     ayuda: 'No funcionó en este país.' },
+  };
+  var ORDEN_EST = ['', 'flujos', 'listo', 'programada', 'testeo', 'funciona', 'tablas', 'no'];
+  var NOMBRE_ROL = { owner: 'Dueno', trafficker: 'Carla', editor: 'Ana', videos: 'Beto', servidor: 'el servidor' };
+  function celda(f, p) { return (f.celdas && f.celdas[p]) || null; }
+  function estadoDe(f, p) { var c = celda(f, p); return c ? c.estado : ''; }
+  function faseAbierta(f, n) {
+    if (n === 1) return true;
+    if (n === 2) { var c = estadoDe(f, 'colombia'); return c === 'funciona' || c === 'tablas'; }
+    return estadoDe(f, 'mexico') === 'funciona' && estadoDe(f, 'venezuela') === 'funciona';
+  }
+  function hace(iso) {
+    var ms = Date.now() - new Date(iso).getTime(); if (!isFinite(ms) || ms < 0) return '';
+    var m = Math.round(ms / 60000);
+    if (m < 2) return 'hace un momento';
+    if (m < 90) return 'hace ' + m + ' min';
+    var h = Math.round(m / 60); if (h < 36) return 'hace ' + h + ' h';
+    return 'hace ' + Math.round(h / 24) + ' días';
+  }
+  function quien(c) { return c && c.por ? (NOMBRE_ROL[c.por] || c.por) : ''; }
+  function guardarFila(accion, cuerpo, tipo) {
+    return api(Object.assign({ accion: accion }, cuerpo)).then(function (j) {
+      var lista = tipo === 'exp' ? expansion : variaciones, i = lista.findIndex(function (x) { return x.id === j.fila.id; });
+      // Guardar no devuelve los originales en Drive (los calcula el GET): se conservan los de antes (ver veConservar).
+      if (tipo !== 'exp' && i !== -1) j.fila = veConservar(j.fila, lista[i]);
+      if (i === -1) lista.push(j.fila); else lista[i] = j.fila;
+      if (tipo === 'exp') pintarExpansion(); else pintarVariaciones();
+      return j.fila;
+    }).catch(function (e) { avisar(e.message); cargar(); });
+  }
+  function cambiarCelda(id, pais, estado, nota) { return guardarFila('exp_celda', { id: id, pais: pais, estado: estado, nota: nota || '' }, 'exp'); }
+
+  function pintarExpansion() {
+    var tabla = el('exp-tabla'), paneles = el('exp-paneles'); if (!tabla) return;
+    var todos = []; FASES.forEach(function (f) { f.paises.forEach(function (p) { todos.push({ p: p, fase: f.n }); }); });
+    // --- paneles: lo que le toca a cada quien
+    var paraCarla = [], paraAna = [];
+    expansion.forEach(function (f) {
+      todos.forEach(function (c) {
+        var e = estadoDe(f, c.p), cel = celda(f, c.p);
+        if (e === 'listo') paraCarla.push({ f: f, p: c.p, cel: cel });
+        else if ((e === '' || e === 'flujos') && c.fase > 1 && faseAbierta(f, c.fase)) paraAna.push({ f: f, p: c.p, e: e, cel: cel });
+      });
+    });
+    function item(x, botones, sub) {
+      return '<div class="exp-item"><div class="t"><b>' + esc(x.f.nombre) + ' → ' + esc(NOMBRE_PAIS[x.p] || x.p) + '</b><span>' + sub + '</span></div><div class="acc">' + botones + '</div></div>';
+    }
+    paneles.innerHTML =
+      '<div class="exp-panel"><h3>📣 Para Carla: listos para programar <span class="cnt">' + paraCarla.length + '</span></h3>' +
+        (paraCarla.length ? paraCarla.slice(0, 12).map(function (x) {
+          return item(x, '<button class="primario" data-xp="' + esc(x.f.id) + '" data-pais="' + x.p + '" data-est="programada">Ya la programé</button>',
+            'Flujos listos' + (quien(x.cel) ? ' por ' + esc(quien(x.cel)) : '') + (x.cel && x.cel.en ? ' · ' + hace(x.cel.en) : ''));
+        }).join('') : '<div class="vacio">Nada todavía. Cuando Ana marque «Flujos listos» en un país, sale aquí.</div>') + '</div>' +
+      '<div class="exp-panel"><h3>⚙ Para Ana: flujos por hacer <span class="cnt">' + paraAna.length + '</span></h3>' +
+        (paraAna.length ? paraAna.slice(0, 12).map(function (x) {
+          return item(x, (x.e === '' ? '<button class="sec" data-xp="' + esc(x.f.id) + '" data-pais="' + x.p + '" data-est="flujos">Empezar</button>' : '') +
+            '<button class="primario" data-xp="' + esc(x.f.id) + '" data-pais="' + x.p + '" data-est="listo">✓ Flujos listos</button>',
+            x.e === 'flujos' ? 'En proceso' + (x.cel && x.cel.en ? ' · ' + hace(x.cel.en) : '') : 'Fase abierta, sin empezar');
+        }).join('') : '<div class="vacio">Sin pendientes: cuando una oferta funcione en Colombia, México y Venezuela quedan aquí.</div>') + '</div>';
+
+    // --- matriz
+    var cab1 = '<tr><th class="of" rowspan="2">Oferta</th>' + FASES.map(function (f) { return '<th class="fase" colspan="' + f.paises.length + '">' + esc(f.txt) + '</th>'; }).join('') + '</tr>';
+    var cab2 = '<tr>' + todos.map(function (c, i) { return '<th class="f' + c.fase + '">' + esc(NOMBRE_PAIS[c.p]) + '</th>'; }).join('') + '</tr>';
+    var filas = expansion.map(function (f) {
+      var cols = todos.map(function (c) {
+        var e = estadoDe(f, c.p), m = EST[e], cel = celda(f, c.p), abierta = faseAbierta(f, c.fase);
+        var tip = m.ayuda + (cel ? (quien(cel) ? ' · ' + quien(cel) : '') + (cel.en ? ' · ' + hace(cel.en) : '') + (cel.nota ? ' · ' + cel.nota : '') : '') + (!abierta && e === '' ? ' (fase todavía cerrada)' : '');
+        return '<td class="f' + c.fase + '"><button class="celda ' + m.cls + (!abierta && e === '' ? ' cerrada' : '') + '" data-celda="' + esc(f.id) + '" data-pais="' + c.p + '" title="' + esc(tip) + '">' + esc(m.txt) + '</button></td>';
+      }).join('');
+      var gate = faseAbierta(f, 3) ? 'Fase 3 abierta' : faseAbierta(f, 2) ? 'Fase 2 abierta · la 3 espera a México y Venezuela' : 'Esperando que Colombia funcione o quede en tablas';
+      return '<tr><td class="of"><b>' + esc(f.nombre) + '</b><small>' + gate + '</small><button class="ed" data-exp-ed="' + esc(f.id) + '" title="Renombrar o borrar">✎</button></td>' + cols + '</tr>';
+    }).join('');
+    tabla.innerHTML = '<thead>' + cab1 + cab2 + '</thead><tbody>' + (filas || '<tr><td class="of" colspan="' + (todos.length + 1) + '"><div class="vacio-gr">Todavía no hay ofertas en expansión. Agrega una con «+ Oferta a expandir»: arranca con Colombia en testeo.</div></td></tr>') + '</tbody>';
+    el('exp-leyenda').innerHTML = ORDEN_EST.filter(Boolean).map(function (k) { return '<span title="' + esc(EST[k].ayuda) + '">' + esc(EST[k].txt) + '</span>'; }).join('');
+  }
+
+  function dialogoExpCelda(id, pais) {
+    var f = expansion.find(function (x) { return x.id === id; }); if (!f) return;
+    var cel = celda(f, pais), actual = cel ? cel.estado : '';
+    var abierta = faseAbierta(f, FASES.filter(function (x) { return x.paises.indexOf(pais) !== -1; })[0].n);
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>' + esc(f.nombre) + ' · ' + esc(NOMBRE_PAIS[pais]) + '</h2>' +
+      (abierta ? '' : '<p class="ayuda">Esta fase todavía no se abre: la anterior no ha funcionado. Igual puedes adelantar el trabajo.</p>') +
+      ORDEN_EST.map(function (k) {
+        return '<label class="opcion-estado' + (k === actual ? ' on' : '') + '"><input type="radio" name="est" value="' + k + '"' + (k === actual ? ' checked' : '') + '><div><b>' + esc(k === '' ? 'Sin empezar' : EST[k].txt) + '</b><span>' + esc(EST[k].ayuda) + '</span></div></label>';
+      }).join('') +
+      '<label>Nota (opcional)</label><input type="text" id="x-nota" maxlength="160" value="' + esc(cel ? cel.nota : '') + '" placeholder="Ej.: faltan los audios de México">' +
+      '<div class="btns"><button class="sec" id="x-cancel">Cancelar</button><button class="primario" id="x-ok">Guardar</button></div></div></div>';
+    el('x-cancel').addEventListener('click', function () { el('modal-root').innerHTML = ''; });
+    el('modal-root').querySelector('.modal-bg').addEventListener('click', function (e) { if (e.target === this) el('modal-root').innerHTML = ''; });
+    el('modal-root').querySelectorAll('.opcion-estado').forEach(function (l) { l.addEventListener('click', function () { el('modal-root').querySelectorAll('.opcion-estado').forEach(function (x) { x.classList.remove('on'); }); l.classList.add('on'); }); });
+    el('x-ok').addEventListener('click', function () {      // la nota se lee ANTES de cerrar: el campo desaparece con el modal
+      var r = el('modal-root').querySelector('input[name=est]:checked'), nota = (el('x-nota') || {}).value || '';
+      var nuevo = r ? r.value : actual;
+      el('modal-root').innerHTML = '';
+      cambiarCelda(id, pais, nuevo, nota);
+    });
+  }
+
+  function dialogoExpFila(id) {
+    var f = id ? expansion.find(function (x) { return x.id === id; }) : null;
+    var sugerencias = {}; tarjetas.forEach(function (t) { if (t.nombre) sugerencias[t.nombre] = 1; });
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>' + (f ? 'Oferta en expansión' : 'Oferta a expandir') + '</h2>' +
+      '<label>Nombre de la oferta</label><input type="text" id="x-nombre" maxlength="100" list="x-sug" value="' + esc(f ? f.nombre : '') + '" placeholder="Ej.: Vestidos infantiles en crochet">' +
+      '<datalist id="x-sug">' + Object.keys(sugerencias).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+      (f ? '' : '<p class="ayuda">Arranca con Colombia en testeo: ahí se prueba primero.</p>') +
+      '<div class="btns">' + (f ? '<button class="borrar" id="x-del">Borrar</button>' : '') + '<button class="sec" id="x-cancel">Cancelar</button><button class="primario" id="x-ok">Guardar</button></div></div></div>';
+    el('x-cancel').addEventListener('click', function () { el('modal-root').innerHTML = ''; });
+    var del = el('x-del'); if (del) del.addEventListener('click', function () {
+      if (!window.confirm('¿Borrar «' + f.nombre + '» de la expansión?')) return;
+      el('modal-root').innerHTML = '';
+      api({ accion: 'exp_borrar', id: f.id }).then(function () { expansion = expansion.filter(function (x) { return x.id !== f.id; }); pintarExpansion(); }).catch(function (e) { avisar(e.message); });
+    });
+    el('x-ok').addEventListener('click', function () {
+      var nombre = el('x-nombre').value.trim(); if (!nombre) { el('x-nombre').focus(); return; }
+      el('modal-root').innerHTML = '';
+      guardarFila('exp_guardar', f ? { id: f.id, nombre: nombre } : { nombre: nombre }, 'exp');
+    });
+    el('x-nombre').focus();
+  }
+
+  // ================= Variaciones de anuncios =================
+  var ESTADOS_VAR = [
+    { k: 'idea',       txt: '💡 Idea',            sig: [['produccion', 'Empezar']] },
+    { k: 'produccion', txt: '🎬 En producción',    sig: [['lista', '✓ Lista']] },
+    { k: 'lista',      txt: '✅ Lista',            sig: [['subida', '📣 Ya la subí']] },
+    { k: 'subida',     txt: '📣 Subida',           sig: [['ganadora', '🏆 Ganadora'], ['descartada', '✖ Descartar']] },
+    { k: 'ganadora',   txt: '🏆 Ganadora',         sig: [['produccion', 'Reabrir']] },
+    { k: 'descartada', txt: '✖ Descartada',        sig: [['idea', 'Reabrir']] },
+  ];
+  function estVar(k) { return ESTADOS_VAR.find(function (e) { return e.k === k; }) || ESTADOS_VAR[0]; }
+  // El anuncio de otra empresa que se va a modelar, cuando la variacion viene del radar de ofertas.
+  // El de la pagina de un anunciante (view_all_page_id: «Todos sus anuncios», sin un video puntual) se rotula asi (revisor-cambios 17-nov: eran los «links largos de búsqueda» de Beto).
+  function refAnuncio(v) { return v.referencia ? '<span><a class="ref-anuncio" href="' + esc(urlSegura(v.referencia)) + '" target="_blank" rel="noopener">' + (/[?&]view_all_page_id=/.test(String(v.referencia)) ? 'Ver los anuncios de ese anunciante ↗' : 'Ver el anuncio a modelar ↗') + '</a></span>' : ''; }
+  // NUESTRO anuncio del que sale (2026-11-12, «Revivir ofertas»: el que mas vendio): el video que Beto edita. Si la fila no lo guardo, el que se deduce (ver `efectiva`).
+  function baseAnuncio(v) {
+    var e = efectiva(v);
+    return e.base ? '<span class="base-var">🎞️ Sale del ' + esc(textoAnuncio(e.base)) + (e.deducida === 'recomendada' ? ' (la base recomendada)' : e.deducida === 'cola' ? ' (como las otras de esta oferta)' : '') + '</span>' : '';
+  }
+  // ---- Lo que la variacion ES aunque la fila no lo diga (2026-11-17) ----
+  // Beto: «al copiar la orden dice por error "Es un anuncio nuevo desde cero"… Haz que tome siempre el anuncio ganador base (por ejemplo, el AD 101)» y «que copie la descripción completa».
+  //   - base: la guardada. Si no hay y vino de «Buscar ideas» (`anuncio` «revivir-…»: las de antes del 12-nov no la guardaban, y «Ninguno» ya no se ofrece), la base recomendada de su
+  //     oferta (la que mas dolares trajo, la misma que marca la ventana). Si vino del explorador del dash (`anuncio` = el nombre del anuncio en Meta), el numero de ese nombre.
+  //     Del radar («radar-…», un anuncio nuevo modelando el de afuera) o hecha a mano sin base: ninguna.
+  //   - cambio: el guardado; con la base deducida, el que pide la idea (oferta o precio: inicio y cierre; formato; si no, solo el inicio).
+  //   - nota: completa. Hasta el 17-nov se guardaba cortada en 200 letras (el radar escribe hasta 240): si la busqueda sigue guardada, se toma de ahi.
+  function claveIdea(pid, x) { return ('revivir-idea-' + String(pid).slice(0, 30) + '-' + slugTxt(x.angulo).slice(0, 30)).slice(0, 80); }
+  function origenRevivir(v) {
+    var a = String(v.anuncio || ''); if (!/^revivir-/.test(a)) return null;
+    var ids = Object.keys(revPedidos || {}), i, k, p;
+    for (i = 0; i < ids.length; i++) {
+      p = revPedidos[ids[i]] || {};
+      if (/^revivir-idea-/.test(a)) { for (k = 0; k < (p.ideas || []).length; k++) if (claveIdea(p.id, p.ideas[k]) === a) return { tipo: 'idea', x: p.ideas[k] }; }
+      else { for (k = 0; k < (p.resultados || []).length; k++) if ('revivir-' + p.resultados[k].ad === a) return { tipo: 'ad', x: p.resultados[k] }; }
+    }
+    return null;
+  }
+  function plano(t) { return String(t == null ? '' : t).replace(/\s+/g, ' ').trim(); }
+  function productoDe(oferta) { try { return window.RevivirOfertas.emparejador(revProductosParaEmparejar())(oferta); } catch (e) { return null; } }
+  // Sin los datos de anuncios (la pagina salio sin ellos: falla de Anuncios-Por-Oferta.ps1) no hay base recomendada: se usa la de la variacion mas nueva de la misma oferta que la tenga
+  // guardada (QA 17-nov: si no, la orden volvia a decir «desde cero»). Sin esos datos no se numera (ver numerosConocidos): la fila lo avisa.
+  function baseDeLaCola(oferta, sinId) {
+    var k = claveOferta(oferta), mejor = null;
+    variaciones.forEach(function (x) {
+      if (x.id === sinId || x.estado === 'descartada' || !String(x.base || '').trim() || claveOferta(x.oferta) !== k) return;
+      if (!mejor || String(x.creadoEn || '') > String(mejor.creadoEn || '')) mejor = x;
+    });
+    return mejor ? String(mejor.base).trim() : '';
+  }
+  function baseRecomendada(oferta) { var pid = productoDe(oferta), gp = null; try { gp = pid ? revBases({ id: pid }) : null; } catch (e) { gp = null; } return gp && gp.bases.length ? gp.bases[0].a : ''; }
+  function efectiva(v) {
+    var R = window.RevivirOfertas, e = { base: String(v.base || '').trim(), cambio: v.cambio || '', nota: String(v.nota || ''), deducida: '' };
+    if (!R) return e;
+    var a = String(v.anuncio || '').trim(), org = origenRevivir(v);
+    if (!e.base) {
+      if (/^revivir-/.test(a)) {
+        e.base = baseRecomendada(v.oferta); if (e.base) e.deducida = 'recomendada';
+        if (!e.base) { try { e.base = baseDeLaCola(v.oferta, v.id); } catch (er) { e.base = ''; } if (e.base) e.deducida = 'cola'; }
+      }
+      else if (a && !/^radar-/.test(a)) { e.base = R.etiquetaDeNombre(a); if (e.base) e.deducida = 'nombre'; }
+      // Una idea cuya busqueda ya no esta no dice su palanca: la orden asume «solo el inicio» pero no se guarda (revisor-cambios 17-nov), por si era de oferta o precio.
+      if (e.deducida && !R.cambioValido(e.cambio)) { e.cambio = org && org.tipo === 'idea' ? R.cambioDe(org.x.palanca) : 'inicio'; e.cambioSeguro = !!org || !/^revivir-idea-/.test(a); }
+    }
+    // Guardada cortada (las de antes del 17-nov: 200 letras justas) y sin la busqueda para completarla: la orden lo dice, en vez de terminar a mitad de palabra (QA 17-nov).
+    if (!org && /^revivir-idea-/.test(a) && e.nota.length === 200) e.nota += '… (la descripción se guardó cortada)';
+    // Solo se completa la que se guardo cortada en el tope viejo (190 letras o mas y empieza EXACTAMENTE igual): una nota que el equipo vacio o recorto se respeta (revisor-seguridad 17-nov).
+    if (org) {
+      var completa = plano((org.tipo === 'idea' ? org.x.como : org.x.porque) || ''), guardada = plano(e.nota);
+      if (guardada.length >= 190 && completa.length > guardada.length && completa.indexOf(guardada) === 0) { e.nota = completa; e.completada = true; }
+    }
+    return e;
+  }
+  // Que se le cambia al original y el gancho (2026-11-13: «así como está el editor no sabe qué hacer»). El resto, idéntico; la orden completa sale con «📋 Orden».
+  function cambioVar(v) {
+    var R = window.RevivirOfertas, e = efectiva(v), c = R && e.base ? R.cambioValido(e.cambio) : '';
+    return (c ? '<span class="cambia-var">✂️ ' + esc(R.CAMBIOS[c].corto) + '; el resto, igual al original</span>' : '') + (v.gancho ? '<span class="gancho-var">Gancho: «' + esc(v.gancho) + '»</span>' : '');
+  }
+  function botonOrden(v) { return porProducir(v) && window.RevivirOfertas ? '<button class="sec" data-var-orden="' + esc(v.id) + '">📋 Orden</button>' : ''; }
+  function porProducir(v) { return v.estado === 'idea' || v.estado === 'produccion'; }
+  // En la cola (Beto e Carla) el anuncio de afuera sobra cuando la variacion ya dice sobre cual anuncio nuestro se hace y que gancho lleva (2026-11-17, Beto: «salen links largos
+  // de búsqueda de Facebook que no llevan al video puntual y confunden»). Sin gancho el enlace ES la tarea (p. ej. «Modelar anuncio de referencia» del radar): ahi se queda.
+  // La lista completa de abajo lo sigue mostrando siempre.
+  function refEnCola(v) { return efectiva(v).base && String(v.gancho || '').trim() ? '' : refAnuncio(v); }
+
+  // ---- El numero de cada variacion (2026-11-17) ----
+  // Beto: «al mandar la tercera variación de Sermones Bíblicos a mi cola, el tablero la bautizó AD 101.7 porque las dos primeras que ya estaban cargadas quedaron sin número». El
+  // numero de la proxima solo cuenta las variaciones que YA tienen numero en su nombre, asi que toda variacion por producir con un anuncio base numerado debe llevar el suyo: si
+  // alguna no lo trae, la cola dice cuantas son por oferta y como quedarian («AD 101.8 y AD 101.9», en el orden de la cola) y «Numerarlas» las numera TODAS de una vez, en ese
+  // orden (una por una dejaba huecos: el siguiente es el mayor + 1, asi que numerar primero la segunda saltaba el 101.8). Nunca se cambia un numero que ya existe, y el
+  // formulario lo pone solo al guardar.
+  // «ad101», «AD101», «AD 101» y «101» valen. Sin base (un anuncio nuevo, «Modelar anuncio de referencia» del radar) o con un nombre por base no se sabe que numero le toca.
+  // 2026-11-17 (Beto: «asígnale automáticamente su número consecutivo para que ninguna quede sin código»): se numeran SOLAS al abrir la pestaña (`autoNumerar`), con la base
+  // efectiva, y solo si el dash tiene los anuncios de esa oferta en Meta (si no, el siguiente podria ser uno que ya existe alla: se avisa y se pone a mano con ✎).
+  function baseNum(b) { var s = String(b == null ? '' : b).trim().replace(/^ad\s*/i, 'AD '); return window.RevivirOfertas && window.RevivirOfertas.esNumero(s) ? s : ''; }
+  // Los numeros que ya usa la oferta: los de Meta (todos los paises) y los de las variaciones del tablero (menos `sinId` y las descartadas), como al crearla desde «Buscar ideas».
+  function etiquetasDeOferta(oferta, sinId) {
+    var R = window.RevivirOfertas, de = R.emparejador(revProductosParaEmparejar()), pid = de(oferta), o = String(oferta || '').trim().toLowerCase();
+    var out = pid ? R.etiquetasDe(revAnunciosDe(pid)) : [];
+    variaciones.forEach(function (x) {
+      if (x.id === sinId || x.estado === 'descartada') return;
+      if (pid ? de(x.oferta) !== pid : String(x.oferta || '').trim().toLowerCase() !== o) return;
+      var n = R.numeroDe(x.nombre); if (n) out.push(n);
+    });
+    return out;
+  }
+  function claveOferta(oferta) { var pid = window.RevivirOfertas.emparejador(revProductosParaEmparejar())(oferta); return pid ? 'p:' + pid : 'n:' + String(oferta || '').trim().toLowerCase(); }
+  // El numero que le toca a cada una que no tiene, en el orden de la cola (la mas vieja primero): dos sin numero de la misma oferta no proponen el mismo (101.8 y 101.9, no 101.8 y 101.8).
+  function numerosPropuestos() {
+    var out = {}, ya = {};
+    try {
+      var R = window.RevivirOfertas;
+      variaciones.filter(sinNumero).sort(ordenCola).forEach(function (v) {
+        var k = claveOferta(v.oferta), pedido = v.edicion && R.esNumero(String(v.edicion.numero || '')) ? String(v.edicion.numero) : '';
+        // Ya pedida al servidor del editor con su numero: ese (el servidor nombra el archivo asi).
+        var n = pedido || (numerosConocidos(v.oferta) ? R.siguienteNumero(baseNum(efectiva(v).base), etiquetasDeOferta(v.oferta, v.id).concat(ya[k] || [])) : '');
+        if (n) { out[v.id] = n; (ya[k] = ya[k] || []).push(n); }
+      });
+    } catch (e) { /* sin datos de anuncios: sin propuesta */ }
+    return out;
+  }
+  function numeroLibre(v, base) {
+    var b = baseNum(base === undefined ? v.base : base); if (!b || !numerosConocidos(v.oferta)) return '';
+    try { return window.RevivirOfertas.siguienteNumero(b, etiquetasDeOferta(v.oferta, v.id)); } catch (e) { return ''; }
+  }
+  function sinNumero(v) { return porProducir(v) && !!window.RevivirOfertas && !window.RevivirOfertas.numeroDe(v.nombre) && !!baseNum(efectiva(v).base); }
+  // Se conocen los numeros que la oferta ya usa en Meta (datos de anuncios en la pagina y la oferta emparejada con su producto).
+  // Tambien exige que los datos de anuncios sean recientes (menos de 3 h desde que se armo la pagina; revisor-cambios 17-nov: una pestaña abierta desde hace horas no ve los numeros
+  // nuevos de Meta), como las reglas, que no actuan con la pagina de mas de 90 min.
+  var ANUNCIOS_MAX_HORAS = 3;
+  function anunciosViejos() { var t = ANUNCIOS && Date.parse(ANUNCIOS.generadoEn); return isFinite(t) && (Date.now() - t) / 3600000 > ANUNCIOS_MAX_HORAS; }
+  function numerosConocidos(oferta) {
+    if (!revLeido || anunciosViejos()) return false;
+    var pid = productoDe(oferta);
+    try { return !!(pid && ANUNCIOS && Array.isArray(ANUNCIOS.grupos) && ANUNCIOS.grupos.length && revAnunciosDe(pid)); } catch (e) { return false; }
+  }
+  function avisoNumero(v, propuestos) {
+    if (!sinNumero(v)) return '';
+    if (propuestos[v.id]) return '<span class="num-falta">🔢 Todavía sin número: quedará ' + esc(propuestos[v.id]) + ' (se pone sola en un momento)</span>';
+    if (anunciosViejos()) return '<span class="num-falta">🔢 Sin número todavía: los datos de anuncios de esta página tienen más de ' + ANUNCIOS_MAX_HORAS + ' horas. Recargue la página para numerarla.</span>';
+    if (revCargado && !revLeido) return '<span class="num-falta">🔢 Sin número todavía: no cargó la búsqueda de ideas. Recargue la página para numerarla.</span>';
+    return '<span class="num-falta">🔢 Sin número: el dash no tiene los anuncios de «' + esc(v.oferta || 'esta oferta') + '» en Meta para numerarla sin chocar. Escriba el número al inicio de su nombre con ✎, en la lista de abajo.</span>';
+  }
+  // Las que estan por producir sin numero se numeran SOLAS, en el orden de la cola (la mas vieja primero), una tras otra, con lo que se deduce de cada una (base, que se cambia y la
+  // nota completa). Lo hace cualquiera del equipo que abra la pestaña (el mismo calculo da los mismos numeros), una vez por fila y por visita: si falla, sigue el aviso y se intenta
+  // en la proxima. Al agregar una a la cola (revVariacion) primero se numeran las que falten y DESPUES la nueva toma el siguiente: sin huecos ni numeros repetidos.
+  var autoNum = { promesa: null, intentadas: {}, hechas: [] };
+  function numerarLista() {
+    var prop = numerosPropuestos(), cola = variaciones.filter(function (v) { return prop[v.id] && !autoNum.intentadas[v.id]; }).sort(ordenCola);
+    return cola.reduce(function (p, v) {
+      return p.then(function (ok) {
+        if (ok === false) return false;
+        autoNum.intentadas[v.id] = 1;
+        // var_numerar (no var_guardar): el servidor no crea una fila borrada ni cambia un numero ya puesto, y solo completa la nota cortada. Si falla, no se recarga todo (cada
+        // recarga es un listado de KV): se dejan las demas para la proxima visita y se avisa una vez.
+        var e = efectiva(v), cuerpo = { accion: 'var_numerar', id: v.id, numero: prop[v.id] };
+        if (!String(v.base || '').trim()) { cuerpo.base = e.base; if (!window.RevivirOfertas.cambioValido(v.cambio) && e.cambioSeguro) cuerpo.cambio = e.cambio; }
+        if (e.completada) cuerpo.nota = e.nota.slice(0, 300);
+        return api(cuerpo).then(function (j) {
+          if (!j || !j.fila) throw new Error('respuesta sin la fila');
+          var i = variaciones.findIndex(function (x) { return x.id === j.fila.id; });
+          if (i !== -1) variaciones[i] = veConservar(j.fila, variaciones[i]);
+          autoNum.hechas.push(prop[v.id] + (v.oferta ? ' (' + v.oferta + ')' : ''));
+          pintarVariaciones();
+          return true;
+        }, function (er) {
+          variaciones.forEach(function (x) { autoNum.intentadas[x.id] = 1; });
+          avisar('No pude ponerles número a las variaciones que no lo tienen (' + er.message + '). Se intenta de nuevo la próxima vez que se abra la pestaña.');
+          return false;
+        });
+      });
+    }, Promise.resolve(true));
+  }
+  // `releer`: pedir la lista antes (si no, se usa la que la pagina acaba de releer).
+  function numerarPendientes(releer) {
+    if (autoNum.promesa) return autoNum.promesa.then(function () { return numerarPendientes(releer); });
+    if (!revCargado || !variacionesCargadas || !window.RevivirOfertas) return Promise.resolve();
+    var antes = releer ? fetch('/api/tablero?solo=variaciones&originales=1', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+      .then(function (j) { if (!j || !Array.isArray(j.variaciones)) throw new Error('sin lista'); variaciones = j.variaciones; }) : Promise.resolve();
+    autoNum.promesa = antes.then(numerarLista).catch(function () { /* sin lista o sin red: se intenta en la proxima */ })
+      .then(function () { autoNum.promesa = null; pintarVariaciones(); });
+    return autoNum.promesa;
+  }
+  // Desde cada repintado: solo si hay alguna por numerar que no se haya intentado.
+  function autoNumerar() {
+    if (autoNum.promesa || !revCargado || !variacionesCargadas || !window.RevivirOfertas) return;
+    var prop = numerosPropuestos();
+    if (variaciones.some(function (v) { return prop[v.id] && !autoNum.intentadas[v.id]; })) numerarPendientes(true);
+  }
+  function avisoNumeradas() {
+    var h = autoNum.hechas, n = h.length; if (!n) return '';
+    return '<div class="num-aviso"><span>🔢 <b>' + (n === 1 ? 'Se numeró sola 1 variación' : 'Se numeraron solas ' + n + ' variaciones') + ' que no tenían número:</b> ' +
+      esc(n === 1 ? h[0] : h.slice(0, -1).join(', ') + ' y ' + h[n - 1]) + '. Use ese número en el nombre del archivo y en Meta.</span></div>';
+  }
+
+  // ---- Copiar la orden de un toque (2026-11-17, Beto: «mi lista de Por producir con el botón de copiar la Orden y marcar Lista cuando ya esté en Drive») ----
+  // Si el navegador no deja copiar, abre la orden en su ventana para copiarla a mano. Cuando la copia Beto (rol «videos») y estaba en Idea, pasa a «En producción»: asi el
+  // equipo ve en que esta, sin un boton «Empezar» de mas.
+  var colaCopiada = { id: '', en: 0 };
+  function botonCopiar(v) {
+    if (!window.RevivirOfertas) return '';
+    var recien = colaCopiada.id === v.id && Date.now() - colaCopiada.en < 4000;
+    return '<button class="sec' + (recien ? ' copiada' : '') + '" data-var-copiar="' + esc(v.id) + '">' + (recien ? '✓ Orden copiada' : '📋 Copiar orden') + '</button>';
+  }
+  // La orden con lo que la variacion ES (base deducida, que se cambia y la nota completa): ver `efectiva`.
+  function textoOrden(v) { var e = efectiva(v); return window.RevivirOfertas.ordenEdicion(Object.assign({}, v, { base: e.base, cambio: e.cambio, nota: e.nota })) + veLineaOriginal(v); }
+  function copiarOrden(id, b) {
+    var v = variaciones.find(function (x) { return x.id === id; }); if (!v || !window.RevivirOfertas) return;
+    function aMano() { dialogoOrden(id); }
+    function listo() {
+      colaCopiada = { id: id, en: Date.now() };
+      b.textContent = '✓ Orden copiada'; b.classList.add('copiada');
+      setTimeout(function () { if (colaCopiada.id === id) pintarVariaciones(); }, 4100);
+      if (veInfo && veInfo.rol === 'videos' && v.estado === 'idea') guardarFila('var_estado', { id: id, estado: 'produccion' }, 'var');
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(textoOrden(v)).then(listo, aMano); else aMano();
+    } catch (e) { aMano(); }
+  }
+  // Por oferta y, dentro de cada una, por numero (101.7, 101.8, 101.9…): las que no tienen numero, al final.
+  // Por PRODUCTO (revisor-cambios 17-nov: «Sermones Biblicos» y «Zapdata Sermones…» quedaban en dos grupos y se numeraban por separado, sin importar cual era mas vieja).
+  function grupoCola(oferta) { try { return claveOferta(oferta).slice(2); } catch (e) { return String(oferta || '').trim().toLowerCase(); } }
+  function ordenCola(a, b) {
+    var R = window.RevivirOfertas, oa = grupoCola(a.oferta), ob = grupoCola(b.oferta);
+    if (oa !== ob) return oa.localeCompare(ob);
+    var na = R ? R.numeroDe(a.nombre) : '', nb = R ? R.numeroDe(b.nombre) : '';
+    if (na && nb) { var d = R.compararNumeros(na, nb); if (d) return d; }
+    else if (na || nb) return na ? -1 : 1;
+    return String(a.creadoEn || '').localeCompare(String(b.creadoEn || ''));
+  }
+  var COLA_MAX = 12;
+  function pintarVariaciones() {
+    var paneles = el('var-paneles'), lista = el('var-lista'); if (!lista) return;
+    var paraBeto = variaciones.filter(porProducir).sort(ordenCola), propuestos = numerosPropuestos();
+    var paraCarla = variaciones.filter(function (v) { return v.estado === 'lista'; });
+    function paisesTxt(v) { return (v.paises || []).length ? ' · ' + (v.paises || []).map(function (p) { return esc(NOMBRE_PAIS[p] || p); }).join(', ') : ''; }
+    // La fila de Beto: lo justo para producir (de que anuncio sale, que se cambia, el gancho, el original en Drive) y dos botones: copiar la orden y marcarla Lista.
+    function filaBeto(v) {
+      return '<div class="exp-item"><div class="t"><b>' + esc(v.oferta ? v.oferta + ' · ' : '') + esc(v.nombre) + '</b><span>' + esc(estVar(v.estado).txt) + paisesTxt(v) + '</span>' + avisoNumero(v, propuestos) +
+        baseAnuncio(v) + veOriginal(v) + cambioVar(v) + veEstado(v) + (!String(v.gancho || '').trim() && efectiva(v).nota ? '<span>' + esc(efectiva(v).nota) + '</span>' : '') + refEnCola(v) + '</div><div class="acc">' +
+        botonCopiar(v) + '<button class="primario" data-var-est="' + esc(v.id) + '" data-est="lista" title="Ya está hecha y subida a Drive: le sale a Carla">✓ Lista (en Drive)</button>' + veBotones(v) + '</div></div>';
+    }
+    function filaCarla(v) {
+      return '<div class="exp-item"><div class="t"><b>' + esc(v.oferta ? v.oferta + ' · ' : '') + esc(v.nombre) + '</b><span>' + (v.en ? 'Lista ' + hace(v.en) + (v.por ? ' por ' + esc(NOMBRE_ROL[v.por] || v.por) : '') : esc(estVar(v.estado).txt)) +
+        paisesTxt(v) + '</span>' + baseAnuncio(v) + veOriginal(v) + cambioVar(v) + veEstado(v) + (v.nota ? '<span>' + esc(v.nota) + '</span>' : '') + refEnCola(v) + '</div><div class="acc">' +
+        estVar(v.estado).sig.slice(0, 1).map(function (s) { return '<button class="primario" data-var-est="' + esc(v.id) + '" data-est="' + s[0] + '">' + s[1] + '</button>'; }).join('') + veBotones(v) + '</div></div>';
+    }
+    function resto(n) { return n > COLA_MAX ? '<div class="vacio">Y ' + (n - COLA_MAX) + ' más en la lista completa, abajo.</div>' : ''; }
+    paneles.innerHTML =
+      '<div class="exp-panel"><h3>🎬 Cola de Beto: por producir <span class="cnt">' + paraBeto.length + '</span></h3>' + avisoNumeradas() +
+        (paraBeto.length ? paraBeto.slice(0, COLA_MAX).map(filaBeto).join('') + resto(paraBeto.length) : '<div class="vacio">Nada pendiente. Las ideas se agregan desde «Buscar ideas para variaciones», abajo.</div>') + '</div>' +
+      '<div class="exp-panel"><h3>📣 Para Carla: listas para subir <span class="cnt">' + paraCarla.length + '</span></h3>' +
+        (paraCarla.length ? paraCarla.slice(0, COLA_MAX).map(filaCarla).join('') + resto(paraCarla.length) : '<div class="vacio">Nada todavía. Cuando Beto marque una variación como lista, sale aquí.</div>') + '</div>';
+    if (revCargado && variacionesCargadas && !autoNum.promesa) setTimeout(autoNumerar, 0);
+    var grupos = {}, orden = [];
+    variaciones.forEach(function (v) { var g = v.oferta || 'Sin oferta'; if (!grupos[g]) { grupos[g] = []; orden.push(g); } grupos[g].push(v); });
+    orden.sort();
+    lista.innerHTML = orden.length ? orden.map(function (g) {
+      return '<div class="var-grupo"><h3>' + esc(g) + ' <span class="cnt">' + grupos[g].length + '</span></h3>' + grupos[g].map(function (v) {
+        var e = estVar(v.estado);
+        return '<div class="var"><div class="t"><b>' + esc(v.nombre) + '</b><div class="m"><span class="chip-e ' + esc(v.estado) + '">' + esc(e.txt) + '</span>' +
+          baseAnuncio(v) + veOriginal(v) + cambioVar(v) + veEstado(v) + (v.enlace ? '<a class="drive-var" href="' + esc(urlSegura(v.enlace)) + '" target="_blank" rel="noopener">drive</a>' : '') + refAnuncio(v) +
+          ((v.paises || []).length ? '<span>' + (v.paises || []).map(function (p) { return esc(NOMBRE_PAIS[p] || p); }).join(', ') + '</span>' : '') +
+          (v.en ? '<span class="dato-estado">' + hace(v.en) + (v.por ? ' · ' + esc(NOMBRE_ROL[v.por] || v.por) : '') + '</span>' : '') + (v.nota ? '<span>· ' + esc(v.nota) + '</span>' : '') + '</div></div><div class="acc">' +
+          e.sig.map(function (s, i) { return '<button class="' + (i === 0 ? 'primario' : 'sec') + '" data-var-est="' + esc(v.id) + '" data-est="' + s[0] + '">' + s[1] + '</button>'; }).join('') +
+          botonOrden(v) + veBotones(v) + '<button class="sec" data-var-ed="' + esc(v.id) + '" title="Editar">✎</button></div></div>';
+      }).join('') + '</div>';
+    }).join('') : '<div class="vacio-gr">Todavía no hay variaciones. Agrega una con «+ Variación».</div>';
+  }
+
+  function dialogoVar(id) {
+    var v = id ? variaciones.find(function (x) { return x.id === id; }) : null;
+    var ofertas = {}; tarjetas.forEach(function (t) { if (t.nombre) ofertas[t.nombre] = 1; }); expansion.forEach(function (x) { ofertas[x.nombre] = 1; }); variaciones.forEach(function (x) { if (x.oferta) ofertas[x.oferta] = 1; });
+    var sel = v ? (v.paises || []) : ['colombia'];
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>' + (v ? 'Editar variación' : 'Nueva variación') + '</h2>' +
+      '<label>Oferta</label><input type="text" id="v-oferta" maxlength="80" list="v-sug" value="' + esc(v ? v.oferta : '') + '" placeholder="Ej.: Dinámicas Mujer">' +
+      '<datalist id="v-sug">' + Object.keys(ofertas).sort().map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>' +
+      '<label>Variación</label><input type="text" id="v-nombre" maxlength="100" value="' + esc(v ? v.nombre : '') + '" placeholder="Ej.: Disney, monja, formato caricatura">' +
+      '<label>Anuncio base (opcional)</label><input type="text" id="v-base" maxlength="40" value="' + esc(v ? v.base || '' : '') + '" placeholder="Ej.: 101 (nuestro video que se edita)">' +
+      '<p class="ayuda">Con un anuncio base numerado (por ejemplo AD 101), la variación sale con su número (AD 101.7, AD 101.8…) si todavía no lo tiene.</p>' +
+      (window.RevivirOfertas ? '<label>Qué se le cambia al anuncio base</label><select id="v-cambio"><option value="">—</option>' + Object.keys(window.RevivirOfertas.CAMBIOS).map(function (k) {
+        return '<option value="' + esc(k) + '"' + (v && v.cambio === k ? ' selected' : '') + '>' + esc(window.RevivirOfertas.CAMBIOS[k].corto) + '</option>'; }).join('') + '</select>' : '') +
+      '<label>Gancho (el texto grande del inicio, opcional)</label><input type="text" id="v-gancho" maxlength="200" value="' + esc(v ? v.gancho || '' : '') + '">' +
+      '<label>Carpeta de Drive (opcional)</label><input type="text" id="v-enlace" maxlength="500" value="' + esc(v ? v.enlace : '') + '" placeholder="https://drive.google.com/...">' +
+      '<label>Países donde se sube</label><div class="paises-list">' + Object.keys(NOMBRE_PAIS).map(function (p) { return '<label class="pais-chk' + (sel.indexOf(p) !== -1 ? ' on' : '') + '"><input type="checkbox" value="' + p + '"' + (sel.indexOf(p) !== -1 ? ' checked' : '') + '>' + esc(NOMBRE_PAIS[p]) + '</label>'; }).join('') + '</div>' +
+      '<label>Nota (opcional)</label><input type="text" id="v-nota" maxlength="300" value="' + esc(v ? v.nota : '') + '">' +
+      (v ? '<label>Estado</label><select id="v-estado">' + ESTADOS_VAR.map(function (e) { return '<option value="' + e.k + '"' + (e.k === v.estado ? ' selected' : '') + '>' + esc(e.txt) + '</option>'; }).join('') + '</select>' : '') +
+      '<div class="btns">' + (v ? '<button class="borrar" id="v-del">Borrar</button>' : '') + '<button class="sec" id="v-cancel">Cancelar</button><button class="primario" id="v-ok">Guardar</button></div></div></div>';
+    el('modal-root').querySelectorAll('.pais-chk input').forEach(function (c) { c.addEventListener('change', function () { c.parentNode.classList.toggle('on', c.checked); }); });
+    el('v-cancel').addEventListener('click', function () { el('modal-root').innerHTML = ''; });
+    var del = el('v-del'); if (del) del.addEventListener('click', function () {
+      if (!window.confirm('¿Borrar la variación «' + v.nombre + '»?')) return;
+      el('modal-root').innerHTML = '';
+      api({ accion: 'var_borrar', id: v.id }).then(function () { variaciones = variaciones.filter(function (x) { return x.id !== v.id; }); pintarVariaciones(); }).catch(function (e) { avisar(e.message); });
+    });
+    el('v-ok').addEventListener('click', function () {
+      var nombre = el('v-nombre').value.trim(); if (!nombre) { el('v-nombre').focus(); return; }
+      var cuerpo = { oferta: el('v-oferta').value.trim(), nombre: nombre, enlace: el('v-enlace').value.trim(), nota: el('v-nota').value.trim(), base: el('v-base').value.trim(),
+        gancho: el('v-gancho').value.trim(), paises: Array.prototype.map.call(el('modal-root').querySelectorAll('.pais-chk input:checked'), function (c) { return c.value; }) };
+      if (el('v-cambio')) cuerpo.cambio = el('v-cambio').value;
+      if (v) { cuerpo.id = v.id; cuerpo.estado = el('v-estado').value; }
+      el('modal-root').innerHTML = '';
+      // Por producir, con anuncio base numerado y sin numero en el nombre: lleva el siguiente libre de la oferta (ver «El numero de cada variacion»), calculado con la lista
+      // releida (otra persona pudo numerar una hace un momento; revisor-cambios 17-nov). Uno ya puesto no se toca.
+      if (!(porProducir({ estado: cuerpo.estado || 'idea' }) && window.RevivirOfertas && !window.RevivirOfertas.numeroDe(nombre) && baseNum(cuerpo.base))) { guardarFila('var_guardar', cuerpo, 'var'); return; }
+      fetch('/api/tablero?solo=variaciones&originales=1', { credentials: 'same-origin', cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+        .then(function (j) {
+          if (j && Array.isArray(j.variaciones)) variaciones = j.variaciones;
+          var n = numeroLibre({ id: v ? v.id : '', oferta: cuerpo.oferta }, cuerpo.base);
+          // Si mientras el formulario estaba abierto otra pestaña ya la numero, el servidor no la renumera (409; revisor-cambios 17-nov).
+          if (n) { cuerpo.nombre = (n + ' · ' + nombre).slice(0, 100); cuerpo.sinNumeroAntes = true; }
+          guardarFila('var_guardar', cuerpo, 'var');
+        });
+    });
+    el('v-nombre').focus();
+  }
+
+  // La orden completa para el editor, en un cuadro de texto para leerla o copiarla (Beto la sigue tal cual o la pega en su Claude del servidor). El texto va por `value`, nunca
+  // como HTML: trae el gancho de la IA y el enlace del anuncio de afuera.
+  function dialogoOrden(id) {
+    var v = variaciones.find(function (x) { return x.id === id; }); if (!v || !window.RevivirOfertas) return;
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>📋 Orden para el editor</h2>' +
+      '<p class="ayuda">Lo que hay que hacer con esta variación, paso a paso. Beto la sigue tal cual o la pega en su Claude del servidor.</p>' +
+      '<textarea id="vo-txt" readonly rows="12"></textarea>' +
+      '<div class="btns"><button class="sec" id="vo-cerrar">Cerrar</button><button class="primario" id="vo-copiar">Copiar</button></div></div></div>';
+    var t = el('vo-txt'); t.value = textoOrden(v);
+    // Que se lea entera sin desplazarse dentro del cuadro (en el celular la orden mide unos 420 px): crece hasta el 60 % de la pantalla.
+    if (t.scrollHeight > t.clientHeight) t.style.height = Math.min(t.scrollHeight + 6, Math.round((window.innerHeight || 800) * 0.6)) + 'px';
+    el('vo-cerrar').addEventListener('click', cerrarModal);
+    el('vo-copiar').addEventListener('click', function () {
+      var b = this;
+      function listo() { b.textContent = 'Copiada ✓'; }
+      function aMano() { t.focus(); t.select(); try { if (document.execCommand && document.execCommand('copy')) { listo(); return; } } catch (e) { /* sigue abajo */ } b.textContent = 'Selecciónela y cópiela'; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(listo, aMano); else aMano();
+    });
+  }
+
+  // Un solo escucha para las dos pestanas: las filas se repintan enteras y los botones nacen de nuevo.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-celda], [data-xp], [data-exp-ed], [data-var-est], [data-var-ed], [data-var-orden], [data-var-copiar]') : null;
+    if (!b) return;
+    if (b.hasAttribute('data-var-orden')) { dialogoOrden(b.getAttribute('data-var-orden')); return; }
+    if (b.hasAttribute('data-var-copiar')) { copiarOrden(b.getAttribute('data-var-copiar'), b); return; }
+    if (b.hasAttribute('data-celda')) dialogoExpCelda(b.getAttribute('data-celda'), b.getAttribute('data-pais'));
+    else if (b.hasAttribute('data-xp')) cambiarCelda(b.getAttribute('data-xp'), b.getAttribute('data-pais'), b.getAttribute('data-est'));
+    else if (b.hasAttribute('data-exp-ed')) dialogoExpFila(b.getAttribute('data-exp-ed'));
+    else if (b.hasAttribute('data-var-est')) {
+      // Desde Idea (nunca empezada ni copiada su orden), «Lista» pregunta: un toque por error se la manda a Carla (revisor-cambios 17-nov).
+      var vEst = variaciones.find(function (x) { return x.id === b.getAttribute('data-var-est'); });
+      if (b.getAttribute('data-est') === 'lista' && vEst && vEst.estado === 'idea' && !window.confirm('¿«' + vEst.nombre + '» ya está hecha y subida a Drive? Pasa a Carla para subirla.')) return;
+      guardarFila('var_estado', { id: b.getAttribute('data-var-est'), estado: b.getAttribute('data-est') }, 'var');
+    }
+    else if (b.hasAttribute('data-var-ed')) dialogoVar(b.getAttribute('data-var-ed'));
+  });
+  el('btn-exp-nueva').addEventListener('click', function () { dialogoExpFila(null); });
+  el('btn-var-nueva').addEventListener('click', function () { dialogoVar(null); });
+
+  // ================= «Hacerla en el servidor» (2026-11-13) =================
+  // Una variacion que cambia SOLO el inicio de un anuncio nuestro la puede hacer el servidor del editor (VPS): baja el original de Drive, cambia hasta que termina la primera frase (voz e imagen
+  // nuevas con el gancho) y pega el resto idéntico, como Beto hizo la 105.1 de Sermones. El dueño la pide; el servidor la toma cada hora y avisa como va (functions/api/variacion-editor.js).
+  // Ademas, cada variacion con base trae su ORIGINAL en Drive (lo calcula /api/tablero con el indice que sube el servidor): Beto lo abre de un toque.
+  // Los nombres de archivo y de carpeta y las notas del servidor son texto de afuera: se escapan siempre, y cada enlace se vuelve a comprobar aqui (solo https://drive.google.com/file/d/<id>/view)
+  // aunque el servidor ya lo rehizo con el id.
+  var veInfo = null, veCargando = false;
+  var RE_DRIVE_ARCHIVO = /^https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]{15,100}\/view$/;
+  var VE_ETAPA = { original: 'bajando el original', analisis: 'buscando dónde termina la primera frase', gancho: 'haciendo la voz y las imágenes del gancho', render: 'armando el inicio nuevo',
+    unir: 'pegando el inicio al resto del original', revisar: 'revisando el resultado', entrega: 'subiéndola a Drive' };
+  var VE_VIVOS = ['pendiente', 'tomado', 'en-curso'];
+  // Como hace el inicio nuevo el servidor (corredor.json › variaciones.modo). La voz solo se nombra cuando es la nuestra.
+  var VE_MODO = { clip: 'El avatar del original dice el gancho nuevo.', fish: 'Nuestra voz dice el gancho, con imágenes nuevas.', original: 'Se queda la voz del original, con imágenes nuevas.' };
+  function veHref(u) { u = String(u == null ? '' : u); return urlSegura(u) !== '#' && RE_DRIVE_ARCHIVO.test(u) ? u : ''; }
+  function veOriginales(v) { return (Array.isArray(v.originales) ? v.originales : []).filter(function (o) { return o && veHref(o.enlace); }); }
+  function veHoras(iso) { var t = Date.parse(iso); return isFinite(t) ? (Date.now() - t) / 3600000 : Infinity; }
+  function veUsd(n) { n = Number(n); if (!isFinite(n)) return ''; return n > 0 && n < 0.005 ? 'menos de un centavo' : 'US$ ' + n.toFixed(2).replace('.', ','); }
+  function veCarpeta(o) { return [o.raiz, o.carpeta].filter(Boolean).join(' › '); }
+  // Un pedido «vivo» sin noticias en 6 h se da por perdido (el servidor deja volver a pedirlo).
+  function veVivo(e) { return !!(e && VE_VIVOS.indexOf(e.estado) !== -1 && veHoras(e.actualizadoEn || e.pedidoEn) < 6); }
+  // El original en Drive. «No encontré» solo si el servidor ya mando su indice (si no, /api/tablero no trae `originales` y no se dice nada).
+  function veOriginal(v) {
+    if (!v.base || !Array.isArray(v.originales)) return '';
+    var os = veOriginales(v);
+    if (!os.length) return '<span class="ve-nada">No encontré el original en Drive</span>';
+    var o = os[0], donde = veCarpeta(o);
+    return '<span class="ve-orig"><a class="ve-abrir" href="' + esc(veHref(o.enlace)) + '" target="_blank" rel="noopener noreferrer" title="' + esc(o.nombre + (donde ? ' · ' + donde : '')) + '">🎞️ Abrir el original</a>' +
+      '<small>' + esc(o.nombre) + (donde ? ' · ' + esc(donde) : '') + (os.length > 1 ? ' · y ' + (os.length - 1) + (os.length === 2 ? ' copia más' : ' copias más') : '') + '</small></span>';
+  }
+  // Lo que va haciendo el servidor con esta variacion (lo ve todo el equipo).
+  function veEstado(v) {
+    var e = v.edicion;
+    if (!e || !e.estado) return '';
+    if (e.estado === 'pendiente') {
+      // Si alguien la paso a Lista o la descarto antes de que el servidor la tomara, el servidor ya no la hace.
+      if (v.estado !== 'idea' && v.estado !== 'produccion') return '<span class="ve-chip">Pedido sin hacer: la variación ya no está por producir</span>';
+      var srv = veInfo && veInfo.servidor ? veInfo.servidor : {};
+      // El servidor solo ve pedidos de los ultimos 3 dias (la marca de /api/variacion-editor vence): uno mas viejo ya no se hace aunque lo autoricen.
+      if (srv.activo !== true && srv.activo !== 'ensayo') return (Date.now() - Date.parse(e.pedidoEn || '')) / 3600000 > 72
+        ? '<span class="ve-chip malo">⚠️ El pedido venció (más de 3 días sin autorizarse en el servidor). Vuelva a pedirla.</span>'
+        : '<span class="ve-chip">⏸️ Pedida: espera que el dueño la autorice en el servidor (las variaciones automáticas están apagadas)</span>';
+      return veVivo(e) ? '<span class="ve-chip vivo">⏳ Pedida al servidor: arranca en menos de una hora</span>'
+        : '<span class="ve-chip malo">⚠️ El servidor no la ha tomado (pedida ' + esc(hace(e.pedidoEn)) + '). Se puede volver a pedir.</span>';
+    }
+    if (e.estado === 'tomado' || e.estado === 'en-curso') {
+      return veVivo(e) ? '<span class="ve-chip vivo">⚙️ El servidor la está haciendo (' + esc(VE_ETAPA[e.etapa] || 'empezando') + ')</span>'
+        : '<span class="ve-chip malo">⚠️ El servidor se quedó a mitad (sin noticias ' + esc(hace(e.actualizadoEn || e.tomadoEn)) + '). Se puede volver a pedir.</span>';
+    }
+    if (e.estado === 'lista') {
+      var h = veHref(e.enlace), c = e.costoUsd != null ? veUsd(e.costoUsd) : '';
+      return '<span class="ve-chip listo">✅ Hecha por el servidor' + (c ? ' · costó ' + esc(c) : '') + '</span>' +
+        (h ? '<a class="ve-drive" href="' + esc(h) + '" target="_blank" rel="noopener noreferrer"' + (e.archivo ? ' title="' + esc(e.archivo) + '"' : '') + '>Ver en Drive ↗</a>' : '') +
+        (v.estado === 'idea' || v.estado === 'produccion' ? '<span class="ve-aviso">Beto: revísela y márquela Lista</span>' : '');
+    }
+    if (e.estado === 'error') return '<span class="ve-chip malo">⚠️ El servidor no pudo' + (e.nota ? ': ' + esc(e.nota) : '') + '</span>';
+    if (e.estado === 'cancelada') return '<span class="ve-chip">Pedido cancelado</span>';
+    return '';
+  }
+  // Solo anuncios numerados (101, AD 101, 101.2): el servidor no hace variaciones de un «AD 3» ni de un nombre.
+  function veNumerada(base) { return /^(?:AD ?)?1\d\d(?:\.\d+)*$/i.test(String(base || '').trim()); }
+  function vePuede(v) {
+    return !!(veInfo && veInfo.rol === 'owner' && v.base && veNumerada(v.base) && String(v.gancho || '').trim() && (!v.cambio || v.cambio === 'inicio') &&
+      (v.estado === 'idea' || v.estado === 'produccion') && veOriginales(v).length && !veVivo(v.edicion));
+  }
+  function veBotones(v) {
+    if (!veInfo || veInfo.rol !== 'owner') return '';
+    var e = v.edicion, h = '';
+    if (vePuede(v)) h += '<button class="sec ve-pedir" data-ve-pedir="' + esc(v.id) + '">🤖 ' + (e && (e.estado === 'lista' || e.estado === 'error') ? 'Rehacerla' : 'Hacerla') + ' en el servidor</button>';
+    if (e && e.estado === 'pendiente') h += '<button class="sec" data-ve-cancelar="' + esc(v.id) + '">Cancelar pedido</button>';
+    return h;
+  }
+  // En la orden para el editor: donde esta el original (texto plano, va por `value`).
+  function veLineaOriginal(v) {
+    var o = veOriginales(v)[0];
+    return o ? '\n\nEl original en Drive: «' + o.nombre + '»' + (veCarpeta(o) ? ' (carpeta ' + veCarpeta(o) + ')' : '') + ': ' + veHref(o.enlace) : '';
+  }
+  // Guardar una variacion devuelve la fila SIN originales (los calcula el GET): se conservan los de antes si la base y la oferta no cambiaron; si cambiaron, se piden de nuevo.
+  function veConservar(nueva, vieja) {
+    if (!nueva || Array.isArray(nueva.originales) || !vieja || !Array.isArray(vieja.originales)) return nueva;
+    if (String(nueva.base || '') === String(vieja.base || '') && String(nueva.oferta || '') === String(vieja.oferta || '')) nueva.originales = vieja.originales;
+    else if (String(nueva.base || '').trim()) setTimeout(veReleer, 0);
+    return nueva;
+  }
+  function veReleer() {
+    fetch('/api/tablero?solo=variaciones&originales=1', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (j) { if (j && Array.isArray(j.variaciones)) { variaciones = j.variaciones; pintarVariaciones(); if (revCargado) pintarRevivir(); } });
+  }
+  function veGuardada(fila, vieja) {
+    if (!fila || !fila.id) return;
+    fila = veConservar(fila, vieja);
+    var i = variaciones.findIndex(function (x) { return x.id === fila.id; });
+    if (i === -1) variaciones.push(fila); else variaciones[i] = fila;
+    pintarVariaciones();
+    if (revCargado) pintarRevivir();
+  }
+  function veApi(cuerpo) {
+    return fetch('/api/variacion-editor', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || mensajeDe(r.status)); return j; }); });
+  }
+  // Quien mira y si el servidor tiene encendidas las variaciones: una vez, al abrir la pestaña. Si falla, no sale el boton (nada mas cambia).
+  function veCargar() {
+    if (veInfo || veCargando) return;
+    veCargando = true;
+    fetch('/api/variacion-editor', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (j) {
+        veCargando = false;
+        if (!j || !j.ok) return;
+        veInfo = { rol: String(j.rol || ''), servidor: j.servidor && typeof j.servidor === 'object' ? j.servidor : { activo: false } };
+        pintarVariaciones();
+      });
+  }
+  // El numero de la nueva: el que ya trae su nombre («101.7 · Idea: …») o el siguiente libre de la oferta en el tablero.
+  function veSiguiente(v, n) {
+    var R = window.RevivirOfertas; if (!R) return '';
+    var re = new RegExp('^' + n.replace(/\./g, '\\.') + '\\.\\d{1,2}(\\.\\d{1,2})?$'), propio = String(R.numeroDe(v.nombre) || '').replace(/^AD /i, '');
+    if (re.test(propio)) return propio;
+    var usados = variaciones.filter(function (x) { return x.id !== v.id && x.estado !== 'descartada' && String(x.oferta || '').toLowerCase() === String(v.oferta || '').toLowerCase(); })
+      .map(function (x) { return String(R.numeroDe(x.nombre) || '').replace(/^AD /i, ''); }).filter(Boolean);
+    return R.siguienteNumero(n, usados);
+  }
+  function veDialogo(id) {
+    var v = variaciones.find(function (x) { return x.id === id; }); if (!v || !veInfo || !vePuede(v)) return;
+    var os = veOriginales(v), s = veInfo.servidor || {}, activo = s.activo === true || s.activo === 'ensayo', n = String(v.base || '').trim().replace(/^AD ?/i, '');
+    var costo = s.costoEstimadoUsd != null && veUsd(s.costoEstimadoUsd) ? 'Cuesta ≈ ' + veUsd(s.costoEstimadoUsd) + (s.topeUsd != null ? ' (tope ' + veUsd(s.topeUsd) + ')' : '') + '.' : s.topeUsd != null ? 'Tope: ' + veUsd(s.topeUsd) + '.' : '';
+    function radio(o, i) {
+      return '<label class="rev-base-op' + (i === 0 ? ' on' : '') + '"><input type="radio" name="ve-orig" value="' + esc(o.id) + '"' + (i === 0 ? ' checked' : '') + '><span><b>' + esc(o.nombre) + '</b>' +
+        (veCarpeta(o) ? ' — carpeta ' + esc(veCarpeta(o)) : '') + (o.fecha ? ' · ' + esc(o.fecha) : '') + '</span></label>';
+    }
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>🤖 Hacerla en el servidor</h2>' +
+      '<div class="rev-pais"><b>' + esc((v.oferta ? v.oferta + ' · ' : '') + v.nombre) + '</b></div>' +
+      (activo ? '' : '<p class="ve-off">⏸️ El servidor tiene apagadas las variaciones automáticas: el pedido queda en espera hasta que usted la autorice con su tope en el servidor o las encienda. Mientras tanto, Beto puede hacerla a mano con «📋 Orden».</p>') +
+      (s.activo === 'ensayo' ? '<p class="ayuda">🧪 El servidor está en ensayo: la hace sin gastar y no sube nada a Drive.</p>' : '') +
+      '<label>' + (os.length > 1 ? '¿Cuál es el original?' : 'Original') + '</label>' +
+      (os.length > 1 ? '<div class="rev-bases">' + os.map(radio).join('') + '</div>'
+        : '<div class="rev-pais">«' + esc(os[0].nombre) + '»' + (veCarpeta(os[0]) ? ' — carpeta ' + esc(veCarpeta(os[0])) : '') + '</div>') +
+      '<label for="ve-num">Número de la nueva</label><input type="text" id="ve-num" maxlength="12" inputmode="decimal" autocomplete="off" value="' + esc(veSiguiente(v, n)) + '">' +
+      '<p class="ve-msg" id="ve-msg"></p>' +
+      '<label>Gancho (lo que se dice al inicio)</label><div class="rev-pais">«' + esc(v.gancho) + '»</div>' +
+      '<p class="ayuda">✂️ Cambia solo el inicio, hasta que termina la primera frase; el resto queda idéntico.</p>' +
+      '<p class="ayuda">' + esc([VE_MODO[s.modo] || '', costo, s.voz && (!s.modo || s.modo === 'fish') ? 'Voz: ' + s.voz + '.' : '', s.revisionBeto === false ? 'El servidor la deja «Lista» solo.' : 'Beto la revisa antes de subirla.'].filter(Boolean).join(' ')) + '</p>' +
+      '<p class="ayuda">🔒 El servidor hace exactamente este gancho y esta nota: si los cambia después, cancele y vuelva a pedirla. Si Beto la hace a mano, cancele el pedido.</p>' +
+      '<div class="btns"><button class="sec" id="ve-cancel">Cancelar</button><button class="primario" id="ve-ok">' + (activo ? 'Pedir al servidor' : 'Dejarla pedida') + '</button></div></div></div>';
+    var raiz = el('modal-root');
+    raiz.querySelectorAll('.rev-base-op input').forEach(function (c) {
+      c.addEventListener('change', function () { raiz.querySelectorAll('.rev-base-op input').forEach(function (x) { x.parentNode.classList.toggle('on', x.checked); }); });
+    });
+    el('ve-cancel').addEventListener('click', cerrarModal);
+    raiz.querySelector('.modal-bg').addEventListener('click', function (e) { if (e.target === this) cerrarModal(); });
+    el('ve-ok').addEventListener('click', function () {
+      var sel = raiz.querySelector('input[name="ve-orig"]:checked'), original = sel ? sel.value : os[0].id, num = el('ve-num').value.trim().replace(/^AD ?/i, '');
+      if (!new RegExp('^' + n.replace(/\./g, '\\.') + '\\.\\d{1,2}(\\.\\d{1,2})?$').test(num)) { el('ve-msg').textContent = 'El número va así: ' + n + '.7 (el del original, un punto y el de la variación).'; el('ve-num').focus(); return; }
+      var b = this; b.disabled = true; b.textContent = 'Pidiendo…';
+      veApi({ accion: 'pedir', id: v.id, original: original, numero: num, sinRevision: s.revisionBeto === false })
+        .then(function (j) { cerrarModal(); veGuardada(j.fila, v); })
+        .catch(function (er) { cerrarModal(); avisar(er.message); });
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-ve-pedir], [data-ve-cancelar]') : null;
+    if (!b) return;
+    if (b.hasAttribute('data-ve-pedir')) { veDialogo(b.getAttribute('data-ve-pedir')); return; }
+    var id = b.getAttribute('data-ve-cancelar'), v = variaciones.find(function (x) { return x.id === id; });
+    if (!window.confirm('¿Cancelar el pedido al servidor de «' + (v ? v.nombre : '') + '»?')) return;
+    b.disabled = true;
+    veApi({ accion: 'cancelar', id: id }).then(function (j) { veGuardada(j.fila, v); }).catch(function (er) { b.disabled = false; avisar(er.message); });
+  });
+
+  // Kanban
+  function pintarKanban() {
+    var kb = el('kanban');
+    kb.innerHTML = ETAPAS.map(function (et) {
+      // Una tarjeta sale en TODA columna donde tenga al menos un pais, y dentro de cada
+      // una muestra solo los paises de esa etapa. Asi la misma oferta puede estar en
+      // "Flujos" con Peru y en "Testeo" con Mexico, que es como se trabaja de verdad.
+      var enEsta = tarjetas.filter(function (t) {
+        var ps = paisesDe(t);
+        if (!ps.length) return t.etapa === et.key;      // tarjeta sin paises: como antes
+        return ps.some(function (p) { return p.etapa === et.key; });
+      });
+      // La cuenta es de MINITARJETAS, no de tarjetas: lo que hay que hacer en esta columna
+      // son flujos por pais, y una oferta con cinco paises no es "una" cosa por hacer.
+      var cuenta = enEsta.reduce(function (n, t) {
+        var ps = paisesDe(t).filter(function (p) { return p.etapa === et.key; });
+        return n + (ps.length || 1);
+      }, 0);
+      return '<div class="columna" data-etapa="' + esc(et.key) + '">' +
+        '<div class="col-head"><span>' + esc(et.label) + '</span><span class="cnt">' + cuenta + '</span></div>' +
+        '<div class="col-body" data-etapa="' + esc(et.key) + '">' +
+        enEsta.map(function (t) { return pintarTarjeta(t, et.key); }).join('') +
+        '</div></div>';
+    }).join('');
+
+    // Drag & drop
+    kb.querySelectorAll('.tarj').forEach(function (card) {
+      card.setAttribute('draggable', 'true');
+      card.addEventListener('dragstart', function (e) {
+        dragId = card.dataset.id; dragCol = card.dataset.col;
+        card.style.opacity = '.5';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', function () { card.style.opacity = ''; dragId = null; dragCol = null; limpiarDragOver(); });
+      // Un enlace de la tarjeta (el WhatsApp, la biblioteca, Drive) abre su pestaña y nada mas: no tambien la ventana de la tarjeta (no depende del onclick del enlace).
+      card.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a[href]')) return; abrirModal(card.dataset.id); });
+    });
+    kb.querySelectorAll('.btn-listo').forEach(function (b) {
+      b.addEventListener('click', function (e) { e.stopPropagation(); marcarListo(b.dataset.listo); });
+    });
+    // Cada minitarjeta se arrastra sola. stopPropagation porque va DENTRO de la tarjeta,
+    // que tambien es arrastrable: sin eso el navegador dispara los dos dragstart y termina
+    // moviendose la oferta entera cuando solo se queria mover un pais.
+    kb.querySelectorAll('.mini').forEach(function (m) {
+      m.addEventListener('dragstart', function (e) {
+        e.stopPropagation();
+        dragId = m.dataset.id; dragPais = m.dataset.pais;
+        m.style.opacity = '.5';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      m.addEventListener('dragend', function (e) {
+        e.stopPropagation(); m.style.opacity = ''; dragId = null; dragPais = null; limpiarDragOver();
+      });
+      m.addEventListener('click', function (e) { e.stopPropagation(); abrirModal(m.dataset.id); });
+    });
+    kb.querySelectorAll('.mini-ok').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation(); marcarPaisListo(b.dataset.id, b.dataset.pais);
+      });
+    });
+    kb.querySelectorAll('.col-body').forEach(function (col) {
+      col.addEventListener('dragover', function (e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; col.classList.add('drag-over-col'); });
+      col.addEventListener('dragleave', function () { col.classList.remove('drag-over-col'); });
+      col.addEventListener('drop', function (e) {
+        e.preventDefault(); col.classList.remove('drag-over-col');
+        if (!dragId) return;
+        var etapa = col.dataset.etapa;
+        if (dragPais) moverPais(dragId, dragPais, etapa);
+        else mover(dragId, etapa, dragCol);
+      });
+    });
+  }
+
+  function limpiarDragOver() {
+    document.querySelectorAll('.drag-over-col').forEach(function (x) { x.classList.remove('drag-over-col'); });
+  }
+
+  // Los enlaces de una tarjeta, en el orden en que se usan durante el dia: primero la
+  // biblioteca -de donde sale el angulo-, luego los creativos, luego el texto.
+  //
+  // `enlace` es el campo unico de antes. Sigue leyendose para que ninguna tarjeta vieja
+  // pierda su enlace, y se etiqueta por el dominio: casi todos eran de la biblioteca de
+  // anuncios, y ver "biblioteca" en vez de "enlace" ya es informacion.
+  function enlacesDe(t) {
+    var out = [];
+    (t.biblioteca || []).forEach(function (u, i) {
+      if (u) out.push({ url: u, etiqueta: 'biblioteca' + ((t.biblioteca.length > 1) ? ' ' + (i + 1) : '') });
+    });
+    if (t.drive) out.push({ url: t.drive, etiqueta: 'drive' });
+    if (t.docs)  out.push({ url: t.docs,  etiqueta: 'docs' });
+    if (t.enlace && !(t.biblioteca || []).length && !t.drive && !t.docs) {
+      out.push({ url: t.enlace, etiqueta: etiquetaDeUrl(t.enlace) });
+    }
+    return out;
+  }
+  function etiquetaDeUrl(u) {
+    if (/facebook\.com\/ads\/library/i.test(u)) return 'biblioteca';
+    if (/drive\.google\.com/i.test(u))          return 'drive';
+    if (/docs\.google\.com/i.test(u))           return 'docs';
+    return 'enlace';
+  }
+
+  // Solo http(s) llega a un href. El equipo escribe estas casillas a mano, y un
+  // "javascript:..." pegado ahi se quedaria guardado esperando a que alguien pulse la
+  // etiqueta de la tarjeta.
+  function urlSegura(u) { return /^https?:\/\//i.test(String(u || '').trim()) ? u : '#'; }
+
+  // Enciende la flecha de cada casilla de enlace y la mantiene al dia mientras se escribe:
+  // se pega el link y queda abrible en el acto, sin guardar ni cerrar la tarjeta.
+  function ligarAbrir(cont) {
+    cont.querySelectorAll('.abrir').forEach(function (a) {
+      var inp = a.parentNode.querySelector('input');
+      if (!inp) return;
+      function sync() {
+        var u = inp.value.trim(), ok = urlSegura(u) !== '#';
+        a.href = ok ? u : '#';
+        a.textContent = ok ? u + '  \u2197' : '';
+        a.classList.toggle('off', !ok);
+        a.title = ok ? 'Abrir en una pestana nueva' : '';
+      }
+      inp.addEventListener('input', sync);
+      sync();
+    });
+  }
+
+  function pintarTarjeta(t, etapaCol) {
+    var mias = paisesDe(t).filter(function (p) { return p.etapa === etapaCol; });
+    var minis = mias.map(function (p) {
+      return '<div class="mini' + (p.listo ? ' listo' : '') + '" draggable="true" ' +
+        'data-id="' + esc(t.id) + '" data-pais="' + esc(p.pais) + '">' +
+        '<span class="mini-nom">' + esc(p.pais) + '</span>' +
+        '<button class="mini-ok" data-id="' + esc(t.id) + '" data-pais="' + esc(p.pais) + '" ' +
+        'title="' + (p.listo ? 'Listo para pasar' : 'Marcar flujo listo') + '">' +
+        (p.listo ? '✓' : '○') + '</button></div>';
+    }).join('');
+    var sueltas = tareasDe(t);
+    var total = sueltas.length;
+    var hechas = sueltas.filter(function (x) { return x.hecho; }).length;
+    var pct = total ? Math.round(hechas / total * 100) : 0;
+    // Los enlaces se muestran por lo que SON, no como un "enlace" anonimo. Quien busca los
+    // creativos busca Drive; quien va a copiar un angulo busca la biblioteca. Con una sola
+    // etiqueta generica habia que abrir la tarjeta para saber a donde llevaba.
+    var enlaceHtml = enlacesDe(t).map(function (e) {
+      return '<a href="' + esc(urlSegura(e.url)) + '" target="_blank" rel="noopener" class="link-tag" ' +
+        'title="' + esc(e.url) + '" onclick="event.stopPropagation()">' + esc(e.etiqueta) + '</a>';
+    }).join('');
+    // El WhatsApp del competidor va primero y en verde (2026-11-13, pedido del dueño para Ana): un clic y esta en su WhatsApp viendo el embudo y los entregables.
+    if (urlSegura(t.whatsapp) !== '#') {
+      enlaceHtml = '<a href="' + esc(t.whatsapp) + '" target="_blank" rel="noopener noreferrer" class="link-tag wa" data-wa="1" ' +
+        'title="Entrar al WhatsApp del competidor y ver sus entregables" onclick="event.stopPropagation()">💬 WhatsApp</a>' + enlaceHtml;
+    }
+    // Con minitarjetas, el "listo" de la tarjeta entera sobra: lo que se termina es el
+    // flujo de un pais, y la tarjeta esta lista cuando lo estan todos los de su columna.
+    var todosListos = mias.length > 0 && mias.every(function (p) { return p.listo; });
+    return '<div class="tarj' + ((mias.length ? todosListos : t.listo) ? ' listo' : '') +
+      '" data-id="' + esc(t.id) + '" data-col="' + esc(etapaCol) + '">' +
+      '<div class="nombre">' + esc(t.nombre) + '</div>' +
+      '<div class="meta">' +
+        (mias.length ? '' : (t.pais ? '<span class="pais-tag">' + esc(t.pais) + '</span>' : '')) +
+        enlaceHtml +
+        (total ? '<span>' + hechas + '/' + total + '</span>' : '') +
+      '</div>' +
+      (total ? '<div class="prog"><div class="prog-bar" style="width:' + pct + '%"></div></div>' : '') +
+      (minis ? '<div class="minis">' + minis + '</div>' : '') +
+      (mias.length ? '' :
+        '<button class="btn-listo" data-listo="' + esc(t.id) + '">' +
+          (t.listo ? '✓ Lista para pasar' : 'Marcar completado') + '</button>') +
+      '</div>';
+  }
+
+  // API
+  function api(body) {
+    return fetch('/api/tablero', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(function (r) {
+      if (!r.ok) throw new Error(mensajeDe(r.status));
+      return r.json();
+    }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'Error');
+      return j;
+    });
+  }
+
+  // "HTTP 501" no le dice nada a quien mueve tarjetas. El resto de la suite traduce el
+  // codigo a algo accionable y este tablero se habia quedado fuera.
+  function mensajeDe(estado) {
+    if (estado === 401) return 'Tu sesión expiró. Vuelve a entrar.';
+    if (estado === 403) return 'Tu usuario no tiene permiso para el tablero.';
+    if (estado === 501) return 'Falta el almacén KV en Cloudflare.';
+    if (estado === 404) return 'El servidor respondió 404. ¿Están desplegadas las Functions?';
+    return 'El servidor respondió ' + estado + '.';
+  }
+
+  function cargar() {
+    fetch('/api/tablero', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (!r.ok) throw new Error(mensajeDe(r.status));
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'Error');
+        tarjetas = j.tarjetas || [];
+        expansion = j.expansion || [];
+        variaciones = j.variaciones || [];
+        variacionesCargadas = true;
+        if (j.etapas && j.etapas.length) {
+          ETAPAS = j.etapas.map(function (e) { return { key: e.id, label: e.nombre }; });
+        }
+        pintarKanban(); pintarExpansion(); pintarVariaciones();
+        // Los botones «Agregar a la cola de Beto» de Revivir ofertas dicen si ya hay una pedida: dependen de esta lista.
+        if (revCargado) pintarRevivir();
+      })
+      .catch(function (e) { avisar(e.message); pintarKanban(); pintarExpansion(); pintarVariaciones(); });
+  }
+
+  // ---------- editor de etapas ----------
+  function abrirEtapas() {
+    var filas = ETAPAS.map(function (e, i) {
+      return '<div class="tarea" data-fila="' + i + '">' +
+        '<input type="text" value="' + esc(e.label) + '" data-et="' + i + '">' +
+        '<button class="quitar" data-qe="' + i + '">×</button></div>';
+    }).join('');
+
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal">' +
+      '<h2>Etapas del tablero</h2>' +
+      '<p style="color:#7e93c5;font-size:12px;margin:0 0 12px">El orden es el de las columnas. ' +
+      'Si borras una etapa, sus tarjetas se mueven a la primera — no se pierde ninguna.</p>' +
+      '<div id="et-lista">' + filas + '</div>' +
+      '<button class="sec" id="et-add" style="font-size:11px;padding:5px 10px;margin-top:6px">+ Etapa</button>' +
+      '<div class="btns">' +
+        '<button class="sec" id="et-cancel">Cancelar</button>' +
+        '<button class="primario" id="et-guardar">Guardar etapas</button>' +
+      '</div></div></div>';
+
+    el('et-cancel').addEventListener('click', cerrarModal);
+    el('modal-root').querySelector('.modal-bg').addEventListener('click', function (e) {
+      if (e.target === this) cerrarModal();
+    });
+    el('et-add').addEventListener('click', function () {
+      var d = document.createElement('div'); d.className = 'tarea';
+      d.innerHTML = '<input type="text" value="" placeholder="Nombre de la etapa">' +
+                    '<button class="quitar">×</button>';
+      el('et-lista').appendChild(d);
+      d.querySelector('input').focus();
+      d.querySelector('.quitar').addEventListener('click', function () { d.remove(); });
+    });
+    el('et-lista').querySelectorAll('.quitar').forEach(function (b) {
+      b.addEventListener('click', function () { b.closest('.tarea').remove(); });
+    });
+
+    el('et-guardar').addEventListener('click', function () {
+      var nuevas = [];
+      el('et-lista').querySelectorAll('.tarea').forEach(function (d, i) {
+        var nombre = d.querySelector('input').value.trim();
+        if (!nombre) return;
+        // Se conserva el id de la etapa que ya existia para no mover sus tarjetas al
+        // renombrarla; las nuevas reciben uno derivado del nombre.
+        var idx = d.querySelector('input').dataset.et;
+        var id = (idx !== undefined && ETAPAS[+idx]) ? ETAPAS[+idx].key : idDesde(nombre, nuevas);
+        nuevas.push({ id: id, nombre: nombre });
+      });
+      if (!nuevas.length) { avisar('Deja al menos una etapa.'); return; }
+      var b = this; b.disabled = true; b.textContent = 'Guardando…';
+      api({ accion: 'etapas', etapas: nuevas }).then(function (j) {
+        ETAPAS = j.etapas.map(function (e) { return { key: e.id, label: e.nombre }; });
+        cerrarModal();
+        cargar();
+        if (j.movidas) avisar(j.movidas + ' tarjeta(s) se movieron a "' + ETAPAS[0].label + '".');
+      }).catch(function (e) { avisar(e.message); })
+        .then(function () { b.disabled = false; b.textContent = 'Guardar etapas'; });
+    });
+  }
+
+  function idDesde(nombre, yaHechas) {
+    var base = nombre.toLowerCase()
+      // Escapado a proposito: escritos literales, los signos combinantes se pierden con
+      // cualquier reguardado en otra codificacion y "Revisión" pasaria a id "revisi-n".
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'etapa';
+    var id = base, n = 2;
+    var usados = {};
+    ETAPAS.forEach(function (e) { usados[e.key] = 1; });
+    yaHechas.forEach(function (e) { usados[e.id] = 1; });
+    while (usados[id]) { id = base + '-' + n; n++; }
+    return id;
+  }
+
+  el('btn-etapas').addEventListener('click', abrirEtapas);
+
+  // Arrastrar la tarjeta ENTERA. Si tiene minitarjetas de pais, cada una vive en SU columna: se llevan las que estan en la columna de donde
+  // se arrastro, y la etapa suelta de la tarjeta no cuenta. Antes se comparaba esa etapa con la columna de destino y, cuando coincidian
+  // (la tarjeta decia "flujos" y su pais estaba en "creacion"), el arrastre se ignoraba sin avisar; y aunque pasara, los paises no se
+  // movian en pantalla hasta recargar. Por eso "la tarjeta de vestidos no se dejaba pasar".
+  function mover(id, etapa, desde) {
+    var t = tarjetas.find(function (x) { return x.id === id; });
+    if (!t) return;
+    var ps = paisesDe(t);
+    if (ps.length) {
+      var lleva = ps.filter(function (p) { return !desde || p.etapa === desde; });
+      if (!lleva.length || lleva.every(function (p) { return p.etapa === etapa; })) return;
+      var antesI = ETAPAS.findIndex(function (e) { return e.key === lleva[0].etapa; });
+      var ahoraI = ETAPAS.findIndex(function (e) { return e.key === etapa; });
+      var tareas = tareasDe(t);        // antes de escribir t.paises (ver moverPais)
+      t.paises = ps.map(function (p) { return lleva.indexOf(p) !== -1 ? { pais: p.pais, etapa: etapa, listo: false } : p; });
+      t.tareas = tareas;
+      t.etapa = etapa;
+      pintarKanban();
+      api({ accion: 'editar', id: id, paises: t.paises, tareas: tareas, etapa: etapa })
+        .catch(function (e) { avisar(e.message); cargar(); });
+      celebrarAvance(t, antesI, ahoraI);
+      return;
+    }
+    if (t.etapa === etapa) return;
+    var antes = ETAPAS.findIndex(function (e) { return e.key === t.etapa; });
+    var ahora = ETAPAS.findIndex(function (e) { return e.key === etapa; });
+    t.etapa = etapa;
+    // El servidor tambien apaga "listo" al mover -ver accion 'mover' en /api/tablero-,
+    // esto es solo para que la tarjeta ya se vea sin verde antes de que vuelva la respuesta.
+    t.listo = false;
+    pintarKanban();
+    api({ accion: 'mover', id: id, etapa: etapa }).catch(function (e) { avisar(e.message); cargar(); });
+    celebrarAvance(t, antes, ahora);
+  }
+
+  // Mover UN pais. La tarjeta se queda donde esta y solo su minitarjeta cambia de columna,
+  // que es el caso normal: el flujo de Mexico ya se puede testear y el de Peru todavia no.
+  //
+  // Se manda el arreglo completo con 'editar' en vez de inventar una accion 'mover-pais':
+  // el servidor ya lee y escribe esta tarjeta sola, y una accion menos es una cosa menos
+  // que mantener sincronizada entre el cliente y la funcion.
+  function moverPais(id, pais, etapa) {
+    var t = tarjetas.find(function (x) { return x.id === id; });
+    if (!t) return;
+    var ps = paisesDe(t);
+    var actual = ps.find(function (p) { return p.pais === pais; });
+    if (!actual || actual.etapa === etapa) return;
+    var antes = ETAPAS.findIndex(function (e) { return e.key === actual.etapa; });
+    var ahora = ETAPAS.findIndex(function (e) { return e.key === etapa; });
+    // Se calcula ANTES de escribir t.paises: si las minitarjetas salieron de las tareas
+    // "flujo listo en X", esas tareas ya no van, o la misma cosa quedaria dos veces -como
+    // pais arriba y como tarea abajo- cada una con su propio tick.
+    var tareas = tareasDe(t);
+    // Cambiar de etapa apaga el "listo" del pais, por lo mismo que en la tarjeta entera:
+    // esa marca era una promesa sobre la etapa vieja.
+    t.paises = ps.map(function (p) {
+      return (p.pais === pais) ? { pais: p.pais, etapa: etapa, listo: false } : p;
+    });
+    t.tareas = tareas;
+    pintarKanban();
+    api({ accion: 'editar', id: id, paises: t.paises, tareas: tareas })
+      .catch(function (e) { avisar(e.message); cargar(); });
+    celebrarAvance({ nombre: t.nombre + ' · ' + pais }, antes, ahora);
+  }
+
+  // El "listo" de un pais: ya quedo el flujo de ese pais. Mismo gesto que el de la tarjeta
+  // entera, pero a la escala en la que de verdad se termina el trabajo.
+  function marcarPaisListo(id, pais) {
+    var t = tarjetas.find(function (x) { return x.id === id; });
+    if (!t) return;
+    var ps = paisesDe(t);
+    var actual = ps.find(function (p) { return p.pais === pais; });
+    if (!actual) return;
+    var nuevo = !actual.listo;
+    var tareas = tareasDe(t);          // ver el comentario en moverPais
+    t.paises = ps.map(function (p) {
+      return (p.pais === pais) ? { pais: p.pais, etapa: p.etapa, listo: nuevo } : p;
+    });
+    t.tareas = tareas;
+    pintarKanban();
+    api({ accion: 'editar', id: id, paises: t.paises, tareas: tareas })
+      .catch(function (e) { avisar(e.message); cargar(); });
+    if (nuevo && window.premio) {
+      window.premio({
+        icono: '✓',
+        titulo: 'Flujo de ' + pais + ' listo',
+        dato: (t.nombre || 'La oferta') + ' — lista para pasar a la siguiente etapa.',
+      });
+    }
+  }
+
+  // El boton de la tarjeta: "ya hice mi parte, esta lista para la siguiente etapa". No
+  // mueve nada -eso lo decide quien arrastra la tarjeta despues-, solo la pinta de verde
+  // para que se note sin abrirla. El confeti va aqui, no en el arrastre: terminar tu parte
+  // se siente como logro en el momento en que la marcas, no cuando otro la mueve despues.
+  function marcarListo(id) {
+    var t = tarjetas.find(function (x) { return x.id === id; });
+    if (!t) return;
+    var nuevo = !t.listo;
+    t.listo = nuevo;
+    pintarKanban();
+    api({ accion: 'editar', id: id, listo: nuevo }).catch(function (e) { avisar(e.message); cargar(); });
+    if (nuevo && window.premio) {
+      window.premio({
+        icono: '✓',
+        titulo: (t.nombre || 'La tarjeta') + ' está lista',
+        dato: 'Lista para pasar a la siguiente etapa.',
+      });
+    }
+  }
+
+  // Mover una tarjeta hacia adelante es de las pocas cosas del dia que se sienten como
+  // terminar algo. Se celebra solo eso: retroceder o reordenar dentro de la misma etapa no
+  // dispara nada, o el premio se gastaria en cualquier arrastre.
+  function celebrarAvance(t, antes, ahora) {
+    if (!window.premio || antes < 0 || ahora <= antes) return;
+    var et = ETAPAS[ahora];
+    var ultima = ahora === ETAPAS.length - 1;
+    // El numero convierte "moviste una tarjeta" en "llevas cinco".
+    var enUltima = tarjetas.filter(function (x) { return x.etapa === ETAPAS[ETAPAS.length - 1].key; }).length;
+    window.premio({
+      icono: ultima ? '★' : '↑',
+      titulo: ultima ? (t.nombre || 'La oferta') + ' llego al final' : (t.nombre || 'Oferta') + ' pasa a ' + et.label,
+      dato: ultima
+        ? (enUltima === 1 ? 'La primera que completas el recorrido entero.'
+                          : enUltima + ' ofertas ya completaron el recorrido.')
+        : 'Etapa ' + (ahora + 1) + ' de ' + ETAPAS.length + '.',
+    });
+  }
+
+  // Modal
+  function abrirModal(id) {
+    var t = id ? tarjetas.find(function (x) { return x.id === id; }) : null;
+    var esNueva = !t;
+    if (esNueva) t = { nombre: '', enlace: '', pais: '', etapa: 'idea', notas: '', tareas: [] };
+
+    // Una tarjeta vieja trae su enlace suelto. Se coloca en la casilla que le corresponde
+    // segun el dominio, en vez de dejarlo aparte: si no, el equipo tendria dos sitios donde
+    // mirar la biblioteca de anuncios y ninguno seria el bueno.
+    var bibl = (t.biblioteca || []).slice();
+    var drive = t.drive || '', docs = t.docs || '';
+    if (t.enlace && !bibl.length && !drive && !docs) {
+      var tipo = etiquetaDeUrl(t.enlace);
+      if (tipo === 'drive') drive = t.enlace;
+      else if (tipo === 'docs') docs = t.enlace;
+      else bibl.push(t.enlace);
+    }
+    if (!bibl.length) bibl.push('');
+
+    var biblHtml = bibl.map(function (u) {
+      return '<div class="tarea"><input type="text" class="m-bibl" value="' + esc(u) + '" ' +
+        'placeholder="https://www.facebook.com/ads/library/...">' +
+        '<a class="abrir" target="_blank" rel="noopener"></a>' +
+        '<button class="quitar">×</button></div>';
+    }).join('');
+
+    var tareasHtml = tareasDe(t).map(function (x, i) {
+      return '<div class="tarea"><input type="checkbox"' + (x.hecho ? ' checked' : '') + ' data-i="' + i + '">' +
+        '<input type="text" value="' + esc(x.texto) + '" data-i="' + i + '">' +
+        '<button class="quitar" data-i="' + i + '">×</button></div>';
+    }).join('');
+
+    var etapasOpts = ETAPAS.map(function (e) {
+      return '<option value="' + esc(e.key) + '"' + (t.etapa === e.key ? ' selected' : '') + '>' + esc(e.label) + '</option>';
+    }).join('');
+
+    // Un pais marcado = una minitarjeta. Se conserva la etapa que ya tenia -si Mexico ya
+    // paso a testeo, abrir la tarjeta y guardar no puede devolverlo a flujos-, y uno nuevo
+    // nace en la etapa de la tarjeta.
+    var yaPuestos = {};
+    paisesDe(t).forEach(function (p) { yaPuestos[p.pais] = p; });
+    var paisesHtml = PAISES.map(function (nombre) {
+      var p = yaPuestos[nombre];
+      var et = p ? (ETAPAS.find(function (e) { return e.key === p.etapa; }) || null) : null;
+      return '<label class="pais-chk' + (p ? ' on' : '') + '">' +
+        '<input type="checkbox" class="m-pais" value="' + esc(nombre) + '"' + (p ? ' checked' : '') +
+        ' data-etapa="' + esc(p ? p.etapa : '') + '" data-listo="' + (p && p.listo ? '1' : '') + '">' +
+        '<span>' + esc(nombre) + '</span>' +
+        (et ? '<em>' + esc(et.label) + '</em>' : '') + '</label>';
+    }).join('');
+
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal">' +
+      '<h2>' + (esNueva ? 'Nueva tarjeta' : esc(t.nombre)) + '</h2>' +
+      // La Fabrica de ofertas lleva esta oferta a ebooks con sus bonos, anuncios para Claudia y flujos de ZapData (/fabrica abre su confirmacion, o el proyecto si ya esta alli).
+      (esNueva ? '' : '<p class="ayuda" style="margin:0 0 10px"><a href="/fabrica#nueva=' + encodeURIComponent(t.id) + '" style="color:#8fb0ff;font-weight:700">⚙ Fabricar esta oferta</a> — ebooks, anuncios y flujos casi solos.</p>') +
+      // Al abrir la tarjeta, el WhatsApp del competidor tambien sale como boton grande (2026-11-13: el dueño lo busco aqui, en la ventana, y no en la tarjeta).
+      (urlSegura(t.whatsapp) !== '#' ? '<a class="wa-boton" data-wa="1" href="' + esc(t.whatsapp) + '" target="_blank" rel="noopener noreferrer" ' +
+        'title="Entrar al WhatsApp del competidor y ver sus entregables">💬 Entrar a su WhatsApp ↗</a>' : '') +
+      '<label>Nombre de la oferta</label><input id="m-nombre" value="' + esc(t.nombre) + '">' +
+      '<label>Biblioteca de anuncios</label>' +
+      '<div class="tareas-list" id="m-biblioteca">' + biblHtml + '</div>' +
+      '<button class="sec" id="m-add-bibl" style="font-size:11px;padding:5px 10px">+ Otra biblioteca</button>' +
+      // El WhatsApp del competidor (2026-11-13): lo deja el radar al marcar «Testiando»; si no lo trae, se pega aqui (wa.me o la publicacion del anuncio con su boton).
+      '<label style="margin-top:14px">💬 WhatsApp del competidor</label>' +
+      '<p class="ayuda">Para entrar como cliente y ver su embudo y sus entregables.</p>' +
+      '<div class="campo-link"><input id="m-whatsapp" value="' + esc(t.whatsapp || '') + '" ' +
+        'placeholder="https://wa.me/... o la publicación del anuncio">' +
+        '<a class="abrir" target="_blank" rel="noopener noreferrer"></a></div>' +
+      '<label>Carpeta de Drive (creativos)</label>' +
+      '<div class="campo-link"><input id="m-drive" value="' + esc(drive) + '" ' +
+        'placeholder="https://drive.google.com/...">' +
+        '<a class="abrir" target="_blank" rel="noopener"></a></div>' +
+      '<label>Documento del contenido</label>' +
+      '<div class="campo-link"><input id="m-docs" value="' + esc(docs) + '" ' +
+        'placeholder="https://docs.google.com/...">' +
+        '<a class="abrir" target="_blank" rel="noopener"></a></div>' +
+      '<label>Países</label>' +
+      '<p class="ayuda">Cada país marcado es una minitarjeta: el flujo se arma uno por uno, ' +
+        'y cada una se arrastra sola entre columnas.</p>' +
+      '<div class="paises-list" id="m-paises">' + paisesHtml + '</div>' +
+      '<label>Etapa de la tarjeta</label><select id="m-etapa">' + etapasOpts + '</select>' +
+      '<label>Notas</label><textarea id="m-notas">' + esc(t.notas) + '</textarea>' +
+      '<label>Tareas</label>' +
+      '<div class="tareas-list" id="m-tareas">' + tareasHtml + '</div>' +
+      '<button class="sec" id="m-add-tarea" style="font-size:11px;padding:5px 10px">+ Tarea</button>' +
+      '<div class="btns">' +
+        (esNueva ? '' : '<button class="borrar" id="m-borrar">Borrar</button>') +
+        '<button class="sec" id="m-cancel">Cancelar</button>' +
+        '<button class="primario" id="m-guardar">' + (esNueva ? 'Crear' : 'Guardar') + '</button>' +
+      '</div></div></div>';
+
+    el('m-cancel').addEventListener('click', cerrarModal);
+    el('modal-root').querySelector('.modal-bg').addEventListener('click', function (e) {
+      if (e.target === this) cerrarModal();
+    });
+
+    el('m-add-tarea').addEventListener('click', function () {
+      var div = document.createElement('div'); div.className = 'tarea';
+      var list = el('m-tareas');
+      var idx = list.children.length;
+      div.innerHTML = '<input type="checkbox" data-i="' + idx + '">' +
+        '<input type="text" value="" data-i="' + idx + '" placeholder="Describe la tarea...">' +
+        '<button class="quitar" data-i="' + idx + '">×</button>';
+      list.appendChild(div);
+      div.querySelector('input[type=text]').focus();
+      div.querySelector('.quitar').addEventListener('click', function () { div.remove(); });
+    });
+
+    el('m-tareas').querySelectorAll('.quitar').forEach(function (b) {
+      b.addEventListener('click', function () { b.closest('.tarea').remove(); });
+    });
+
+    // Varias bibliotecas por tarjeta: una oferta que corre en tres paises tiene tres, y
+    // antes solo cabia una.
+    function quitarBibl(b) {
+      b.addEventListener('click', function () {
+        var fila = b.closest('.tarea');
+        // La ultima no se borra, se vacia: dejar la seccion sin ninguna casilla obliga a
+        // pulsar "+ Otra" para escribir la primera.
+        if (el('m-biblioteca').children.length > 1) fila.remove();
+        else fila.querySelector('input').value = '';
+      });
+    }
+    el('m-biblioteca').querySelectorAll('.quitar').forEach(quitarBibl);
+    ligarAbrir(el('modal-root'));
+    el('m-add-bibl').addEventListener('click', function () {
+      var div = document.createElement('div'); div.className = 'tarea';
+      div.innerHTML = '<input type="text" class="m-bibl" value="" ' +
+        'placeholder="https://www.facebook.com/ads/library/...">' +
+        '<a class="abrir" target="_blank" rel="noopener"></a>' +
+        '<button class="quitar">×</button>';
+      el('m-biblioteca').appendChild(div);
+      div.querySelector('input').focus();
+      quitarBibl(div.querySelector('.quitar'));
+      ligarAbrir(div);
+    });
+
+    if (!esNueva && el('m-borrar')) {
+      el('m-borrar').addEventListener('click', function () {
+        if (!confirm('¿Borrar esta tarjeta?')) return;
+        api({ accion: 'borrar', id: t.id }).then(function () {
+          tarjetas = tarjetas.filter(function (x) { return x.id !== t.id; });
+          pintarKanban(); cerrarModal();
+        }).catch(function (e) { avisar(e.message); });
+      });
+    }
+
+    // El chip se pinta encendido al marcarlo, sin esperar a guardar.
+    el('m-paises').querySelectorAll('input.m-pais').forEach(function (c) {
+      c.addEventListener('change', function () { c.closest('.pais-chk').classList.toggle('on', c.checked); });
+    });
+    function paisesDelModal() {
+      var out = [];
+      el('m-paises').querySelectorAll('input.m-pais:checked').forEach(function (c) {
+        out.push({
+          pais: c.value,
+          etapa: c.dataset.etapa || el('m-etapa').value,
+          listo: c.dataset.listo === '1',
+        });
+      });
+      return out;
+    }
+
+    el('m-guardar').addEventListener('click', function () {
+      var tareas = [];
+      el('m-tareas').querySelectorAll('.tarea').forEach(function (div) {
+        var txt = div.querySelector('input[type=text]').value.trim();
+        if (!txt) return;
+        tareas.push({ texto: txt, hecho: div.querySelector('input[type=checkbox]').checked });
+      });
+      // Sin esto, Guardar con el formulario vacio creaba una tarjeta llamada
+      // "Sin nombre" (el servidor rellena el hueco) y ensuciaba el tablero.
+      if (!el('m-nombre').value.trim()) {
+        avisar('Ponle un nombre a la oferta.');
+        el('m-nombre').focus();
+        return;
+      }
+      var biblioteca = [];
+      el('m-biblioteca').querySelectorAll('input.m-bibl').forEach(function (i) {
+        var v = i.value.trim(); if (v) biblioteca.push(v);
+      });
+      var datos = {
+        nombre: el('m-nombre').value,
+        // El campo suelto de antes se vacia al guardar: su contenido ya vive en la casilla
+        // que le toca. Si se quedara, la tarjeta mostraria el mismo enlace dos veces.
+        enlace: '',
+        biblioteca: biblioteca,
+        drive: el('m-drive').value.trim(),
+        docs: el('m-docs').value.trim(),
+        whatsapp: el('m-whatsapp').value.trim(),
+        pais: '',                 // el texto suelto de antes ya vive en las minitarjetas
+        paises: paisesDelModal(),
+        etapa: el('m-etapa').value,
+        notas: el('m-notas').value,
+        tareas: tareas,
+      };
+      if (esNueva) {
+        datos.accion = 'crear';
+        api(datos).then(function (j) {
+          tarjetas.push(j.tarjeta); pintarKanban(); cerrarModal();
+        }).catch(function (e) { avisar(e.message); });
+      } else {
+        datos.accion = 'editar';
+        datos.id = t.id;
+        api(datos).then(function (j) {
+          var idx = tarjetas.findIndex(function (x) { return x.id === t.id; });
+          if (idx !== -1) tarjetas[idx] = j.tarjeta;
+          pintarKanban(); cerrarModal();
+        }).catch(function (e) { avisar(e.message); });
+      }
+    });
+  }
+
+  function cerrarModal() { el('modal-root').innerHTML = ''; }
+
+  el('btn-nueva').addEventListener('click', function () { abrirModal(null); });
+
+  // ================= Revivir ofertas (pestaña Variaciones, 2026-11-11) =================
+  // Pedido del dueño: «la oferta de sermones funcionó bien en Colombia; la de kinesiotaping también, pero ya no se venden… una sección que coja esas ofertas, las analice y busque en
+  // Facebook ofertas que estén vendiendo eso, con otro ángulo, en portugués, en español o en cualquier idioma, para hacerle variaciones», y luego: «una IA que sugiera ángulos que estén
+  // funcionando en otras industrias… cómo volver una oferta que ya vendió en dinamita pura».
+  //   - QUE ofertas: RevivirOfertas.detectar (templates/revivir-ofertas.js) con la serie de ventas de la suite (la misma de /costos-proyectos).
+  //   - QUE hay afuera: /api/revivir (pedido -> el radar del VPS busca en la Biblioteca de anuncios y pide a Gemini angulos de otras industrias -> lo hallado vuelve aqui).
+  //   - Cada anuncio o idea se vuelve una variacion con un boton (var_guardar, con `anuncio` = clave unica para no pedirla dos veces y `referencia` = el anuncio ajeno a modelar).
+  // Todo lo que viene del radar es texto de terceros (o de Gemini resumiendo terceros): se escapa siempre y los enlaces se vuelven a comprobar aqui aunque el servidor ya los rehizo.
+  var VENTAS = __VENTAS_OFERTAS_JSON__;
+  var RV = { productos: [], apagadas: [], hoy: '' };
+  try { if (window.RevivirOfertas && VENTAS) RV = window.RevivirOfertas.detectar(VENTAS); } catch (e) { /* sin serie igual se puede revivir a mano */ }
+  // Nuestros anuncios que mas vendieron, por oferta y pais (2026-11-12; Build-Suite.ps1 con scripts/Anuncios-Por-Oferta.ps1): la BASE de cada variacion. Dentro de un try: una pagina armada
+  // sin este dato (una vista previa vieja del kit del equipo) no se rompe, solo no muestra las bases.
+  var ANUNCIOS = null;
+  try { ANUNCIOS = __ANUNCIOS_OFERTAS_JSON__; } catch (e) { ANUNCIOS = null; }
+  // revLeido: /api/revivir respondio bien (revCargado tambien queda en true si fallo). Numerar exige revLeido (revisor-cambios 17-nov: con la busqueda caida numeraba una oferta
+  // agregada a mano sobre el anuncio de otra).
+  var revLeido = false;
+  var revPedidos = {}, revCargado = false, revCargando = false, revAbierta = {}, revTodas = false, revVerOcultas = false, revTimer = null;
+  var REV_MAX = 8;
+  var PAIS_ISO = { BR: 'Brasil', CO: 'Colombia', MX: 'México', AR: 'Argentina', PE: 'Perú', CL: 'Chile', EC: 'Ecuador', VE: 'Venezuela', GT: 'Guatemala', BO: 'Bolivia', DO: 'R. Dominicana',
+    US: 'EE. UU.', ES: 'España', PT: 'Portugal', UY: 'Uruguay', PY: 'Paraguay', CR: 'Costa Rica', PA: 'Panamá', SV: 'El Salvador', HN: 'Honduras', NI: 'Nicaragua', PR: 'Puerto Rico', GB: 'Reino Unido', CA: 'Canadá' };
+  var IDIOMA = { pt: 'portugués', es: 'español', en: 'inglés', fr: 'francés', it: 'italiano', de: 'alemán' };
+  var PALANCA = { angulo: 'Ángulo', oferta: 'Oferta', formato: 'Formato', publico: 'Público', precio: 'Precio' };
+  var RE_BIBLIOTECA = /^https:\/\/www\.facebook\.com\/ads\/library\/\?[A-Za-z0-9_=&]+$/;
+  function hrefRev(u) { return RE_BIBLIOTECA.test(String(u || '')) ? u : ''; }
+  function minutos(iso) { var t = Date.parse(iso); return isFinite(t) ? (Date.now() - t) / 60000 : Infinity; }
+  function slugTxt(t) { return window.RevivirOfertas ? window.RevivirOfertas.idDe(t) : String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
+
+  function revApi(cuerpo) {
+    return fetch('/api/revivir', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || mensajeDe(r.status)); return j; }); });
+  }
+  function revCargar() {
+    if (revCargando) return;
+    revCargando = true;
+    fetch('/api/revivir', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || mensajeDe(r.status)); return j; }); })
+      .then(function (j) { revPedidos = {}; (j.ofertas || []).forEach(function (o) { if (o && o.id) revPedidos[o.id] = o; }); revCargado = true; revLeido = true; })
+      .catch(function (e) { avisar('Revivir ofertas: ' + e.message); revCargado = true; })
+      .then(function () { revCargando = false; pintarRevivir(); pintarVariaciones(); revProgramar(); });
+  }
+  // Mientras haya una busqueda en fila o en curso, se vuelve a mirar cada minuto (la lista del servidor se guarda 30 s): sin recargar la pagina aparece lo hallado.
+  function revProgramar() {
+    clearTimeout(revTimer);
+    var vivo = Object.keys(revPedidos).some(function (id) { var p = revPedidos[id]; return p.estado === 'pendiente' && minutos(p.pedidoEn) < 45; });
+    if (vivo) revTimer = setTimeout(function () { if (el('tab-variaciones').style.display !== 'none' && document.visibilityState !== 'hidden') revCargar(); else revProgramar(); }, 60000);
+  }
+
+  // La lista: primero lo que se esta buscando o ya se hallo, luego lo que el dash detecto apagado (del mejor mes mas grande al mas chico).
+  function revItems() {
+    var porId = {}; RV.productos.forEach(function (p) { porId[p.id] = p; });
+    var ids = [], vistos = {};
+    function sumar(id) { if (!vistos[id]) { vistos[id] = 1; ids.push(id); } }
+    Object.keys(revPedidos).filter(function (id) { return revPedidos[id].estado; })
+      .sort(function (a, b) { var pa = revPedidos[a], pb = revPedidos[b]; return (pb.estado === 'pendiente') - (pa.estado === 'pendiente') || String(pb.resueltoEn || pb.pedidoEn || '').localeCompare(String(pa.resueltoEn || pa.pedidoEn || '')); })
+      .forEach(sumar);
+    RV.apagadas.forEach(function (p) { sumar(p.id); });
+    Object.keys(revPedidos).forEach(sumar);
+    return ids.map(function (id) {
+      var ped = revPedidos[id] || null, prod = porId[id] || null;
+      return { id: id, ped: ped, prod: prod, nombre: (prod && prod.nombre) || (ped && ped.producto) || id };
+    });
+  }
+  function revEstado(ped) {
+    if (!ped || !ped.estado) return { cls: '', txt: 'Sin buscar todavía.' };
+    var nR = (ped.resultados || []).length, nI = (ped.ideas || []).length;
+    var hallado = (nR ? nR + (nR === 1 ? ' anuncio' : ' anuncios') : '') + (nR && nI ? ' y ' : '') + (nI ? nI + (nI === 1 ? ' idea' : ' ideas') : '');
+    if (ped.estado === 'pendiente') {
+      if (ped.tomadoEn && minutos(ped.pedidoEn) <= 45) return { cls: 'vivo', txt: '🔎 El radar la está buscando (empezó ' + hace(ped.tomadoEn) + '). Tarda unos minutos.' };
+      if (minutos(ped.pedidoEn) > 30) return { cls: 'malo', txt: '⚠️ El radar no la ha tomado (pedida ' + hace(ped.pedidoEn) + '). Puede volver a pedirla.' };
+      return { cls: 'vivo', txt: '⏳ En fila: el radar la toma en menos de 10 minutos (pedida ' + hace(ped.pedidoEn) + ').' };
+    }
+    if (ped.estado === 'listo') return { cls: 'listo', txt: '✅ ' + hallado + ' · ' + hace(ped.resueltoEn) };
+    if (ped.estado === 'sin_resultados') return { cls: '', txt: 'Nadie más la vende con anuncios que lleven semanas' + (nI ? ' · ' + nI + (nI === 1 ? ' idea' : ' ideas') + ' de otras industrias' : '') + ' · ' + hace(ped.resueltoEn) };
+    return { cls: 'malo', txt: '⚠️ La búsqueda falló' + (ped.mensaje ? ': ' + ped.mensaje : '') + ' · ' + hace(ped.resueltoEn) };
+  }
+  function revSpark(prod) {
+    if (!prod || !prod.semanas || !prod.semanas.length) return '';
+    var max = Math.max.apply(null, prod.semanas) || 1;
+    return '<span class="spark" title="Ventas por semana, último medio año (US$)" aria-label="Ventas por semana del último medio año">' +
+      prod.semanas.map(function (v) { return '<i style="height:' + Math.max(2, Math.round(v / max * 100)) + '%"></i>'; }).join('') + '</span>';
+  }
+  function revChips(it) {
+    var out = [];
+    if (it.prod) it.prod.paises.filter(function (r) { return r.fuerte; }).slice(0, 4).forEach(function (r) {
+      var pct = r.ritmo === null ? '' : (r.ritmo >= 0.9 ? ' · al ritmo' : ' · ' + Math.round(r.ritmo * 100) + ' %');
+      out.push('<span class="chip-p' + (r.apagada ? ' apagada' : '') + '" title="Ritmo de las últimas 2 semanas contra su mejor mes">' + esc((NOMBRE_PAIS[r.pais] || r.pais) + pct) + '</span>');
+    });
+    if (it.ped && it.ped.origen === 'manual') out.push('<span class="chip-p manual">Agregada a mano</span>');
+    return out.length ? '<span class="rev-chips">' + out.join('') + '</span>' : '';
+  }
+  function revYaPedida(clave) { return variaciones.some(function (v) { return v.anuncio === clave && v.estado !== 'descartada'; }); }
+  // «Agregar a la cola de Beto» (antes «Hacer variación»; 2026-11-17, Beto: «parece que va a empezar a generar el video ahí mismo o a mandar la orden al Claude de mi PC,
+  // cuando en realidad lo único que hace es agregar la tarea a mi lista»). Nada se edita aqui: la idea queda en su cola con la orden.
+  function revBotonVar(clave, attrs) {
+    var v = revYaPedida(clave) ? variaciones.filter(function (x) { return x.anuncio === clave && x.estado !== 'descartada'; })[0] : null;
+    if (v) return '<button class="sec hecha" disabled>' + (porProducir(v) ? '✓ En la cola de Beto' : '✓ Ya se hizo (' + esc(estVar(v.estado).txt) + ')') + '</button>';
+    return '<button class="primario" ' + attrs + '>➕ Agregar a la cola de Beto</button>';
+  }
+
+  // ---- La base de cada variacion: NUESTRO anuncio que mas vendio (2026-11-12) ----
+  // Pedido del dueño: «esos se supone que son anuncios que ya tenemos y vamos a editarlos poniéndoles alguna variación» -> «hagámoslo en base a los anuncios que más hayan vendido».
+  // Todo sale de ANUNCIOS (numeros de creativo, ventas, dolares y gasto) y de RevivirOfertas (juntar por producto, elegir la base, nombre de la proxima variacion). Solo cifras y numeros
+  // de anuncio escritos por el equipo en Meta: igual se escapan al pintarlos.
+  function textoAnuncio(a) { a = String(a || ''); return window.RevivirOfertas && window.RevivirOfertas.esNumero(a) ? (/^AD /.test(a) ? a : 'anuncio ' + a) : '«' + a + '»'; }
+  function mayuscula(t) { t = String(t || ''); return t.charAt(0).toUpperCase() + t.slice(1); }
+  function miles(n) { return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  // Todos los productos (los detectados y los agregados a mano): un nombre de campaña que calza con dos productos no se le da a ninguno.
+  function revProductosParaEmparejar() {
+    var lista = RV.productos.map(function (p) { return { id: p.id, nombre: p.nombre, alias: p.alias }; }), hay = {};
+    lista.forEach(function (p) { hay[p.id] = 1; });
+    Object.keys(revPedidos).forEach(function (id) { var p = revPedidos[id]; if (!hay[id] && p && p.producto) { hay[id] = 1; lista.push({ id: id, nombre: p.producto, alias: [] }); } });
+    return lista;
+  }
+  var revAnunciosMemo = null, revAnunciosClave = '';
+  function revAnunciosDe(id) {
+    var R = window.RevivirOfertas;
+    if (!ANUNCIOS || !R || !R.anunciosPorProducto) return null;
+    var clave = Object.keys(revPedidos).sort().join('|');
+    if (!revAnunciosMemo || clave !== revAnunciosClave) {
+      try { revAnunciosMemo = R.anunciosPorProducto(ANUNCIOS, revProductosParaEmparejar()); } catch (e) { revAnunciosMemo = {}; }
+      revAnunciosClave = clave;
+    }
+    return revAnunciosMemo[id] || null;
+  }
+  // Los numeros que ya usa el producto, en TODOS sus paises: los de Meta y los de las variaciones pedidas en el tablero que todavia no estan en Meta (cualquier pais). El numero es de la
+  // oferta, no del pais (revisor-cambios, 2026-11-13: por pais, Guatemala proponia «AD 101.4», que ya existe en Colombia, y Colombia y Venezuela proponian los dos «102.4»).
+  function revEtiquetasProducto(it) {
+    var R = window.RevivirOfertas, de = R.emparejador(revProductosParaEmparejar());
+    return R.etiquetasDe(revAnunciosDe(it.id)).concat(variaciones.filter(function (v) { return v.estado !== 'descartada' && de(v.oferta) === it.id; })
+      .map(function (v) { return R.numeroDe(v.nombre); }).filter(Boolean));
+  }
+  function revSiguiente(it, a) { return window.RevivirOfertas.siguienteNumero(a, revEtiquetasProducto(it)); }
+  // UNA lista para toda Latinoamerica (el dueño, 2026-11-13: «colocar esos cuadros del país posiblemente sobra porque estamos haciendo los mismos anuncios para todo latam»): los mismos
+  // videos corren en todos los paises, asi que el 101 de Colombia y el AD 101 de Guatemala se suman. Los 3 que mas vendieron, con donde vendio cada uno.
+  function revBases(it) {
+    var R = window.RevivirOfertas, porPais = revAnunciosDe(it.id);
+    if (!porPais) return null;
+    var pp = R.juntarPaises(porPais), bases = R.basesDe(pp, revEtiquetasProducto(it), 3);
+    return bases.length ? { n: pp.n, id: pp.id, bases: bases } : null;
+  }
+  function revPaisesTxt(b) {
+    var ps = b.paises || [];
+    return ps.slice(0, 5).map(function (x) { return (NOMBRE_PAIS[x.p] || x.p) + ' ' + miles(x.v); }).join(' · ') + (ps.length > 5 ? ' · y ' + (ps.length - 5) + ' más' : '');
+  }
+  function revTarjetaBase(b, i) {
+    var R = window.RevivirOfertas;
+    var fechas = b.d1 && b.d2 ? 'Vendió del ' + R.fechaCorta(R.diaNum(b.d1)) + ' al ' + R.fechaCorta(R.diaNum(b.d2)) : '';
+    var hoy = b.act ? 'sigue encendido' + (b.act > 1 ? ' (' + b.act + ' copias)' : '') : 'apagado hoy';
+    return '<div class="rev-card' + (i === 0 ? ' base-top' : '') + '"><span class="chip-pal">' + (i === 0 ? '⭐ Base recomendada' : (i + 1) + '.ª opción') + '</span>' +
+      '<div class="ang">' + esc(mayuscula(textoAnuncio(b.a))) + '</div>' +
+      '<div class="de">' + esc(R.fraseBase(b)) + '</div>' +
+      ((b.paises || []).length ? '<div class="de">Vendió en: ' + esc(revPaisesTxt(b)) + '</div>' : '') +
+      '<div class="de">' + esc([fechas, hoy].filter(Boolean).join(' · ')) + '</div>' +
+      '<div class="por">' + esc(R.fraseVariaciones(b)) + '</div>' +
+      (R.variacionesFlojas(b) ? '<div class="rev-ojo">⚠️ ' + esc(R.fraseFlojas(b)) + '</div>' : '') +
+      (b.siguiente ? '<div class="prox">La próxima variación se llama ' + esc(b.siguiente) + '</div>' : '') + '</div>';
+  }
+  // Que se hace en CADA variacion, en cuatro pasos (el dueño, 2026-11-13: «quiero que seas muy claro … así como está el editor no sabe qué hacer y yo tampoco tengo claridad»).
+  function revReceta(top) {
+    var R = window.RevivirOfertas, sig = top.siguiente, sig2 = sig ? R.siguienteNumero(top.a, [sig]) : '';
+    return '<div class="rev-plan"><b>✂️ Cómo se hace cada variación</b><ol>' +
+      '<li>Se abre el video original: el ' + esc(textoAnuncio(top.a)) + ', la base recomendada.</li>' +
+      '<li>Se cambia <b>solo el inicio</b>: los primeros segundos, hasta que termina la primera frase. Ahí va el gancho visual de la idea que se elija abajo: las imágenes y el texto grande en pantalla. La voz en off no se toca.</li>' +
+      '<li>El resto queda idéntico: la explicación, las páginas del PDF, la oferta y el cierre.</li>' +
+      '<li>Se guarda con su número' + (sig ? ' (' + esc(sig) + ', ' + esc(sig2) + '…)' : '') + ' y se sube junto al original.</li></ol>' +
+      'Así cada variación cuesta casi nada y, si vende más barato que el original, se sabe que fue por el gancho. Las ideas de <b>oferta</b> cambian también el cierre, y las de <b>formato</b> rehacen el inicio en ese formato: cada tarjeta lo dice. Si un gancho gana con claridad, ese ángulo merece un anuncio completo nuevo, con número propio.</div>';
+  }
+  function revSeccionBases(gp) {
+    var R = window.RevivirOfertas, h = '<h4>🏆 Nuestros anuncios que más vendieron · toda Latinoamérica</h4>';
+    if (!gp) return h + '<div class="rev-vacio">' + (ANUNCIOS ? 'No hay ventas con su anuncio identificado para esta oferta en el último año: la variación sale sin anuncio base.' : 'Esta página no trae los anuncios de cada oferta.') + '</div>';
+    h += '<div class="rev-cons">Son los mismos videos en todos los países, así que se suman sus ventas. Se sabe de qué anuncio vino el chat en ' + esc(miles(gp.id)) + ' de las ' + esc(R.ventasTxt(gp.n)) +
+      ' del último año. Van primero los que más dólares trajeron desde que el dash guarda el gasto. El número de la próxima variación es de la oferta: no repite uno que ya exista en ningún país.</div>';
+    h += '<div class="rev-grid">' + gp.bases.map(revTarjetaBase).join('') + '</div>';
+    return h + revReceta(gp.bases[0]);
+  }
+  // En cada idea y en cada anuncio de afuera: que se le cambia a la base recomendada.
+  function revQueCambia(top, cambio, ajeno) {
+    if (!top) return '';
+    var c = window.RevivirOfertas.CAMBIOS[cambio] || window.RevivirOfertas.CAMBIOS.inicio;
+    return '<div class="cambia">✂️ ' + esc('Qué se cambia del ' + textoAnuncio(top.a) + ': ' + c.corto.toLowerCase() +
+      (cambio === 'inicio-cierre' ? ' (y el bot vende lo mismo)' : ajeno ? ', modelando el de este anuncio' : '') + '. El resto, igual.') + '</div>';
+  }
+
+  function revDetalle(it) {
+    var ped = it.ped || {}, prod = it.prod, h = '', gp = revBases(it), top = gp ? gp.bases[0] : null, R = window.RevivirOfertas;
+    h += '<h4>Cómo vendía</h4>';
+    if (prod && prod.paises.length) {
+      h += prod.paises.slice(0, 5).map(function (r) {
+        return '<div class="rev-pais"><b>' + esc(NOMBRE_PAIS[r.pais] || r.pais) + (r.apagada ? ' 🔻' : '') + '.</b> ' + esc(window.RevivirOfertas.frasePais(r)) + '</div>';
+      }).join('');
+      if (prod.alias.length > 1) h += '<div class="rev-cons">Junta las ventas de: ' + esc(prod.alias.join(', ')) + '.</div>';
+    } else h += '<div class="rev-msg">No hay ventas de esta oferta en el último año en la serie del dash (se agregó a mano).</div>';
+    h += revSeccionBases(gp);
+    if (ped.descripcion) h += '<div class="rev-cons">Lo que se le dijo al radar: «' + esc(ped.descripcion) + '»</div>';
+    if (ped.mensaje && ped.estado !== 'error') h += '<div class="rev-msg">' + esc(ped.mensaje) + '</div>';
+    if ((ped.consultas || []).length) {
+      h += '<div class="rev-cons">Buscó: ' + ped.consultas.map(function (c) {
+        return '«' + esc(c.q) + '» en ' + esc(PAIS_ISO[c.pais] || c.pais || '?') + (c.n ? ' (' + c.n + ')' : '');
+      }).join(' · ') + '</div>';
+    }
+    // Ideas de otras industrias
+    var ideas = ped.ideas || [];
+    h += '<h4>💡 Ángulos prestados de otras industrias <span class="cnt">' + ideas.length + '</span></h4>';
+    if (ideas.length) {
+      h += '<div class="rev-grid">' + ideas.map(function (x, i) {
+        var clave = claveIdea(it.id, x);
+        return '<div class="rev-card"><span class="chip-pal">' + esc(PALANCA[x.palanca] || 'Ángulo') + '</span><div class="ang">' + esc(x.angulo) + '</div>' +
+          (x.de ? '<div class="de">Funciona en: ' + esc(x.de) + '</div>' : '') +
+          (x.gancho ? '<div class="gan">«' + esc(x.gancho) + '»</div>' + avisoAtributo(x.gancho) : '') + (x.como ? '<div class="por">' + esc(x.como) + '</div>' : '') +
+          revQueCambia(top, R.cambioDe(x.palanca), false) +
+          '<div class="lnk">' + revBotonVar(clave, 'data-rev-idea="' + esc(it.id) + '" data-i="' + i + '"') + '</div></div>';
+      }).join('') + '</div>';
+    } else h += '<div class="rev-vacio">' + (ped.estado === 'pendiente' ? 'Llegan con la búsqueda.' : 'Salen al pulsar «Buscar ángulos»: la IA del radar toma los ángulos que hoy funcionan en otros nichos y los adapta a esta oferta.') + '</div>';
+    // Anuncios ajenos que venden lo mismo: los del mismo angulo quedan juntos (en el orden en que el radar los puso, el mejor primero) y cada tarjeta lleva su angulo.
+    // Una sola grilla y no un titulo por angulo: casi siempre cada angulo trae un solo anuncio, y un titulo por tarjeta dejaba media pantalla vacia.
+    var res = ped.resultados || [];
+    h += '<h4>📣 Quién la vende hoy afuera <span class="cnt">' + res.length + '</span></h4>';
+    if (res.length) {
+      var grupos = {}, orden = [];
+      res.forEach(function (r, i) { var g = r.angulo || 'Sin ángulo claro', k = g.toLowerCase(); if (!grupos[k]) { grupos[k] = []; orden.push(k); } grupos[k].push({ r: r, i: i }); });
+      h += '<div class="rev-grid">' + orden.map(function (k) { return grupos[k]; }).reduce(function (a, g) { return a.concat(g); }, []).map(function (f) {
+        var r = f.r, en = hrefRev(r.enlace), pag = hrefRev(r.enlacePagina);
+        var datos = [PAIS_ISO[r.pais] || r.pais, IDIOMA[r.idioma] || r.idioma, r.dias ? r.dias + ' días al aire' : '', r.activos ? r.activos + ' anuncios activos' : '', r.formato, r.parecido === 'parecido' ? 'producto parecido' : ''].filter(Boolean).join(' · ');
+        return '<div class="rev-card"><span class="chip-pal">' + esc(r.angulo || 'Sin ángulo claro') + '</span><div class="ang">' + esc(r.anunciante || 'Anunciante') + '</div><div class="de">' + esc(datos) + '</div>' +
+          (r.gancho ? '<div class="gan">«' + esc(r.gancho) + '»</div>' + avisoAtributo(r.gancho) : '') + (r.porque ? '<div class="por">' + esc(r.porque) + '</div>' : '') +
+          revQueCambia(top, 'inicio', true) +
+          '<div class="lnk">' + (en ? '<a href="' + esc(en) + '" target="_blank" rel="noopener">Ver el anuncio ↗</a>' : '') + (pag ? '<a href="' + esc(pag) + '" target="_blank" rel="noopener">Todos sus anuncios ↗</a>' : '') +
+          revBotonVar('revivir-' + r.ad, 'data-rev-ad="' + esc(it.id) + '" data-i="' + f.i + '"') + '</div></div>';
+      }).join('') + '</div>';
+    } else h += '<div class="rev-vacio">' + (ped.estado === 'pendiente' ? 'El radar está en eso.' : ped.estado === 'sin_resultados' ? 'El radar no halló a nadie vendiendo lo mismo con anuncios que lleven semanas. Pruebe describir la oferta con otras palabras y buscar de nuevo, o use las ideas de arriba.' : 'Todavía no se ha buscado.') + '</div>';
+    h += '<div class="rev-pie">' + (ped.oculta ? '<button class="sec" data-rev-ocultar="' + esc(it.id) + '" data-oculta="0">Volver a mostrarla</button>'
+      : '<button class="sec" data-rev-ocultar="' + esc(it.id) + '" data-oculta="1">No revivir esta (sacarla de la lista)</button>') + '</div>';
+    return '<div class="rev-det">' + h + '</div>';
+  }
+  function pintarRevivir() {
+    var lista = el('rev-lista'), pie = el('rev-pie'); if (!lista) return;
+    el('rev-intro').textContent = (RV.productos.length
+      ? 'Las que vendieron bien y hoy venden poco: su mejor mes del último año contra las últimas 2 semanas (ventas al ' + window.RevivirOfertas.fechaCorta(window.RevivirOfertas.diaNum(RV.hoy)) + '). '
+      : 'Esta página no trae la serie de ventas; igual puede revivir una oferta a mano. ') +
+      'Pulse «Buscar ángulos»: en unos 15 minutos el radar trae anuncios de otros que llevan semanas vendiendo ese producto (en portugués, español o inglés) e ideas de ángulos que hoy funcionan en otras industrias. Con «➕ Agregar a la cola de Beto», cada uno queda en su cola como variación de nuestro anuncio que más vendió: se le cambia el inicio y el resto queda igual.';
+    if (!revCargado) { lista.innerHTML = '<div class="rev-vacio">Cargando…</div>'; pie.innerHTML = ''; return; }
+    var items = revItems();
+    var visibles = items.filter(function (x) { return !(x.ped && x.ped.oculta); }), ocultas = items.filter(function (x) { return x.ped && x.ped.oculta; });
+    var mostrar = (revVerOcultas ? ocultas : visibles), corte = revTodas || revVerOcultas ? mostrar : mostrar.slice(0, REV_MAX);
+    lista.innerHTML = corte.length ? corte.map(function (it) {
+      var ped = it.ped, est = revEstado(ped), abierta = !!revAbierta[it.id], vivo = ped && ped.estado === 'pendiente' && minutos(ped.pedidoEn) < 30;
+      return '<div class="rev-of" data-rev-of="' + esc(it.id) + '"><div class="rev-fila"><div class="t"><b>' + esc(it.nombre) + '</b>' + revChips(it) +
+        '<span class="rev-est ' + est.cls + '">' + esc(est.txt) + '</span></div>' + revSpark(it.prod) +
+        '<div class="acc"><button class="sec" data-rev-ver="' + esc(it.id) + '">' + (abierta ? 'Cerrar' : 'Ver') + '</button>' +
+        '<button class="' + (ped && ped.estado && ped.estado !== 'pendiente' ? 'sec' : 'primario') + '" data-rev-buscar="' + esc(it.id) + '"' + (vivo ? ' disabled' : '') + '>' +
+        (vivo ? 'Buscando…' : ped && ped.estado ? 'Buscar de nuevo' : 'Buscar ángulos') + '</button></div></div>' +
+        (abierta ? revDetalle(it) : '') + '</div>';
+    }).join('') : '<div class="rev-vacio">' + (revVerOcultas ? 'No hay ofertas ocultas.' : 'Ninguna oferta se apagó según las ventas del último año. Puede revivir cualquiera con «+ Revivir otra oferta».') + '</div>';
+    var b = [];
+    if (!revVerOcultas && !revTodas && visibles.length > REV_MAX) b.push('<button class="sec" data-rev-todas="1">Ver todas (' + visibles.length + ')</button>');
+    if (ocultas.length || revVerOcultas) b.push('<button class="sec" data-rev-ver-ocultas="1">' + (revVerOcultas ? 'Volver a la lista' : 'Sacadas de la lista (' + ocultas.length + ')') + '</button>');
+    pie.innerHTML = b.join('');
+  }
+
+  // Pedir la busqueda: «¿de que es la oferta?» ayuda al radar a buscar mejor (sinonimos, otros idiomas). Los paises van solos: donde la oferta vendia.
+  function revDialogoBuscar(id, nombreLibre) {
+    var it = revItems().filter(function (x) { return x.id === id; })[0] || null;
+    var nombre = it ? it.nombre : '', ped = it && it.ped, prod = it && it.prod;
+    var todos = RV.productos.map(function (p) { return p.nombre; });
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>' + (it ? 'Buscar ángulos nuevos' : 'Revivir otra oferta') + '</h2>' +
+      '<label>Oferta</label>' + (it ? '<div class="rev-pais"><b>' + esc(nombre) + '</b></div>'
+        : '<input type="text" id="rv-nombre" maxlength="80" list="rv-sug" value="' + esc(nombreLibre || '') + '" placeholder="Ej.: Sermones Bíblicos"><datalist id="rv-sug">' + todos.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>') +
+      '<label>¿De qué es la oferta? (opcional, ayuda a buscar mejor)</label><textarea id="rv-desc" maxlength="300" placeholder="Ej.: sermones bíblicos listos para predicar, en PDF; para pastores y líderes de iglesia">' + esc(ped ? ped.descripcion : '') + '</textarea>' +
+      '<p class="ayuda">El radar busca en la Biblioteca de anuncios de Facebook en portugués (Brasil), español (Colombia, México, Argentina, Perú) e inglés (EE. UU.) a quien lleve semanas anunciando ese producto, y le pide a la IA ideas de ángulos de otras industrias. Tarda unos 15 minutos y cuesta centavos.</p>' +
+      '<div class="btns"><button class="sec" id="rv-cancel">Cancelar</button><button class="primario" id="rv-ok">Buscar</button></div></div></div>';
+    el('rv-cancel').addEventListener('click', cerrarModal);
+    el('rv-ok').addEventListener('click', function () {
+      var producto = it ? nombre : el('rv-nombre').value.trim();
+      if (!producto) { el('rv-nombre').focus(); return; }
+      var prodElegido = prod || RV.productos.filter(function (p) { return p.id === slugTxt(producto); })[0] || null;
+      if (!it && prodElegido) producto = prodElegido.nombre;
+      var paises = prodElegido ? prodElegido.paises.filter(function (r) { return r.fuerte; }).map(function (r) { return r.pais; }) : [];
+      var b = this; b.disabled = true; b.textContent = 'Pidiendo…';
+      revApi({ accion: 'pedir', producto: producto, descripcion: el('rv-desc').value.trim(), paises: paises, origen: prodElegido && prodElegido.apagada ? 'detectada' : 'manual' })
+        .then(function (j) { if (j.oferta) { revPedidos[j.oferta.id] = j.oferta; revAbierta[j.oferta.id] = true; } cerrarModal(); pintarRevivir(); revProgramar(); })
+        .catch(function (e) { b.disabled = false; b.textContent = 'Buscar'; avisar(e.message); cerrarModal(); });
+    });
+    (it ? el('rv-desc') : el('rv-nombre')).focus();
+  }
+
+  // Un anuncio ajeno o una idea -> una variacion en Idea, en los paises donde la oferta vendia. Se relee la lista justo antes para no pedir dos veces la misma (otra persona pudo pedirla).
+  // `ajustar` (si viene) termina el cuerpo con la lista ya releida: asi el numero de la proxima variacion (101.7) cuenta tambien las que otra persona acaba de pedir.
+  function revVariacion(clave, cuerpo, boton, ajustar) {
+    boton.disabled = true; boton.textContent = 'Agregando…';
+    fetch('/api/tablero?solo=variaciones&originales=1', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+      .then(function (j) {
+        if (j && Array.isArray(j.variaciones)) variaciones = j.variaciones;
+        if (revYaPedida(clave)) { pintarVariaciones(); pintarRevivir(); return; }
+        // Primero se numeran las que esten sin numero (ver autoNumerar): asi la nueva toma el siguiente despues de ellas.
+        return numerarPendientes(false).then(function () {
+          return guardarFila('var_guardar', Object.assign({ anuncio: clave }, ajustar ? ajustar(cuerpo) : cuerpo), 'var');
+        }).then(function () { pintarRevivir(); });
+      });
+  }
+  // «Agregar a la cola de Beto» pregunta sobre cual anuncio NUESTRO se hace (viene marcado el que mas vendio en toda Latinoamerica) y QUE se le cambia (viene marcado lo que pide la idea: casi
+  // siempre solo el inicio). La variacion queda con `base` (ese numero), `cambio`, el gancho y los paises donde vende ese anuncio; su nombre empieza por el numero de la proxima
+  // («101.7 · Idea: …»), que es como el equipo la nombra en Meta y como el dash la junta despues con su original. Sin datos de anuncios: como antes (sin base ni cambio).
+  function revElegirBase(it, clave, cuerpo, boton, cambio) {
+    var R = window.RevivirOfertas, gp = revBases(it), ops = gp ? gp.bases : [];
+    if (!ops.length) { revVariacion(clave, cuerpo, boton); return; }
+    cambio = R.cambioValido(cambio) || 'inicio';
+    function radio(nombre, valor, on, html) { return '<label class="rev-base-op' + (on ? ' on' : '') + '"><input type="radio" name="' + nombre + '" value="' + esc(valor) + '"' + (on ? ' checked' : '') + '><span>' + html + '</span></label>'; }
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal"><h2>➕ Agregar a la cola de Beto</h2>' +
+      '<div class="rev-pais"><b>' + esc(cuerpo.nombre) + '</b></div>' +
+      '<label>¿Sobre cuál anuncio nuestro?</label><div class="rev-bases" data-grupo="rv-base">' +
+      ops.map(function (b, i) {
+        var np = (b.paises || []).length;
+        return radio('rv-base', String(i), i === 0, '<b>' + esc(mayuscula(textoAnuncio(b.a))) + '</b> — ' + esc(R.ventasTxt(b.v) + (np > 1 ? ' en ' + np + ' países' : np === 1 ? ' en ' + (NOMBRE_PAIS[b.paises[0].p] || b.paises[0].p) : '') +
+          (i === 0 ? ', la recomendada' : '') + (b.siguiente ? '. Se llamará ' + b.siguiente : '')));
+      }).join('') +
+      '</div>' +
+      '<label>¿Qué se le cambia?</label><div class="rev-bases" data-grupo="rv-cambio">' +
+      Object.keys(R.CAMBIOS).map(function (k) { return radio('rv-cambio', k, k === cambio, '<b>' + esc(R.CAMBIOS[k].corto) + '</b> — ' + esc(R.CAMBIOS[k].que)); }).join('') + '</div>' +
+      '<p class="ayuda">Aquí no se edita ningún video: la idea queda arriba, en «Cola de Beto: por producir», con su número y la orden completa para que él la haga con su Claude. Lo que no se cambia queda idéntico al original.</p>' +
+      '<div class="btns"><button class="sec" id="rvb-cancel">Cancelar</button><button class="primario" id="rvb-ok">Agregar a la cola</button></div></div></div>';
+    var raiz = el('modal-root');
+    raiz.querySelectorAll('.rev-base-op input').forEach(function (c) {
+      c.addEventListener('change', function () { raiz.querySelectorAll('.rev-base-op input[name="' + c.name + '"]').forEach(function (x) { x.parentNode.classList.toggle('on', x.checked); }); });
+    });
+    el('rvb-cancel').addEventListener('click', cerrarModal);
+    el('rvb-ok').addEventListener('click', function () {
+      // Siempre sobre un anuncio nuestro (2026-11-17, Beto: «que tome siempre el anuncio ganador base»): ya no hay «Ninguno».
+      var sel = raiz.querySelector('input[name="rv-base"]:checked'), b = ops[sel ? +sel.value : 0] || ops[0];
+      var selC = raiz.querySelector('input[name="rv-cambio"]:checked'), cam = R.cambioValido(selC ? selC.value : '') || 'inicio';
+      cerrarModal();
+      if (!b) { revVariacion(clave, cuerpo, boton); return; }
+      revVariacion(clave, cuerpo, boton, function (c0) {
+        // Los paises: donde vende ese anuncio (el que mas primero) y despues los de antes (donde la oferta vendia); se cambian en el formulario.
+        var c = Object.assign({}, c0), sig = revSiguiente(it, b.a), suyos = (b.paises || []).map(function (x) { return x.p; }).filter(function (p) { return NOMBRE_PAIS[p]; });
+        c.base = b.a; c.cambio = cam;
+        c.paises = suyos.concat((c0.paises || []).filter(function (p) { return suyos.indexOf(p) === -1; })).slice(0, 4);
+        if (sig) c.nombre = (sig + ' · ' + c0.nombre).slice(0, 100);
+        return c;
+      });
+    });
+  }
+  function revPaisesVar(it) {
+    var ps = it && it.prod ? it.prod.paises.filter(function (r) { return r.apagada || r.fuerte; }).map(function (r) { return r.pais; }).filter(function (p) { return NOMBRE_PAIS[p]; }) : [];
+    return ps.length ? ps.slice(0, 4) : ['colombia'];
+  }
+
+  function revGuia() {
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal ancho guia"><h2>🧨 Cómo volver dinamita una oferta que ya vendió</h2>' + GUIA_DINAMITA +
+      '<div class="btns"><button class="primario" id="gd-ok">Entendido</button></div></div></div>';
+    el('gd-ok').addEventListener('click', cerrarModal);
+    el('modal-root').querySelector('.modal-bg').addEventListener('click', function (e) { if (e.target === this) cerrarModal(); });
+  }
+  // La receta (texto fijo, escrito aqui, sin nada de terceros). Salio de una investigacion del 2026-11-11 (guias de Meta sobre variedad de anuncios, saturacion, aprendizaje y atributos
+  // personales; Schwartz, Hormozi; practica de agencias): lo que es practica y no dato medido se dice asi. Las ideas de cada oferta las arma la IA del radar (revivir.py) con estas mismas
+  // palancas y con la misma regla de Meta. El detalle y las fuentes estan en la skill mi-dashboard («Revivir ofertas»).
+  var GUIA_DINAMITA =
+    '<p>Una oferta que vendió bien y se apagó casi nunca está muerta: lo que se gasta es el anuncio y la gente más fácil de convencer, no las ganas de comprar. Se revive cambiando lo que la gente VE, de lo más barato a lo más caro.</p>' +
+    '<ol>' +
+    '<li><b>Mire antes de tocar.</b> Si los chats siguen llegando al mismo costo pero ya nadie compra, el problema es el bot o el precio, no el anuncio. Si el costo por conversación se duplicó, es cansancio del anuncio.</li>' +
+    '<li><b>Rescate la promesa que vendía.</b> Escríbala en una frase: qué prometía y a quién. Esa promesa sigue viva; lo que cambia es cómo se cuenta.</li>' +
+    '<li><b>Primero, ganchos nuevos.</b> Es lo más barato: 3 a 5 comienzos distintos (los primeros 3 segundos o el titular) para el mismo anuncio. Ejemplo: «52 domingos resueltos en un solo archivo».</li>' +
+    '<li><b>Si no basta, un ángulo nuevo</b> (la razón para comprar). Meta muestra como uno solo los anuncios muy parecidos: hay que variar la idea, no los colores. Ejemplo: de «aprenda a vendar» a «el error que despega la cinta en una hora».</li>' +
+    '<li><b>Robe ángulos de otras industrias.</b> El error, el atajo, la lista con número, «menos que una pizza», el reto con plazo… Las tarjetas «Ángulos prestados» de cada oferta traen ejemplos ya adaptados.</li>' +
+    '<li><b>Póngale un método con nombre.</b> Cuando el público ya oyó la promesa, vende un «cómo» nuevo: «Método Bosquejo en 5 pasos», «Mapa de colores de la cinta».</li>' +
+    '<li><b>Un público nuevo para el mismo PDF.</b> Sermones: también líderes de célula, de jóvenes o maestras de escuela dominical. Kinesiotaping: entrenadores y mamás de deportistas.</li>' +
+    '<li><b>Vuelva el PDF un kit con nombre.</b> Más volumen y bonos («Kit Predica Todo el Año»: 52 bosquejos + 12 sermones de fechas especiales), un complemento barato al pagar en el bot, garantía de 7 días y urgencia solo si es verdad.</li>' +
+    '<li><b>Prueba real en el chat.</b> Que el bot muestre 2 páginas del PDF y una captura de un cliente agradecido: la gente pide pruebas de que el negocio es real antes de comprar.</li>' +
+    '<li><b>Varias ideas distintas cada semana.</b> 3 a 5 ángulos nuevos, cada uno con 2 o 3 ganchos, en formatos variados: hojear el PDF en video, carrusel de páginas, testimonio con el celular, escena en primera persona.</li>' +
+    '<li><b>Público amplio y optimizar por compra.</b> Que el bot le avise a Meta cada pago; sacar a quien ya compró; probar otros países con el precio ajustado. Poco dinero repartido en muchos grupos no aprende.</li>' +
+    '<li><b>Vuelva a los que ya compraron</b> con un kit 2 o un paquete de temporada: es el público más barato.</li>' +
+    '</ol>' +
+    '<p><b>Qué cambiar según lo que pase.</b> Menos gente se detiene pero los que escriben compran: cambie el gancho. Todos los ganchos del mismo argumento se caen rápido: ángulo nuevo. El costo sube en todos los anuncios a la vez: público o país nuevo. Chats baratos que no compran o «eso está gratis en YouTube»: cambie la oferta. La gente se va al ver el precio o el enlace de pago: arregle el bot. Pocos días o pocas ventas: espere, y cambie una sola cosa a la vez.</p>' +
+    '<p><b>⚠️ Regla de Meta.</b> Un anuncio no puede preguntar ni insinuar la religión o la salud de quien lo ve: «¿Eres cristiano?» o «¿Te duele la rodilla?» se rechazan; «Sermones listos para este domingo» o «Guía de kinesiotaping para rodilla» sí pasan.</p>' +
+    '<p>Cada idea y cada anuncio de afuera pasa a la cola de Beto con «➕ Agregar a la cola de Beto»: se elige sobre cuál de nuestros anuncios se hace (viene marcado el que más vendió en toda Latinoamérica) y qué se le cambia (casi siempre, solo el inicio; el resto queda idéntico). Ahí no se edita nada todavía: queda en «Cola de Beto: por producir», arriba, con su número (101.7, 101.8…), el gancho y la orden completa para el editor.</p>';
+  // La misma regla, mirada en cada gancho que llega (de la IA o de un anuncio ajeno): solo AVISA, no borra. El radar ya filtra las ideas; esto cubre lo que se cuele y los anuncios de afuera.
+  var RE_ATRIBUTO = /(\b(eres|estás|estas|sufres|padeces|tienes|te sientes|você é|você está|sofre|are you|do you suffer)\b.{0,40}\b(cristian|catól|catol|evangél|evangel|creyente|cristã|dolor|lesi[oó]n|diabet|ansiedad|depresi|enferm|artritis|obes|dor\b|pain)|¿\s*te duele|\bte duele\b|\bsente dor\b)/i;
+  function avisoAtributo(t) { return RE_ATRIBUTO.test(String(t || '')) ? '<div class="por" style="color:#ff8fb0">⚠️ Este gancho insinúa la religión o la salud de quien lo ve: Meta lo rechaza. Cámbielo antes de usarlo.</div>' : ''; }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-rev-ver], [data-rev-buscar], [data-rev-ad], [data-rev-idea], [data-rev-ocultar], [data-rev-todas], [data-rev-ver-ocultas]') : null;
+    if (!b) return;
+    if (b.hasAttribute('data-rev-ver')) { var id = b.getAttribute('data-rev-ver'); revAbierta[id] = !revAbierta[id]; pintarRevivir(); }
+    else if (b.hasAttribute('data-rev-buscar')) revDialogoBuscar(b.getAttribute('data-rev-buscar'));
+    else if (b.hasAttribute('data-rev-todas')) { revTodas = true; pintarRevivir(); }
+    else if (b.hasAttribute('data-rev-ver-ocultas')) { revVerOcultas = !revVerOcultas; pintarRevivir(); }
+    else if (b.hasAttribute('data-rev-ocultar')) {
+      var oid = b.getAttribute('data-rev-ocultar'), it0 = revItems().filter(function (x) { return x.id === oid; })[0];
+      b.disabled = true;
+      revApi({ accion: 'ocultar', id: oid, producto: it0 ? it0.nombre : '', oculta: b.getAttribute('data-oculta') === '1' })
+        .then(function (j) { if (j.oferta) revPedidos[oid] = j.oferta; else delete revPedidos[oid]; revAbierta[oid] = false; pintarRevivir(); })
+        .catch(function (er) { b.disabled = false; avisar(er.message); });
+    } else {
+      var esAd = b.hasAttribute('data-rev-ad'), pid = b.getAttribute(esAd ? 'data-rev-ad' : 'data-rev-idea'), i = +b.getAttribute('data-i');
+      var it = revItems().filter(function (x) { return x.id === pid; })[0]; if (!it || !it.ped) return;
+      if (esAd) {
+        var r = (it.ped.resultados || [])[i]; if (!r) return;
+        revElegirBase(it, 'revivir-' + r.ad, { oferta: it.nombre, nombre: ('Ángulo: ' + (r.angulo || 'de ' + r.anunciante) + (r.anunciante ? ' (' + r.anunciante.slice(0, 30) + ')' : '')).slice(0, 100),
+          referencia: hrefRev(r.enlace), gancho: (r.gancho || '').slice(0, 200), nota: (r.porque || '').slice(0, 300), paises: revPaisesVar(it) }, b, 'inicio');
+      } else {
+        var x = (it.ped.ideas || [])[i]; if (!x) return;
+        var clave = claveIdea(it.id, x);
+        revElegirBase(it, clave, { oferta: it.nombre, nombre: ('Idea: ' + x.angulo + (x.de ? ' (como en ' + x.de + ')' : '')).slice(0, 100),
+          gancho: (x.gancho || '').slice(0, 200), nota: (x.como || '').slice(0, 300), paises: revPaisesVar(it) }, b, window.RevivirOfertas.cambioDe(x.palanca));
+      }
+    }
+  });
+  el('rev-otra').addEventListener('click', function () { revDialogoBuscar(null); });
+  el('rev-guia').addEventListener('click', revGuia);
+  // «Buscar ideas para variaciones» plegada por defecto (2026-11-17, Beto: «si se deja colapsado por defecto, la pantalla queda súper limpia»). Cada equipo recuerda si la dejo
+  // abierta (quien investiga la abre una vez; quien produce no la ve). La lista se sigue cargando al abrir la pestaña: el numero de la proxima variacion cuenta las ofertas agregadas a mano.
+  var IDEAS_ABIERTAS = 'tablero.ideasAbiertas';
+  function pintarPlegado(abierta) {
+    el('rev-cuerpo').hidden = !abierta;
+    el('rev-plegar').setAttribute('aria-expanded', abierta ? 'true' : 'false');
+    el('rev-plegar').querySelector('.rev-flecha').textContent = abierta ? 'Ocultar ▴' : 'Mostrar ▾';
+  }
+  el('rev-plegar').addEventListener('click', function () {
+    var abrir = el('rev-cuerpo').hidden;
+    try { localStorage.setItem(IDEAS_ABIERTAS, abrir ? '1' : '0'); } catch (e) { /* navegador sin almacenamiento: solo por esta vez */ }
+    pintarPlegado(abrir);
+  });
+  (function () { var a = false; try { a = localStorage.getItem(IDEAS_ABIERTAS) === '1'; } catch (e) { a = false; } pintarPlegado(a); })();
+  // Se carga al abrir la pestaña (y si la pagina abrio directo en #variaciones): quien solo mira el tablero no gasta un listado de KV.
+  var btnVar = document.querySelector('.tabs button[data-tab="variaciones"]');
+  if (btnVar) btnVar.addEventListener('click', function () { if (!revCargado) revCargar(); veCargar(); });
+  pintarRevivir();
+  if (el('tab-variaciones').style.display !== 'none') { revCargar(); veCargar(); }
+
+  cargar();
+})();
+</script>

@@ -1,0 +1,47 @@
+#!/bin/bash
+# pesado [--fondo] <comando> [argumentos...]
+#
+# Para lo que gasta mucha memoria o procesador (render de Remotion, transcribir con Whisper, analizar b-roll, montaje): espera a que el CORREDOR de anuncios del servidor no este
+# trabajando y haya memoria libre, y entonces corre el comando. El servidor es chico (2 nucleos, 8 GB) y lo comparten el radar, el corredor de anuncios y tu cuenta: si dos renders
+# pesados corren a la vez, el sistema mata uno (y mata primero el del corredor). Con `pesado` no se pisan.
+#
+#   pesado node scripts/remotion.mjs render ...        espera su turno y corre aqui; ves la salida
+#   pesado --fondo python scripts/montaje_auto.py ...   lo deja corriendo AUNQUE se corte tu conexion; la salida va a ~/trabajos/<fecha>-<nombre>.log
+#
+# Espera hasta 90 minutos su turno; si no llega, sale con error y dice por que. No es una proteccion contra quien no lo use: tu cuenta tiene sus propios topes (4 GB de memoria,
+# 1,5 nucleos) y el servidor sacrifica primero lo tuyo, pero usalo siempre para lo pesado.
+set -u
+LIBRE_MIN_MB=3500
+ESPERA_MAX_S=5400
+usar() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+fondo=0
+[ "${1:-}" = "--fondo" ] && { fondo=1; shift; }
+[ $# -gt 0 ] || usar
+
+esperar_turno() {
+  local t0 ahora motivo libre
+  t0=$(date +%s)
+  while :; do
+    motivo=""
+    if [ "$(systemctl is-active anuncios-corredor.service 2>/dev/null)" = "active" ] || [ "$(systemctl is-active anuncios-corredor.service 2>/dev/null)" = "activating" ]; then motivo="el corredor de anuncios esta trabajando un anuncio"; fi
+    libre=$(awk '/^MemAvailable:/ {print int($2/1024)}' /proc/meminfo)
+    if [ -z "$motivo" ] && [ "${libre:-0}" -lt "$LIBRE_MIN_MB" ]; then motivo="solo hay ${libre} MB de memoria libre (hacen falta ${LIBRE_MIN_MB})"; fi
+    [ -z "$motivo" ] && return 0
+    ahora=$(date +%s)
+    if [ $((ahora - t0)) -ge "$ESPERA_MAX_S" ]; then echo "pesado: espere 90 minutos y sigue ocupado: $motivo. No corri nada." >&2; return 1; fi
+    echo "pesado: espero mi turno ($motivo)..." >&2
+    sleep 30
+  done
+}
+
+if [ "$fondo" -eq 1 ]; then
+  mkdir -p "$HOME/trabajos"
+  nombre="$(basename "$1" | tr -c 'A-Za-z0-9._-' '_')"
+  log="$HOME/trabajos/$(date +%Y%m%d-%H%M%S)-$nombre.log"
+  # se vuelve a lanzar a si mismo sin --fondo, separado de tu conexion: espera el turno y corre; si tu conexion se corta, sigue
+  setsid nohup "$0" "$@" > "$log" 2>&1 < /dev/null &
+  echo "pesado: lo deje en segundo plano (pid $!). Salida: $log   (mirala con: tail -f \"$log\")"
+  exit 0
+fi
+esperar_turno || exit 1
+exec "$@"

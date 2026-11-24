@@ -1,0 +1,1847 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fábrica de ofertas — Suite</title>
+<style>
+  body { margin:0; background:#020916; color:#f3f5fa; font:13.5px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:1320px; margin:0 auto; padding:24px 22px 90px; }
+  h1 { font-size:21px; font-weight:800; letter-spacing:-.4px; margin:0 0 3px; }
+  h2, h3 { margin:0; }
+  .sub { color:#90a2cd; font-size:12.5px; margin:0; max-width:700px; }
+  .cabecera { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:10px 20px; margin:0 0 14px; }
+
+  /* Botones y campos: 40 px de alto como minimo (lo que se toca con el dedo). border-box: un <a class="btn"> es content-box por omision. */
+  .btn { box-sizing:border-box; max-width:100%; min-height:40px; padding:0 14px; border-radius:9px; border:1px solid #132751; background:#09152f; color:#d3daeb;
+         font:650 13px ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; text-align:center; }
+  .btn:hover { border-color:#2f6bff; color:#fff; }
+  .btn:disabled { opacity:.5; cursor:default; border-color:#132751; color:#d3daeb; }
+  .btn.prim { background:linear-gradient(135deg,#2f6bff,#5b8cff); border-color:transparent; color:#fff; box-shadow:0 0 16px rgba(47,107,255,.4); }
+  .btn.prim:disabled { box-shadow:none; }
+  .btn.peligro { color:#ff8fb0; }
+  .btn.ancho { width:100%; }
+  input[type="text"], input[type="url"], input[type="number"], select, textarea { width:100%; box-sizing:border-box; min-height:40px; padding:8px 11px; border-radius:9px; border:1px solid #132751; background:#09152f; color:#f3f5fa; font:13px ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  textarea { resize:vertical; min-height:70px; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#4d8bff; }
+  input:disabled, select:disabled, textarea:disabled { opacity:.55; }
+  input[type="color"] { width:46px; min-height:40px; padding:2px; border-radius:9px; border:1px solid #132751; background:#09152f; flex:0 0 46px; }
+  label.campo { display:flex; flex-direction:column; gap:4px; font-size:11px; color:#90a2cd; font-weight:600; min-width:0; }
+  .chk { display:flex; align-items:center; gap:9px; min-height:40px; font-size:12.5px; color:#d3daeb; cursor:pointer; }
+  .chk input { width:22px; height:22px; margin:0; accent-color:#2f6bff; flex:0 0 22px; }
+
+  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+  .tab { min-height:40px; padding:0 16px; border-radius:999px; border:1px solid #12254e; background:transparent; color:#bbc7e1; font:600 12.5px ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; cursor:pointer; }
+  .tab:hover { border-color:#2f6bff; color:#fff; }
+  .tab.on { background:linear-gradient(135deg,#2f6bff,#5b8cff); border-color:transparent; color:#fff; box-shadow:0 0 14px rgba(47,107,255,.45); }
+
+  .aviso { margin:0 0 12px; padding:10px 13px; border-radius:10px; font-size:12.5px; }
+  .aviso:empty { display:none; }
+  .aviso.mal { background:#2a1420; border:1px solid #5a2536; color:#ffc9d8; }
+  .aviso.bien { background:#0d2a22; border:1px solid #14503f; color:#8ff0cd; }
+  .aviso.ojo { background:#2a2110; border:1px solid #4a3a14; color:#ffd88a; }
+  /* La revision de los flujos de venta encendidos (inicio y rama de pagos), 2026-11-06 */
+  .rev { margin:0 0 12px; min-width:0; }
+  .rev .aviso-of { margin:0; }
+  .rev ul { margin:6px 0 4px; padding-left:18px; }
+  .rev li { margin:8px 0; overflow-wrap:anywhere; }
+  .rev .acciones { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .rev small { display:block; margin-top:6px; }
+  .rev-linea { margin:0; font-size:12px; color:#8fa3c7; overflow-wrap:anywhere; }
+  .rev-linea.bien { color:#38e0a5; }
+  .rev-linea.ojo { color:#ffd88a; }
+  .rev details { margin:4px 0 0; }
+  .rev summary { cursor:pointer; padding:10px 0; text-decoration:underline; }
+
+  /* Lista y ficha (mismo esquema que /radar). NO usa .card: esa sube 2 px al pasar el mouse y atrapa todo position:fixed. */
+  .cuerpo { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start; }
+  .cuerpo.con-ficha { grid-template-columns:minmax(0,1fr) 560px; }
+  .lista { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:12px; min-width:0; }
+  .proy { background:#061026; border:1px solid #112247; border-radius:14px; padding:13px 14px 12px; min-width:0; cursor:pointer; display:flex; flex-direction:column; gap:9px; text-align:left; color:inherit; font:inherit;
+          box-shadow:0 0 0 1px rgba(47,107,255,.04), 0 10px 30px rgba(0,0,0,.22); transition:border-color .15s ease, box-shadow .15s ease; }
+  .proy:hover { border-color:#23408a; }
+  .proy:focus-visible { outline:2px solid #4d8bff; outline-offset:2px; }
+  .proy.sel { border-color:#2f6bff; box-shadow:0 0 0 1px #2f6bff, 0 0 26px rgba(47,107,255,.35); }
+  .proy b.nom { display:block; font-size:14.5px; font-weight:750; letter-spacing:-.2px; overflow-wrap:anywhere; }
+  .proy small { display:block; color:#7e93c5; font-size:11.5px; overflow-wrap:anywhere; }
+  .lineas { display:flex; flex-wrap:wrap; gap:6px; }
+  .lin { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#0d1b39; color:#a7b6d8; white-space:nowrap; }
+  .lin.lista { background:#0d2a22; color:#38e0a5; } .lin.en-curso { background:#241a4d; color:#c9b8ff; } .lin.error { background:#2a1420; color:#ff8fb0; } .lin.ojo { background:#2a2110; color:#ffc857; }
+  .vacio { grid-column:1/-1; color:#90a2cd; padding:30px 6px; text-align:center; }
+
+  .ficha { background:#061026; border:1px solid #112247; border-radius:14px; position:sticky; top:14px; max-height:calc(100vh - 28px); overflow:auto; min-width:0; box-shadow:0 0 0 1px rgba(47,107,255,.06), 0 18px 50px rgba(0,0,0,.4); }
+  .ficha[hidden] { display:none; }
+  .f-cab { position:sticky; top:0; z-index:3; display:flex; align-items:center; gap:11px; padding:12px 14px; background:rgba(6,16,38,.96); border-bottom:1px solid #112247; }
+  .f-cab .t { flex:1; min-width:0; } .f-cab .t b { display:block; font-size:15px; overflow-wrap:anywhere; } .f-cab .t small { color:#7e93c5; font-size:11.5px; }
+  .f-cab .cerrar { min-width:40px; padding:0; }
+  .f-cuerpo { padding:14px 16px 24px; }
+
+  /* Pasos unidos por una linea (oferta > ebooks > anuncios > flujos) */
+  .paso { position:relative; padding:0 0 22px 38px; }
+  .paso::before { content:''; position:absolute; left:13px; top:30px; bottom:0; width:2px; background:linear-gradient(#2f6bff,rgba(47,107,255,.15)); }
+  .paso:last-child { padding-bottom:0; } .paso:last-child::before { display:none; }
+  .paso > .n { position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%; background:#0d1b39; border:2px solid #2f6bff; color:#cfe0ff; display:grid; place-items:center; font-size:12px; font-weight:800; box-shadow:0 0 12px rgba(47,107,255,.35); }
+  .paso.hecho > .n { background:#0d2a22; border-color:#34d399; color:#8ff0cd; box-shadow:0 0 12px rgba(52,211,153,.3); }
+  .paso > h3 { font-size:13.5px; font-weight:750; line-height:28px; margin:0 0 7px; }
+  .paso > h3 small { font-weight:500; color:#7e93c5; font-size:11.5px; margin-left:6px; }
+  .kv { display:grid; grid-template-columns:104px minmax(0,1fr); gap:5px 10px; margin:0; font-size:12.5px; }
+  .kv dt { color:#7e93c5; margin:0; } .kv dd { margin:0; color:#d3daeb; overflow-wrap:anywhere; min-width:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 0; }
+  .chip { font-size:11px; padding:3px 10px; border-radius:999px; background:#0d1b39; color:#a7b6d8; }
+  .nota-p { color:#7e93c5; font-size:11.5px; margin:8px 0 0; overflow-wrap:anywhere; }
+  .aviso-of { margin:10px 0 0; padding:9px 11px; border-radius:10px; background:#2a2110; border:1px solid #4a3a14; color:#ffd88a; font-size:12px; overflow-wrap:anywhere; }
+  .aviso-of ul { margin:4px 0 0; padding-left:18px; } .aviso-of b { color:#ffc857; }
+  .aviso-mal { background:#2a1420; border-color:#5a2536; color:#ffc9d8; } .aviso-mal b { color:#ff8fb0; }
+  .aviso-bien { background:#0d2a22; border-color:#14503f; color:#8ff0cd; } .aviso-bien b { color:#38e0a5; }
+  .acciones { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; }
+  .acciones .btn { flex:1 1 170px; }
+  details.mas { margin:10px 0 0; border-top:1px solid #0d1b39; padding-top:6px; }
+  details.mas summary { cursor:pointer; min-height:40px; display:flex; align-items:center; color:#8fb0ff; font-size:12px; font-weight:650; list-style:none; }
+  details.mas summary::-webkit-details-marker { display:none; } details.mas summary::before { content:'▸'; margin-right:7px; } details.mas[open] summary::before { content:'▾'; }
+
+  /* Ebooks */
+  .eb-lista { display:flex; flex-direction:column; gap:7px; margin:10px 0 0; }
+  .eb-fila { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:9px 11px; border-radius:11px; background:#040b1b; border:1px solid #112247; min-width:0; }
+  .eb-fila.fuera { opacity:.5; }
+  .eb-fila input[type="checkbox"] { width:22px; height:22px; margin:0; accent-color:#2f6bff; }
+  .eb-fila .t { min-width:0; } .eb-fila .t b { display:block; font-size:12.8px; overflow-wrap:anywhere; } .eb-fila .t small { display:block; color:#7e93c5; font-size:11.5px; overflow-wrap:anywhere; }
+  .eb-fila .pg { font-size:11.5px; color:#90a2cd; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .eb-fila .t small a { display:inline-flex; align-items:center; min-height:40px; padding:0 10px 0 6px; }   /* el enlace «Abrir» de cada ebook: area de toque de 40 px */
+  .eb-fila .rol { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#8fb0ff; }
+  .costo { margin:12px 0 0; padding:11px 13px; border-radius:11px; background:#040b1b; border:1px solid #112247; }
+  .costo .g { font-size:24px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; } .costo small { display:block; color:#7e93c5; font-size:11.5px; }
+  .progreso { height:7px; border-radius:99px; background:#0d1b39; overflow:hidden; margin:10px 0 4px; box-shadow:inset 0 0 0 1px #12254e; }
+  .progreso i { display:block; height:100%; width:0; background:linear-gradient(90deg,#2f6bff,#6aa0ff); transition:width .4s ease; }
+  .girando::before { content:''; display:inline-block; width:13px; height:13px; margin-right:8px; border-radius:50%; border:2px solid #2f6bff; border-top-color:transparent; vertical-align:-2px; animation:gira .8s linear infinite; }
+  @keyframes gira { to { transform:rotate(360deg); } }
+  .archivos { display:flex; flex-direction:column; gap:6px; margin:10px 0 0; }
+  .archivos a { display:flex; align-items:center; min-height:40px; color:#8fb0ff; overflow-wrap:anywhere; font-size:12.5px; }
+
+  /* Pedidos de anuncio */
+  .anuncios { display:flex; flex-direction:column; gap:10px; margin:10px 0 0; }
+  .ad { background:#040b1b; border:1px solid #112247; border-radius:12px; padding:11px 12px; min-width:0; }
+  .ad-top { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
+  .ad-top b { font-size:14px; } .ad-top .sp { flex:1; }
+  .est { font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:#0d1b39; color:#a7b6d8; white-space:nowrap; }
+  .est.pedido { background:#0e2250; color:#8fb0ff; } .est.tomado, .est.en-edicion { background:#241a4d; color:#c9b8ff; } .est.lista { background:#2a2110; color:#ffc857; }
+  .est.aprobada { background:#0d2a22; color:#38e0a5; } .est.error { background:#2a1420; color:#ff8fb0; } .est.cancelado { background:#16213f; color:#7e93c5; }
+  .ad .grid2 { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:8px; margin:9px 0 0; }
+  .ad .botones { display:flex; flex-wrap:wrap; gap:6px; margin:9px 0 0; }
+  .ad .botones .btn { min-height:40px; padding:0 11px; font-size:12px; flex:1 1 130px; }
+  .ad .entrega { margin:9px 0 0; padding:8px 10px; border-radius:9px; background:#0d2a22; border:1px solid #14503f; color:#8ff0cd; font-size:12px; overflow-wrap:anywhere; }
+  .ad .entrega a { color:#8ff0cd; }
+  .ad .corr { margin:9px 0 0; font-size:11.5px; color:#ffc857; overflow-wrap:anywhere; }
+  /* Progreso y vista previa de un anuncio (lo avisa el editor; aqui solo se pinta) */
+  .ad .prog { margin:10px 0 0; padding:10px 11px; border-radius:11px; background:#071228; border:1px solid #16306b; min-width:0; }
+  .ad .prog-cab { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 10px; font-size:12.5px; }
+  .ad .prog-cab b { font-size:13px; } .ad .prog-cab small { color:#7e93c5; font-size:11px; }
+  .ad .etapas { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 0; padding:0; list-style:none; }
+  .ad .etapas li { font-size:11px; padding:4px 10px; border-radius:999px; background:#0d1b39; color:#7e93c5; white-space:nowrap; }
+  .ad .etapas li.hecha { background:#0d2a22; color:#8ff0cd; }
+  .ad .etapas li.activa { background:#1a3a8f; color:#e6efff; box-shadow:0 0 10px rgba(47,107,255,.45); }
+  .ad .barra { height:7px; border-radius:999px; background:#0d1b39; overflow:hidden; margin:9px 0 0; }
+  .ad .barra > i { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#2f6bff,#34d399); }
+  .ad .prog-nota { margin:8px 0 0; font-size:12px; color:#bbc7e1; overflow-wrap:anywhere; }
+  .ad .vistas { display:flex; flex-wrap:wrap; gap:12px; margin:10px 0 0; align-items:flex-start; }
+  .ad .vista { min-width:0; } .ad .vista-img { flex:1 1 260px; } .ad .vista-vid { flex:0 1 240px; }
+  .ad .vista img, .ad .vista video { display:block; width:100%; height:auto; border-radius:9px; border:1px solid #112247; background:#000; }
+  .ad .vista video { max-width:260px; aspect-ratio:9/16; object-fit:contain; margin:0 auto; }
+  .ad .vista small { display:block; margin:5px 0 0; color:#7e93c5; font-size:11px; }
+  .ad .guion-txt { margin:8px 0 0; font-size:12.5px; color:#d6def0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .ad .plan-wrap { margin:8px 0 0; overflow-x:auto; min-width:0; }
+  .ad table.plan { border-collapse:collapse; width:100%; min-width:440px; font-size:11.5px; }
+  .ad table.plan th, .ad table.plan td { text-align:left; padding:5px 8px; border-bottom:1px solid #112247; vertical-align:top; overflow-wrap:anywhere; }
+  .ad table.plan th { color:#7e93c5; font-weight:600; }
+  .ad table.plan th:first-child, .ad table.plan td:first-child { white-space:nowrap; }
+  .pedircambios { margin:9px 0 0; }
+  .hist { margin:8px 0 0; padding:0; list-style:none; font-size:11.5px; color:#90a2cd; }
+  .hist li { padding:3px 0; border-bottom:1px solid #0d1b39; overflow-wrap:anywhere; } .hist time { color:#7e93c5; margin-right:6px; }
+
+  /* Crear toda la oferta: una tarjeta arriba de la ficha que resume lo que falta y lo encadena con un solo boton */
+  .todo { margin:0 0 18px; padding:13px 14px 14px; border-radius:13px; background:linear-gradient(145deg,#0b1d45,#071228); border:1px solid #1d3a82; box-shadow:0 0 22px rgba(47,107,255,.22); min-width:0; }
+  .todo h3 { font-size:14.5px; font-weight:800; margin:0 0 2px; }
+  .todo .sub2 { color:#90a2cd; font-size:12px; margin:0 0 8px; }
+  .todo-fila { display:grid; grid-template-columns:24px minmax(0,1fr); gap:8px; align-items:start; padding:7px 0; border-top:1px solid #12285a; font-size:12.5px; min-width:0; }
+  .todo-fila .ic { font-size:14px; line-height:20px; text-align:center; color:#8fa3d6; }
+  .todo-fila.hecho .ic { color:#38e0a5; } .todo-fila.error .ic { color:#ff8fb0; } .todo-fila.curso .ic { color:#8fb0ff; }
+  .todo-fila b { display:block; font-size:12.8px; overflow-wrap:anywhere; } .todo-fila small { display:block; color:#90a2cd; font-size:11.5px; overflow-wrap:anywhere; }
+  .todo .btn.grande { width:100%; min-height:46px; font-size:14px; margin-top:10px; }
+  .pasos-modal { margin:12px 0 0; padding-left:20px; font-size:12.5px; color:#d3daeb; }
+  .pasos-modal li { margin:0 0 8px; overflow-wrap:anywhere; } .pasos-modal small { display:block; color:#7e93c5; font-size:11.5px; }
+
+  /* Guia de lanzamiento: lo que va despues de crear la oferta (revisar, cobrar, probar, Facebook, vigilar), por pais */
+  .lz-paises { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; }
+  .lz-pais { min-height:40px; padding:0 13px; border-radius:999px; border:1px solid #1d3a82; background:#0a1838; color:#bbc7e1; font:inherit; font-size:12.5px; cursor:pointer; }
+  .lz-pais.on { background:#1b3f95; color:#fff; border-color:transparent; }
+  .lz-paso { margin:10px 0 0; border:1px solid #12285a; border-radius:11px; background:#061026; min-width:0; }
+  .lz-paso > summary { cursor:pointer; min-height:48px; display:flex; align-items:center; gap:10px; padding:6px 12px; list-style:none; }
+  .lz-paso > summary::-webkit-details-marker { display:none; }
+  .lz-n { flex:0 0 28px; height:28px; border-radius:50%; display:grid; place-items:center; font-size:12.5px; font-weight:800; background:#12285a; color:#bcd0ff; }
+  .lz-paso.hecho .lz-n { background:#0d2a22; color:#38e0a5; }
+  .lz-paso.error .lz-n { background:#3a1424; color:#ff8fb0; }
+  .lz-t { flex:1 1 auto; min-width:0; } .lz-t b { display:block; font-size:13px; overflow-wrap:anywhere; } .lz-t small { display:block; color:#90a2cd; font-size:11.5px; overflow-wrap:anywhere; }
+  .lz-c { flex:0 0 auto; font-size:11.5px; color:#90a2cd; white-space:nowrap; }
+  .lz-tareas { padding:0 12px 10px; min-width:0; }
+  .lz-tarea { display:grid; grid-template-columns:42px minmax(0,1fr); gap:9px; align-items:start; padding:9px 0; border-top:1px solid #0f2149; min-width:0; }
+  .lz-chk { box-sizing:border-box; width:42px; height:42px; border-radius:10px; border:1.5px solid #2a4a9a; background:#0a1838; color:#38e0a5; font-size:19px; font-weight:800; cursor:pointer; display:grid; place-items:center; padding:0; }
+  .lz-chk.on { background:#0d2a22; border-color:#1f7a5c; }
+  .lz-chk.auto { cursor:default; border-style:dashed; color:#8fa3d6; } .lz-chk.auto.on { color:#38e0a5; } .lz-chk.error { color:#ff8fb0; border-color:#7a2a44; background:#1f0d16; }
+  .lz-chk:disabled { opacity:.55; }
+  .lz-tarea b { display:block; font-size:12.8px; overflow-wrap:anywhere; } .lz-tarea small { display:block; color:#90a2cd; font-size:11.5px; overflow-wrap:anywhere; margin-top:2px; }
+  .lz-tarea small b { display:inline; font-size:inherit; color:#d6def0; }
+  .lz-quien { color:#8fb0ff; font-size:11px; font-weight:650; }
+  .lz-por { color:#6f86bd; font-size:11px; }
+  .lz-extra { margin-top:7px; min-width:0; }
+  .lz-extra select { box-sizing:border-box; width:100%; max-width:100%; min-height:42px; }
+  .lz-extra .acciones { margin-top:7px; }
+  .lz-nombres { display:block; margin:6px 0 0; padding:8px 10px; border-radius:9px; background:#030a1c; border:1px solid #16306b; font-family:ui-monospace,Consolas,monospace; font-size:12px; color:#e6efff; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .lz-clave { display:inline-block; padding:1px 8px; border-radius:6px; background:#030a1c; border:1px solid #16306b; font-family:ui-monospace,Consolas,monospace; color:#e6efff; }
+
+  /* Receta de edicion */
+  .receta-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 12px; }
+  .receta-bar select { flex:1 1 220px; width:auto; }
+  .receta-bar .btn { flex:0 1 auto; }
+  .grupo { border:1px solid #112247; border-radius:12px; margin:0 0 10px; background:#061026; overflow:hidden; }
+  .grupo > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:8px; padding:0 14px; font-weight:750; font-size:13px; list-style:none; }
+  .grupo > summary::-webkit-details-marker { display:none; } .grupo > summary::before { content:'▸'; color:#8fb0ff; } .grupo[open] > summary::before { content:'▾'; }
+  .grupo .solo { font-size:10.5px; font-weight:700; color:#ffc857; border:1px solid #4a3a14; border-radius:999px; padding:1px 8px; margin-left:4px; }
+  .grupo .campos { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px 16px; padding:2px 14px 14px; }
+  .campo-r { min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .campo-r.ancho2 { grid-column:1/-1; }
+  .campo-r .r-et { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; font-size:11.5px; color:#bbc7e1; font-weight:650; }
+  .campo-r .r-cambiar { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#8fb0ff; font-weight:600; min-height:40px; cursor:pointer; }
+  .campo-r .r-cambiar input { width:18px; height:18px; margin:0; accent-color:#2f6bff; }
+  .campo-r .r-ctl { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; }
+  .campo-r .r-ctl .opc { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:0 11px; border-radius:999px; border:1px solid #12254e; font-size:12px; color:#bbc7e1; cursor:pointer; }
+  .campo-r .r-ctl .opc.on { background:#1b3f95; border-color:transparent; color:#fff; }
+  .campo-r .r-ctl .opc input { width:16px; height:16px; margin:0; accent-color:#2f6bff; }
+  .campo-r small.ay { color:#7e93c5; font-size:11px; overflow-wrap:anywhere; }
+  .campo-r.hereda .r-ctl { opacity:.6; }
+  .campo-r .num { max-width:140px; }
+
+  /* Ventana (confirmar costos, crear, receta) */
+  .modal-bg { position:fixed; inset:0; z-index:500; background:rgba(2,9,22,.78); display:flex; align-items:flex-start; justify-content:center; padding:24px 14px; overflow:auto; }
+  .modal { background:#061026; border:1px solid #1a2f66; border-radius:14px; width:100%; max-width:760px; box-shadow:0 20px 60px rgba(0,0,0,.6); min-width:0; }
+  .modal.chico { max-width:520px; }
+  .modal .m-cab { display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid #112247; position:sticky; top:0; background:#061026; border-radius:14px 14px 0 0; z-index:2; }
+  .modal .m-cab b { flex:1; font-size:15px; min-width:0; overflow-wrap:anywhere; }
+  .modal .m-cuerpo { padding:14px 16px; }
+  .modal .m-pie { display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px 16px; border-top:1px solid #112247; position:sticky; bottom:0; background:#061026; border-radius:0 0 14px 14px; }
+  .modal .m-pie .btn { flex:1 1 150px; }
+  .tarj-lista { display:flex; flex-direction:column; gap:7px; margin:8px 0 0; max-height:46vh; overflow:auto; }
+  .tarj-fila { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; background:#040b1b; border:1px solid #112247; min-width:0; }
+  .tarj-fila .t { flex:1; min-width:0; } .tarj-fila .t b { display:block; font-size:12.8px; overflow-wrap:anywhere; } .tarj-fila .t small { color:#7e93c5; font-size:11.5px; overflow-wrap:anywhere; }
+  .paises-sel { display:flex; flex-wrap:wrap; gap:7px; margin:6px 0 0; }
+  .paises-sel label { display:inline-flex; align-items:center; gap:7px; min-height:40px; padding:0 12px; border-radius:999px; border:1px solid #12254e; font-size:12.5px; color:#bbc7e1; cursor:pointer; }
+  .paises-sel label.on { background:#1b3f95; border-color:transparent; color:#fff; }
+  .paises-sel input { width:16px; height:16px; margin:0; accent-color:#2f6bff; }
+  .fila2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0 0; }
+  .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:900; max-width:min(92vw,560px); padding:10px 16px; border-radius:11px; background:#0d2a22; border:1px solid #14503f; color:#8ff0cd; font-size:12.5px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  .toast.mal { background:#2a1420; border-color:#5a2536; color:#ffc9d8; }
+
+  @media (max-width:1180px) {
+    html.ficha-abierta, html.ficha-abierta body { overflow:hidden; }
+    .cuerpo.con-ficha { grid-template-columns:minmax(0,1fr); }
+    .ficha { position:fixed; inset:0; z-index:300; max-height:none; border-radius:0; border:0; top:0; }
+    .ficha[hidden] { display:none; }
+  }
+  @media (max-width:640px) {
+    .wrap { padding:14px 12px 70px; }
+    .tabs { flex-wrap:nowrap; } .tab { flex:1 1 0; padding:0 8px; }
+    h1 { font-size:19px; }
+    .lista { grid-template-columns:minmax(0,1fr); }
+    .kv { grid-template-columns:minmax(0,1fr); gap:0; } .kv dt { margin-top:7px; }
+    .f-cuerpo { padding:12px 12px 26px; }
+    .ad .grid2 { grid-template-columns:minmax(0,1fr); }
+    .ad .vista-img, .ad .vista-vid { flex:1 1 100%; }
+    .ad .etapas li { padding:6px 11px; }
+    .grupo .campos { grid-template-columns:minmax(0,1fr); padding:2px 12px 14px; }
+    .modal-bg { padding:0; }
+    .modal { border-radius:0; min-height:100%; border:0; }
+    .modal .m-cab { border-radius:0; } .modal .m-pie { border-radius:0; }
+    .campo-r .num { max-width:none; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="cabecera">
+    <div>
+      <h1>Fábrica de ofertas</h1>
+      <p class="sub">Pasa una oferta del tablero a ebooks con sus bonos, anuncios en español y flujos de ZapData casi sola. Eliges la oferta, revisas lo que se va a hacer y le das a empezar.</p>
+    </div>
+    <button class="btn prim" id="b-nueva">+ Fabricar una oferta</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-tab="proyectos">Ofertas</button>
+    <button class="tab" data-tab="recetas">Receta de edición</button>
+  </div>
+  <div class="aviso" id="aviso" role="status"></div>
+
+  <div id="vista-proyectos">
+    <div class="rev" id="revision" hidden></div>
+    <div class="cuerpo" id="cuerpo">
+      <div class="lista" id="lista"><div class="vacio girando">Cargando…</div></div>
+      <aside class="ficha" id="ficha" hidden></aside>
+    </div>
+  </div>
+
+  <div id="vista-recetas" hidden></div>
+</div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+__EBOOK_PRODUCCION_JS__
+</script>
+<script>
+__EBOOK_PDF_JS__
+</script>
+<script>
+__FABRICA_MOTOR_JS__
+</script>
+<script>
+__FABRICA_CAMPANAS_JS__
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var S = {
+    rol: '', proyectos: [], recetas: { base: {}, presets: {}, presetsBase: {} }, esquema: [], defecto: {}, tocadoPor: '',
+    sel: null, det: null, tab: 'proyectos', tarjetas: null, radar: null, paises: [], modelos: null,
+    prod: {},            // por proyecto: lo que pasa en el paso de ebooks (preparar, producir, material)
+    flujo: {},           // por proyecto: lo que pasa al crear los flujos
+    recetaForm: null
+  };
+
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); }
+  function copia(o) { return JSON.parse(JSON.stringify(o)); }
+  function money(v) { return '$' + (v < 1 ? v.toFixed(3) : v.toFixed(2)); }
+  function esDueno() { return S.rol === 'owner'; }
+  // Solo http(s) llega a un href: los enlaces vienen de anuncios y paginas de terceros.
+  function href(u) { return /^https?:\/\/[^\s"'<>]+$/i.test(String(u || '')) ? u : ''; }
+  function hace(iso) {
+    var t = Date.parse(iso); if (!t) return '';
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return 'ahora'; if (m < 60) return 'hace ' + m + ' min'; if (m < 1440) return 'hace ' + Math.round(m / 60) + ' h';
+    return 'hace ' + Math.round(m / 1440) + ' d';
+  }
+  var ROLES = { owner: 'el dueño', trafficker: 'la trafficker', editor: 'el editor', videos: 'el editor de video', Claudia: 'Claudia' };
+  function quien(r) { return ROLES[r] || r || 'alguien'; }
+
+  function avisar(t, tipo) { var a = el('aviso'); a.className = 'aviso ' + (tipo || 'mal'); a.textContent = t || ''; if (t && tipo === 'bien') setTimeout(function () { if (a.textContent === t) { a.textContent = ''; a.className = 'aviso'; } }, 6000); }
+  function toast(t, tipo) {
+    var d = document.createElement('div'); d.className = 'toast' + (tipo === 'mal' ? ' mal' : ''); d.textContent = t;
+    el('toast-root').appendChild(d); setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 4200);
+  }
+
+  // ---------- red ----------
+  function api(cuerpo) {
+    return fetch('/api/fabrica', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('Tu sesión caducó o no es del equipo: entra de nuevo.');
+        return r.json().catch(function () { return null; }).then(function (j) {
+          if (!r.ok || !j || !j.ok) throw new Error((j && j.error) || ('El servidor respondió ' + r.status + '.'));
+          return j;
+        });
+      });
+  }
+  function pedir(url) {
+    return fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
+      if (r.status === 401) throw new Error('Tu sesión caducó o no es del equipo: entra de nuevo.');
+      return r.json().catch(function () { return null; }).then(function (j) { if (!r.ok || !j || j.ok === false) { var er = new Error((j && j.error) || ('El servidor respondió ' + r.status + '.')); er.status = r.status; throw er; } return j; });
+    });
+  }
+  // La puerta a la red del motor: JSON o binario, con el mismo contrato en todas las herramientas del equipo.
+  function http(ruta, init) {
+    init = init || {};
+    var o = { method: init.metodo || 'GET', credentials: 'same-origin', cache: 'no-store', headers: {} };
+    if (init.json !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(init.json); }
+    else if (init.binario) { o.body = init.binario instanceof Blob ? init.binario : new Blob([init.binario]); }
+    return fetch(ruta, o).then(function (r) {
+      var tipo = r.headers.get('Content-Type') || '';
+      if (/json/i.test(tipo) || r.status >= 400) return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) { /* no era JSON */ } return { status: r.status, tipo: tipo, json: j }; });
+      return r.blob().then(function (b) { return { status: r.status, tipo: tipo, blob: b }; });
+    });
+  }
+
+  // ---------- carga ----------
+  // La lista sale de un `list` de KV, que puede ir varios minutos atrasado: justo despues de quitar una oferta seguia saliendo (y al abrirla decia «Ese proyecto no
+  // existe»). Lo que se quito desde este navegador se esconde hasta que la lista se pone al dia o pasan 15 min. Solo es la vista: el borrado ya lo hizo el servidor.
+  var CLAVE_QUITADAS = 'fabrica:quitadas', VIDA_QUITADA = 15 * 60000;
+  function leerQuitadas() {
+    var q = {}; try { q = JSON.parse(localStorage.getItem(CLAVE_QUITADAS) || '{}') || {}; } catch (e) { q = {}; }
+    var ahora = Date.now(), out = {};
+    Object.keys(q).forEach(function (id) { if (typeof q[id] === 'number' && ahora - q[id] < VIDA_QUITADA) out[id] = q[id]; });
+    return out;
+  }
+  function guardarQuitadas(q) { try { if (Object.keys(q).length) localStorage.setItem(CLAVE_QUITADAS, JSON.stringify(q)); else localStorage.removeItem(CLAVE_QUITADAS); } catch (e) { /* sin almacenamiento: solo dura esta pestaña */ } }
+  var quitadasPestana = {};
+  function marcarQuitada(id) {
+    var q = leerQuitadas(); q[id] = Date.now(); quitadasPestana[id] = q[id]; guardarQuitadas(q);
+    S.proyectos = S.proyectos.filter(function (p) { return p.id !== id; });
+  }
+  function sinQuitadas(lista) {
+    var q = Object.assign(leerQuitadas(), quitadasPestana), ahora = Date.now(), siguen = {};
+    var out = lista.filter(function (p) { if (q[p.id] && ahora - q[p.id] < VIDA_QUITADA) { siguen[p.id] = q[p.id]; return false; } return true; });
+    quitadasPestana = siguen; guardarQuitadas(siguen);      // la que ya no viene en la lista se olvida: la lista se puso al dia
+    return out;
+  }
+  function cargarLista() {
+    return pedir('/api/fabrica').then(function (j) {
+      S.rol = j.rol; S.proyectos = sinQuitadas(j.proyectos || []); S.recetas = j.recetas; S.esquema = j.esquema; S.defecto = j.defecto;
+      pintarLista();
+      if (S.tab === 'recetas') pintarRecetas();
+    }).catch(function (e) {
+      el('lista').innerHTML = '<div class="vacio">' + esc(e.message) + '</div>';
+    });
+  }
+  function cargarPaises() {
+    return pedir('/api/zapflow?catalogo=1').then(function (j) { S.paises = j.paises || []; }).catch(function () { S.paises = []; });
+  }
+  function cargarModelos() {
+    if (S.modelos && !S.modelos.falta) return Promise.resolve(S.modelos);
+    return FabricaMotor.cargarModelos(FabricaMotor.crearCliente({ http: http })).then(function (m) { S.modelos = m; return m; });
+  }
+
+  // ---------- lista ----------
+  var ETQ_ETAPA = { pendiente: 'sin empezar', 'en-curso': 'en curso', lista: 'lista', error: 'con error' };
+  function lineaChip(nombre, estado, extra) {
+    return '<span class="lin ' + esc(estado) + '">' + esc(nombre) + ': ' + esc(extra || ETQ_ETAPA[estado] || estado) + '</span>';
+  }
+  function chipsDe(p) {
+    var a = p.a || {}, e = p.e || {};
+    var anuncios = a.total ? (a.aprobados + a.listos) + ' de ' + a.total + ' listos' + (p.ar && a.pedidos ? ' · en cola' : '') : 'sin pedir';
+    var estA = !a.total ? 'pendiente' : (a.errores ? 'error' : (a.aprobados + a.listos === a.total ? 'lista' : (a.trabajando || a.listos || a.aprobados ? 'en-curso' : 'pendiente')));
+    var lz = Array.isArray(p.l) && p.l[0] > 0 ? lineaChip('Lanzamiento', p.l[0] >= p.l[1] ? 'lista' : 'en-curso', p.l[0] >= p.l[1] ? 'hecho' : p.l[0] + ' de ' + p.l[1] + ' tareas') : (e.flujos === 'lista' ? lineaChip('Lanzamiento', 'pendiente', 'sin empezar') : '');
+    return lineaChip('Ebooks', e.ebooks || 'pendiente') + lineaChip('Anuncios', estA, anuncios) + lineaChip('Flujos', e.flujos || 'pendiente', (e.flujos === 'lista') ? 'creados' : null) + lz;
+  }
+  function pintarLista() {
+    var l = S.proyectos;
+    el('lista').innerHTML = l.length ? l.map(function (p) {
+      return '<div class="proy' + (S.sel === p.id ? ' sel' : '') + '" role="button" tabindex="0" data-id="' + esc(p.id) + '">' +
+        '<div><b class="nom">' + esc(p.n) + '</b><small>' + esc((p.p || []).join(', ')) + ' · ' + esc(hace(p.t)) + (p.r ? ' · viene del radar' : '') + '</small></div>' +
+        '<div class="lineas">' + chipsDe(p) + '</div></div>';
+    }).join('') : '<div class="vacio">Todavía no hay ofertas en la fábrica.<br>Pulsa «Fabricar una oferta» y elige una del tablero.</div>';
+  }
+
+  // ---------- abrir / cerrar la ficha ----------
+  function abrirProyecto(id, sinSalto) {
+    S.sel = id; el('cuerpo').classList.add('con-ficha'); el('ficha').hidden = false; document.documentElement.classList.add('ficha-abierta');
+    try { history.replaceState(null, '', '#p=' + encodeURIComponent(id)); } catch (e) { /* sin historial */ }
+    pintarLista();
+    if (!S.det || S.det.proyecto.id !== id) { el('ficha').innerHTML = '<div class="f-cuerpo"><p class="girando">Abriendo…</p></div>'; }
+    return refrescarDetalle().then(function () { if (!sinSalto && window.innerWidth > 1180) { var r = el('ficha').getBoundingClientRect(); if (r.top > 18 || r.bottom > window.innerHeight) window.scrollTo({ top: Math.max(0, window.pageYOffset + r.top - 14), behavior: 'smooth' }); } });
+  }
+  function cerrarFicha() {
+    S.sel = null; S.det = null; el('cuerpo').classList.remove('con-ficha'); el('ficha').hidden = true; document.documentElement.classList.remove('ficha-abierta');
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sin historial */ }
+    pintarLista();
+  }
+  function refrescarDetalle(soloAnuncios) {
+    var id = S.sel; if (!id) return Promise.resolve();
+    var salio = Date.now();
+    return pedir('/api/fabrica?id=' + encodeURIComponent(id)).then(function (j) {
+      if (S.sel !== id) return;
+      // salio antes de que terminara un guardado de la guia de lanzamiento (o mientras se guarda): se queda el proyecto que devolvio el guardado
+      if (S.det && S.det.proyecto && S.det.proyecto.id === id && (LZ.guardando || salio < LZ.guardadoEn)) j.proyecto = S.det.proyecto;
+      var primera = !S.det || S.det.proyecto.id !== id;
+      S.det = j; S.rol = j.rol || S.rol;
+      var m = S.proyectos.filter(function (p) { return p.id === id; })[0];
+      if (primera || !soloAnuncios) { pintarFicha(); return cargarPedidoEbooks(); }
+      pintarAnuncios();
+    }).catch(function (e) {
+      if (S.sel !== id) return;
+      // Ya no existe (alguien la quito y la lista aun no se entera): se saca de lo que se ve, sin recordarla, por si una lectura atrasada la diera por perdida.
+      var ida = e.status === 404 && S.proyectos.some(function (p) { return p.id === id; });
+      if (ida) { S.proyectos = S.proyectos.filter(function (p) { return p.id !== id; }); pintarLista(); }
+      var msj = ida ? 'Esta oferta ya se quitó de la fábrica. La lista tarda unos minutos en ponerse al día.' : e.message;
+      el('ficha').innerHTML = '<div class="f-cab"><div class="t"><b>No se pudo abrir</b></div><button class="btn cerrar" data-acc="cerrar" aria-label="Cerrar">✕</button></div><div class="f-cuerpo"><div class="aviso-of aviso-mal">' + esc(msj) + '</div></div>';
+    });
+  }
+
+  // ---------- la ficha ----------
+  function pasoHtml(n, titulo, sub, hecho, id, cuerpo) {
+    return '<div class="paso' + (hecho ? ' hecho' : '') + '" id="' + id + '"><span class="n">' + (hecho ? '✓' : n) + '</span><h3>' + esc(titulo) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</h3><div class="cuerpo-paso">' + cuerpo + '</div></div>';
+  }
+  function pintarFicha() {
+    var d = S.det; if (!d) return;
+    var p = d.proyecto;
+    var f = el('ficha'), arriba = f.scrollTop;
+    f.innerHTML = '<div class="f-cab"><div class="t"><b>' + esc(p.nombre) + '</b><small>' + esc((p.paises || []).join(', ')) + ' · producto «' + esc(p.slug) + '» en el editor</small></div>' +
+      '<button class="btn cerrar" data-acc="cerrar" aria-label="Cerrar">✕</button></div>' +
+      '<div class="f-cuerpo">' +
+        '<div class="todo" id="sec-todo"></div>' +
+        '<div class="todo" id="sec-lanzar"></div>' +
+        pasoHtml(1, 'La oferta', 'de dónde sale y para qué países', true, 'sec-oferta', ofertaHtml(p)) +
+        pasoHtml(2, 'Ebooks y bonos', 'el entregable de la oferta', p.etapas.ebooks.estado === 'lista' && p.etapas.material.estado === 'lista', 'sec-ebooks', '') +
+        pasoHtml(3, 'Anuncios para Claudia', 'modelados, en español y con subtítulos', false, 'sec-anuncios', '') +
+        pasoHtml(4, 'Flujos en ZapData', 'venta, entrega y pagos', p.etapas.flujos.estado === 'lista', 'sec-flujos', '') +
+        pasoHtml(5, 'Receta de edición', 'cómo se editan los anuncios de esta oferta', false, 'sec-receta', recetaResumenHtml()) +
+        '<div class="paso" id="sec-hist"><span class="n">↻</span><h3>Qué ha pasado</h3><div class="cuerpo-paso">' + histHtml(p.hechos) + '</div></div>' +
+      '</div>';
+    f.scrollTop = arriba;
+    pintarTodo(); pintarEbooks(); pintarAnuncios(); pintarFlujos();
+    document.documentElement.classList.toggle('ficha-abierta', window.innerWidth <= 1180);
+  }
+  function kv(k, v) { return v ? '<dt>' + esc(k) + '</dt><dd>' + v + '</dd>' : ''; }
+  function ofertaHtml(p) {
+    var o = p.origen || {}, enl = '';
+    if (href(o.linkAnuncio)) enl += '<a class="btn" href="' + esc(o.linkAnuncio) + '" target="_blank" rel="noopener noreferrer">' + (/[?&]view_all_page_id=/.test(o.linkAnuncio) ? 'Ver los anuncios del anunciante ↗' : 'Ver el anuncio original ↗') + '</a>';
+    if (href(o.linkPagina)) enl += '<a class="btn" href="' + esc(o.linkPagina) + '" target="_blank" rel="noopener noreferrer">Ver su página ↗</a>';
+    if (o.radarId) enl += '<a class="btn" href="/radar#o=' + encodeURIComponent(o.radarId) + '">Abrir en el radar</a>';
+    enl += '<a class="btn" href="/tablero">Ver el tablero</a>';
+    var paises = S.paises.length ? S.paises.map(function (c) { var on = (p.paises || []).indexOf(c.nombre) >= 0; return '<label class="' + (on ? 'on' : '') + '"><input type="checkbox" data-pais="' + esc(c.nombre) + '"' + (on ? ' checked' : '') + '> ' + esc(c.nombre) + (c.listo ? '' : ' <small>(sin configurar)</small>') + '</label>'; }).join('') : '<small class="nota-p">No pude leer los países; quedan: ' + esc((p.paises || []).join(', ')) + '.</small>';
+    return '<label class="campo">Nombre de la oferta (el que ve la clienta)<input type="text" id="p-nombre" maxlength="100" value="' + esc(p.nombre) + '"></label>' +
+      '<p class="nota-p" style="margin:6px 0 0">Producto en el editor: <b>' + esc(p.slug) + '</b>. Cambiar el nombre cambia también ese nombre.</p>' +
+      '<div class="paises-sel" id="p-paises">' + paises + '</div>' +
+      '<label class="campo" style="margin-top:10px">Notas del equipo<textarea id="p-notas" maxlength="1000" rows="2">' + esc(p.notas) + '</textarea></label>' +
+      '<label class="campo" style="margin-top:10px">Anuncio o anunciante que se modela (enlace de la biblioteca de Meta)<input type="url" id="p-enlace" maxlength="1000" placeholder="https://www.facebook.com/ads/library/?id=… o la página del anunciante" value="' + esc(o.linkAnuncio || '') + '"></label>' +
+      '<p class="nota-p" style="margin:6px 0 0">Pega el enlace de un anuncio o el de la página de un anunciante (en la biblioteca de Meta: «Ver todos los anuncios», con tus filtros de país, impresiones y fecha). El servidor estudia sus anuncios más antiguos y deja en Drive lo que dicen y los b-rolls. Puedes cambiarlo cuando quieras para modelar a otro anunciante de la misma oferta; si lo vacías, se quita.</p>' +
+      '<div class="acciones"><button class="btn" data-acc="guardar-oferta">Guardar nombre, países, notas y enlace</button></div>' +
+      '<details class="mas"><summary>Lo que se halló del anuncio original</summary><dl class="kv" style="margin-top:6px">' +
+        kv('Anunciante', esc(o.anunciante)) + kv('Tema', esc(o.nicho)) + kv('Qué vende', esc(o.entregable)) + kv('Gancho', esc(o.angulo) + (o.idioma === 'pt' ? ' <i>(en portugués)</i>' : '')) +
+        kv('Precio de origen', esc(o.precio)) + kv('Cómo vende', esc(o.embudo)) + kv('En Colombia', esc(o.hueco)) + '</dl>' +
+        '<p class="nota-p">Es texto de un anuncio ajeno: sirve para modelar, no se copia.</p></details>' +
+      '<div class="acciones" style="margin-top:12px">' + enl + '</div>' +
+      (esDueno() ? '<div class="acciones"><button class="btn peligro" data-acc="borrar">Quitar de la fábrica</button></div>' : '');
+  }
+  function histHtml(h) {
+    h = (h || []).slice(-12).reverse();
+    return h.length ? '<ul class="hist">' + h.map(function (x) { return '<li><time>' + esc(hace(x.t)) + '</time><b>' + esc(quien(x.por)) + '</b>: ' + esc(x.texto) + '</li>'; }).join('') + '</ul>' : '<p class="nota-p">Nada todavía.</p>';
+  }
+
+  // ============================================================= PASO 2: EBOOKS Y MATERIAL
+  function prod(id) {
+    if (!S.prod[id]) S.prod[id] = { fase: 'inicio', pais: '', leerPagina: true, datosPago: pagoGuardado(), prep: null, orden: null, msg: '', paso: '', ev: null, gasto: 0, parar: false, corriendo: false, resultado: null, avisos: [], etapa: '' };
+    return S.prod[id];
+  }
+  function pagoGuardado() { try { return localStorage.getItem('radar:pago') || (JSON.parse(localStorage.getItem('ebook:borrador') || '{}').datosPago || ''); } catch (e) { return ''; } }
+  function cargarPedidoEbooks() {
+    var d = S.det; if (!d) return Promise.resolve(); var p = d.proyecto, P = prod(p.id);
+    if (P.corriendo || P.fase === 'preparando') return Promise.resolve();
+    if (!p.pedidoEbooks) { pintarEbooks(); return Promise.resolve(); }
+    return FabricaMotor.traerPedido(FabricaMotor.crearCliente({ http: http }), p.pedidoEbooks).then(function (o) {
+      if (S.sel !== p.id) return;
+      P.orden = o;
+      if (o && P.fase === 'inicio' && P.prep === null) P.fase = 'pedido';
+      pintarEbooks();
+    }).catch(function () { pintarEbooks(); });
+  }
+  function entregablesIncluidos(o) { return (o && o.entregables || []).filter(function (e) { return e.incluir; }); }
+  function pintarEbooks() {
+    pintarTodo();
+    var d = S.det, cont = el('sec-ebooks'); if (!d || !cont) return;
+    var p = d.proyecto, P = prod(p.id), caja = cont.querySelector('.cuerpo-paso');
+    if (!P.pais) P.pais = (p.paises && p.paises[0]) || 'Colombia';
+    var h = '';
+    var estEb = p.etapas.ebooks.estado, estMat = p.etapas.material.estado;
+    var hecho = estEb === 'lista' && estMat === 'lista';
+    cont.classList.toggle('hecho', hecho); var n = cont.querySelector('.n'); if (n) n.textContent = hecho ? '✓' : '2';
+
+    var hechosAparte = (p.material || {}).entregablesDrive;
+    if (hechosAparte && !(P.fase === 'preparando' || P.fase === 'produciendo' || P.corriendo)) {
+      h = driveHechoHtml(p, hechosAparte);
+    } else if (P.fase === 'preparando') {
+      h = '<p class="girando" style="margin:2px 0 0">' + esc(P.paso || 'Leyendo la oferta…') + '</p><p class="nota-p">Cuesta centavos y todavía no produce nada.</p>';
+    } else if (P.fase === 'propuesta' && P.prep) {
+      h = propuestaHtml(p, P) + (hecho ? '' : driveFormHtml(p));
+    } else if (P.fase === 'produciendo' || P.corriendo) {
+      h = produciendoHtml(p, P);
+    } else if (P.fase === 'fin') {
+      h = finHtml(p, P);
+    } else if (P.orden) {
+      h = pedidoHtml(p, P) + (hecho ? '' : driveFormHtml(p));       // las ofertas que vienen del radar ya traen su pedido de ebooks: el formulario va tambien aqui
+    } else {
+      h = inicioHtml(p, P) + driveFormHtml(p);
+    }
+    caja.innerHTML = h;
+  }
+  // ---- entregables que ya vienen hechos (PDF en una carpeta de Drive): no se producen aqui; el servidor de anuncios los baja de esa carpeta con su propio permiso
+  var RE_CARPETA_DRIVE = /^https:\/\/drive\.google\.com\/drive\/(?:u\/\d{1,2}\/)?folders\/[A-Za-z0-9_-]{10,80}(?:[\/?#].*)?$/;
+  function driveFormHtml(p) {
+    return '<div class="aviso-of" style="margin-top:14px"><b>¿Los PDF ya vienen hechos?</b> Si conseguiste los entregables terminados, no hace falta producirlos: pega el enlace de la carpeta de Drive donde están.' +
+      '<label class="campo" style="margin-top:8px">Carpeta de Drive con los PDF<input type="url" id="eb-drive-url" maxlength="400" placeholder="https://drive.google.com/drive/folders/…"></label>' +
+      '<label class="campo" style="margin-top:8px">Qué recibe el cliente, en una frase (para los anuncios; opcional)<input type="text" id="eb-drive-promesa" maxlength="300" placeholder="Ej.: 280 recetas navideñas fáciles en 8 libros de cocina"></label>' +
+      '<small class="ay">El servidor de anuncios baja los PDF de esa carpeta y saca la portada del principal. La carpeta tiene que estar DENTRO de la carpeta de esta oferta en Drive (MI NEGOCIO › OFERTAS LATAM › la oferta): el servidor no lee otras. Hasta 8 PDF. Si en la misma carpeta hay una imagen (el mockup de la oferta), esa es la portada que se muestra en los anuncios.</small>' +
+      '<div class="acciones"><button class="btn" data-acc="drive-guardar">Usar esta carpeta, sin producir ebooks</button></div></div>';
+  }
+  function driveHechoHtml(p, ed) {
+    var u = href(ed.url);
+    return '<div class="aviso-of aviso-bien"><b>Los entregables ya vienen hechos.</b> No se producen ebooks aquí: el servidor de anuncios los baja de la carpeta de Drive' + (u ? ' (<a href="' + esc(u) + '" target="_blank" rel="noopener">abrir la carpeta</a>)' : '') + ' y saca la portada del principal.</div>' +
+      '<p class="nota-p">Los flujos de ZapData todavía necesitan los PDF dentro del sitio: con esta opción no se crean solos.</p>' +
+      '<div class="acciones"><button class="btn" data-acc="drive-quitar">Quitar el enlace y producir los ebooks aquí</button></div>';
+  }
+  function guardarDrive(p) {
+    var url = (el('eb-drive-url') || {}).value, prom = ((el('eb-drive-promesa') || {}).value || '').trim();
+    url = String(url || '').trim();
+    if (!RE_CARPETA_DRIVE.test(url)) { toast('Pega el enlace de la CARPETA de Drive (drive.google.com/drive/folders/…), no el de un archivo.', 'mal'); return; }
+    var c0 = (p.material || {}).copy || {}, parche = { entregablesDrive: { url: url } };
+    if (prom) parche.copy = { promesa: prom, promesaCorta: c0.promesaCorta || '', vinetas: c0.vinetas || [], claves: c0.claves || [], persona: c0.persona || 'Laura' };
+    guardarEnProyecto(p.id, parche, { ebooks: { estado: 'lista', nota: 'Entregables ya hechos (carpeta de Drive)' }, material: { estado: 'lista', nota: 'Los PDF los baja el servidor de anuncios desde Drive' } }, 'Se usan los entregables ya hechos de una carpeta de Drive')
+      .then(function () { toast('Listo: los ebooks de esta oferta vienen de esa carpeta de Drive', 'bien'); pintarEbooks(); return refrescarDetalle(true).then(cargarLista); })
+      .catch(function (er) { toast(er.message, 'mal'); });
+  }
+  function quitarDrive(p) {
+    if (!confirm('¿Quitar el enlace de los entregables ya hechos de «' + p.nombre + '»?\n\nLos ebooks vuelven a quedar sin hacer. Los anuncios que ya se hicieron no cambian.')) return;
+    guardarEnProyecto(p.id, { entregablesDrive: null }, { ebooks: { estado: 'pendiente', nota: '' }, material: { estado: 'pendiente', nota: '' } }, 'Se quitó el enlace de los entregables ya hechos')
+      .then(function () { toast('Enlace quitado', 'bien'); pintarEbooks(); return refrescarDetalle(true).then(cargarLista); })
+      .catch(function (er) { toast(er.message, 'mal'); });
+  }
+  function inicioHtml(p, P) {
+    var o = p.origen || {};
+    var pais = '<label class="campo" style="margin-top:8px">Para qué país<select data-campo="pais">' + ((p.paises && p.paises.length ? p.paises : ['Colombia']).map(function (x) { return '<option' + (P.pais === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('')) + '</select></label>';
+    var pag = href(o.linkPagina) ? '<label class="chk"><input type="checkbox" data-campo="leerPagina"' + (P.leerPagina ? ' checked' : '') + '> Leer también su página de ventas (mejora el temario)</label>' : '';
+    return '<p style="margin:2px 0 0;color:#bbc7e1">Con esta oferta de modelo armo el temario del <b>ebook principal</b> y de sus <b>bonos</b>, adaptado al país que elijas (contenido original, sin copiar su texto). Cuesta centavos y todavía no produce nada.</p>' +
+      pais + pag + (P.msg ? '<div class="aviso-of aviso-mal">' + esc(P.msg) + '</div>' : '') +
+      '<div class="acciones"><button class="btn prim" data-acc="preparar">Preparar los ebooks de esta oferta</button></div>';
+  }
+  function costoDe(p, P) { return P.prep ? FabricaMotor.costoDeEntregables(S.modelos, P.prep.entregables) : null; }
+  function propuestaHtml(p, P) {
+    var prep = P.prep, costo = costoDe(p, P);
+    var n = prep.entregables.filter(function (e) { return e.incluir; }).length;
+    var filas = prep.entregables.map(function (e, i) {
+      var pr = e.clave === 'principal';
+      return '<label class="eb-fila' + (e.incluir ? '' : ' fuera') + '"><input type="checkbox" data-eb="' + i + '"' + (e.incluir ? ' checked' : '') + (pr ? ' disabled' : '') + ' aria-label="Incluir ' + esc(e.titulo) + '">' +
+        '<span class="t"><span class="rol">' + (pr ? 'Principal' : 'Bono') + '</span><b>' + esc(e.titulo) + '</b>' + (e.promesa ? '<small>' + esc(e.promesa) + '</small>' : '') + '</span><span class="pg">' + e.paginas + ' págs</span></label>';
+    }).join('');
+    var costoHtml = costo
+      ? '<div class="costo"><div class="g">≈ ' + money(costo.total) + '</div><small>en total para producir ' + n + ' ebook' + (n === 1 ? '' : 's') + ' hasta el PDF, con tus modelos de hoy (texto: ' + esc(S.modelos.nTexto) + ' · imágenes: ' + esc(S.modelos.nImagen) + '). El mockup y los dos audios suman unos centavos más.</small></div>'
+      : '<div class="costo"><div class="g">—</div><small>' + (S.modelos && S.modelos.falta ? 'No tengo ' + esc(S.modelos.falta) + ' para estimar. Se detiene solo si el gasto real pasa de ' + money(10) + '.' : 'Calculando el costo…') + '</small></div>';
+    var avisos = (prep.brief.avisos || []).filter(Boolean).slice(0, 3);
+    return '<p style="margin:2px 0 8px;color:#bbc7e1">Para <b>' + esc(P.pais) + '</b>' + (prep.brief.publico ? ' · ' + esc(prep.brief.publico) : '') + '. Quita los bonos que no quieras.</p>' +
+      '<div class="eb-lista">' + filas + '</div>' +
+      (prep.aviso ? '<div class="aviso-of">' + esc(prep.aviso) + '</div>' : '') +
+      (avisos.length ? '<div class="aviso-of"><b>Avisos del modelo</b><ul>' + avisos.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul></div>' : '') +
+      costoHtml +
+      '<label class="campo" style="margin-top:12px">Cómo te pagan (va en la última página de cada ebook)<textarea data-campo="datosPago" rows="3" maxlength="300" placeholder="Nequi 300 123 4567 — Nombre Apellido">' + esc(P.datosPago) + '</textarea></label>' +
+      (P.datosPago.trim() ? '' : '<p class="nota-p">Sin esto, la página de cierre sale sin la cuenta y el ebook no cobra.</p>') +
+      (P.msg ? '<div class="aviso-of aviso-mal">' + esc(P.msg) + '</div>' : '') +
+      '<div class="acciones"><button class="btn prim" data-acc="confirmar"' + (n ? '' : ' disabled') + '>Producir ' + n + ' ebook' + (n === 1 ? '' : 's') + ' y armar el material</button>' +
+      '<button class="btn" data-acc="preparar">Rehacer la propuesta</button></div>' +
+      '<p class="nota-p">Antes de gastar te muestro el costo y te pido confirmar.</p>';
+  }
+  var ICO = { listo: '✅', produciendo: '⏳', error: '⚠', pendiente: '◻' };
+  function filaEb(e, extra) {
+    return '<div class="eb-fila"><span>' + (ICO[e.estado] || ICO.pendiente) + '</span><span class="t"><span class="rol">' + (e.clave === 'principal' ? 'Principal' : 'Bono') + '</span><b>' + esc(e.titulo) + '</b><small>' + (extra || '') + '</small></span><span class="pg">' + e.paginas + ' págs</span></div>';
+  }
+  function textoEv(P, e) {
+    var ev = P.ev;
+    if (!ev || ev.clave !== e.clave) return e.estado === 'listo' ? 'Listo' : e.estado === 'error' ? 'Con error' : e.estado === 'produciendo' ? 'En curso' : 'Pendiente';
+    if (ev.tipo === 'texto') return 'Escribiendo el contenido: ' + ev.hecho + ' de ' + ev.total + ' páginas';
+    if (ev.tipo === 'pagina') return 'Generando páginas y fotos: ' + ev.hecho + ' de ' + ev.total;
+    if (ev.tipo === 'pdf') return ev.texto ? esc(ev.texto) : 'Armando el PDF: ' + ev.hecho + ' de ' + ev.total;
+    if (ev.tipo === 'retoma') return 'Retomando lo que ya estaba escrito…';
+    return esc(ev.texto || 'Preparando…');
+  }
+  function produciendoHtml(p, P) {
+    var o = P.orden, dentro = entregablesIncluidos(o), listos = dentro.filter(function (e) { return e.estado === 'listo'; }).length, ev = P.ev, frac = 0;
+    if (ev && (ev.tipo === 'pagina' || ev.tipo === 'texto') && ev.total) frac = (ev.tipo === 'texto' ? ev.hecho / ev.total * 0.25 : 0.25 + ev.hecho / ev.total * 0.75);
+    var pct = P.etapa === 'material' ? 96 : Math.min(94, Math.round((listos + frac) / Math.max(1, dentro.length) * 94));
+    return '<div class="progreso"><i style="width:' + pct + '%"></i></div><p class="nota-p" style="margin:0 0 6px">' + (P.etapa === 'material' ? 'Armando los PDF, el mockup y los audios…' : listos + ' de ' + dentro.length + ' ebooks listos · ' + pct + '%') + '</p>' +
+      '<div class="eb-lista">' + dentro.map(function (e) { return filaEb(e, textoEv(P, e)); }).join('') + '</div>' +
+      (P.etapa === 'material' && P.ev && P.ev.texto ? '<p class="nota-p girando">' + esc(P.ev.texto) + '</p>' : '') +
+      '<div class="costo"><small>Gastado en los ebooks hasta ahora</small><div class="g">' + money(P.gasto) + '</div>' + (P.estimado ? '<small>de ≈ ' + money(P.estimado) + ' previstos</small>' : '') + '</div>' +
+      '<div class="aviso-of">' + (P.parar ? '<b>Deteniendo…</b> termina la llamada en curso y guarda lo hecho.' : '<b>No cierres esta pestaña.</b> Puedes mirar otras, pero déjala abierta: si se cierra, lo hecho queda guardado y se retoma desde ahí.') + '</div>' +
+      '<div class="acciones"><button class="btn peligro" data-acc="parar"' + (P.parar ? ' disabled' : '') + '>' + (P.parar ? 'Deteniendo…' : 'Detener') + '</button></div>';
+  }
+  function finHtml(p, P) {
+    var r = P.resultado || {}, h = '';
+    if (r.estado === 'lista') h = '<div class="aviso-of aviso-bien"><b>Ebooks y material listos.</b> Gastado en los ebooks: ' + money(r.gasto || P.gasto) + '. El mockup y los audios suman unos centavos más, que quedan aparte en «IA suelta» de Costo por proyecto.</div>';
+    else if (r.estado === 'parada') h = '<div class="aviso-of"><b>Detenido.</b> Lo generado está guardado; «Seguir» retoma desde ahí sin volver a pagarlo.</div>';
+    else if (r.estado === 'tope') h = '<div class="aviso-of aviso-mal"><b>' + esc(r.error || 'Se detuvo por el tope de gasto.') + '</b> Lo generado está guardado; se puede seguir.</div>';
+    else h = '<div class="aviso-of aviso-mal"><b>Se detuvo con un error:</b> ' + esc(r.error || 'sin detalle') + '<br>Lo generado está guardado: «Seguir» retoma desde ahí.</div>';
+    var dentro = entregablesIncluidos(P.orden);
+    return h + '<div class="eb-lista">' + dentro.map(function (e) { return filaEb(e, esc({ listo: 'Listo', error: 'Con error', produciendo: 'A medias', pendiente: 'Pendiente' }[e.estado] || e.estado)); }).join('') + '</div>' +
+      (P.avisos && P.avisos.length ? '<div class="aviso-of"><b>Quedó pendiente</b><ul>' + P.avisos.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul></div>' : '') +
+      materialHtml(p) +
+      '<div class="acciones">' + (r.estado === 'lista' ? '' : '<button class="btn prim" data-acc="confirmar">Seguir</button>') + '</div>';
+  }
+  function materialHtml(p) {
+    var m = p.material || {}, l = [];
+    (m.pdfs || []).forEach(function (x) { l.push('<a href="' + esc(href(x.url) || x.url) + '" target="_blank" rel="noopener">📄 ' + esc(x.titulo) + ' (PDF, ' + x.paginas + ' págs, ' + Math.round((x.bytes || 0) / 1024) + ' KB)</a>'); });
+    if (m.mockup && m.mockup.url) l.push('<a href="' + esc(m.mockup.url) + '" target="_blank" rel="noopener">🖼️ Mockup de la oferta</a>');
+    (m.audios || []).forEach(function (a, i) { l.push('<a href="' + esc(a.url) + '" target="_blank" rel="noopener">🎤 Audio ' + (i + 1) + '</a>'); });
+    (m.imagenesProducto || []).forEach(function (a) { l.push('<a href="' + esc(a.url) + '" target="_blank" rel="noopener">🖼️ ' + esc(a.nombre) + ' (para los anuncios)</a>'); });
+    return l.length ? '<div class="archivos">' + l.join('') + '</div>' : '';
+  }
+  function pedidoHtml(p, P) {
+    var o = P.orden, dentro = entregablesIncluidos(o), listos = dentro.filter(function (e) { return e.estado === 'listo'; }).length;
+    var m = p.material || {}, conPdf = (m.pdfs || []).length;
+    var cab;
+    if (o.estado === 'cancelada') cab = '<div class="aviso-of">El pedido de ebooks está cancelado. Se puede preparar otro.</div>';
+    else if (listos === dentro.length && dentro.length) cab = conPdf >= dentro.length && m.mockup ? '<div class="aviso-of aviso-bien"><b>Ebooks y material listos.</b></div>' : '<div class="aviso-of aviso-bien"><b>Los ' + dentro.length + ' ebooks están listos.</b> Falta armar los PDF y el material de venta.</div>';
+    else cab = '<div class="aviso-of"><b>Pedido hecho:</b> ' + listos + ' de ' + dentro.length + ' ebooks listos. Falta producir el resto.</div>';
+    var filas = dentro.map(function (e) {
+      var abrir = e.proyectoId ? ' <a href="/pdf?abrir=' + encodeURIComponent(e.proyectoId) + '" style="color:#8fb0ff">Abrir ↗</a>' : '';
+      return filaEb(e, esc({ listo: 'Listo', error: 'Con error', produciendo: 'A medias', pendiente: 'Pendiente' }[e.estado] || e.estado) + abrir);
+    }).join('');
+    var costo = o.costoReal > 0 ? '<p class="nota-p">Gastado hasta ahora: <b>' + money(o.costoReal) + '</b>' + (o.costoEstimado ? ' de ≈ ' + money(o.costoEstimado) + ' previstos' : '') + '</p>' : '';
+    var accion = o.estado === 'cancelada'
+      ? '<button class="btn prim" data-acc="preparar">Preparar otra vez</button>'
+      : '<button class="btn prim" data-acc="confirmar">' + (listos === dentro.length ? (conPdf >= dentro.length && m.mockup && (m.audios || []).length >= 2 ? 'Rehacer el material' : 'Armar PDF y material') : 'Producir lo que falta') + '</button>';
+    return cab + '<div class="eb-lista">' + filas + '</div>' + costo + materialHtml(p) + (P.msg ? '<div class="aviso-of aviso-mal">' + esc(P.msg) + '</div>' : '') +
+      '<div class="acciones">' + accion + '</div>';
+  }
+
+  // ---- preparar
+  function nuevoCliente() { return FabricaMotor.crearCliente({ http: http, modeloImagen: S.modelos && S.modelos.idImagen }); }
+  function preparar() {
+    var d = S.det; if (!d) return; var p = d.proyecto, P = prod(p.id);
+    // Si la oferta ya tiene un pedido de ebooks (hecho aqui o desde /radar), preparar otro lo REEMPLAZARIA y al producir se volveria a pagar: solo si la persona lo confirma.
+    if (P.orden && P.orden.estado !== 'cancelada' && !P.reemplazar) {
+      var hechos = entregablesIncluidos(P.orden).filter(function (e) { return e.estado === 'listo'; }).length;
+      if (!confirm('Esta oferta ya tiene un pedido de ebooks' + (hechos ? ' (' + hechos + ' ya hechos)' : '') + '.\n\nPrepararlo de nuevo lo REEMPLAZA y al producir se vuelve a gastar. ¿Reemplazarlo?')) return;
+      P.reemplazar = true;
+    }
+    var sel = document.querySelector('#sec-ebooks [data-campo="pais"]'); if (sel) P.pais = sel.value;
+    P.fase = 'preparando'; P.msg = ''; P.paso = 'Leyendo la oferta…'; P.prep = null; pintarEbooks();
+    var c = nuevoCliente();
+    return cargarModelos().then(function () {
+      return FabricaMotor.preparar(c, p.origen, { pais: P.pais, leerPagina: P.leerPagina, alAvanzar: function (e) { P.paso = e.texto; if (S.sel === p.id) pintarEbooks(); } });
+    }).then(function (r) {
+      P.prep = r; P.fase = 'propuesta';
+      // La promesa y lo que recibe se guardan ya: los anuncios que Claudia arma los usan aunque los ebooks tarden.
+      api({ accion: 'material', id: p.id, material: { copy: { promesa: r.brief.promesa || r.brief.titulo, vinetas: [r.brief.titulo], claves: [], persona: 'Laura' } }, hecho: 'Se preparó el temario de «' + r.brief.titulo + '»' }).then(function (j) { if (S.det && S.det.proyecto.id === p.id) S.det.proyecto = j.proyecto; }).catch(function () { /* se guarda al producir */ });
+    }).catch(function (e) { P.fase = 'inicio'; P.msg = e.message || 'No se pudo preparar la propuesta.'; })
+      .then(function () {
+        c.volcarGasto().catch(function () {}); if (S.sel === p.id) pintarEbooks();     // lo que costo preparar (centavos) tambien se anota, salga bien o mal
+        if (P.todo) { if (P.fase === 'propuesta' && S.sel === p.id) abrirConfirmar(true); else P.todo = false; }      // «Crear toda la oferta»: con el temario listo se muestra el costo para confirmar
+      });
+  }
+
+  // ---- confirmar y producir
+  function abrirConfirmar(todo) {
+    var d = S.det; if (!d) return; var p = d.proyecto, P = prod(p.id);
+    if (P.corriendo) return;
+    P.todo = todo === true;                                   // «Crear toda la oferta»: al terminar los ebooks sigue con la orden a los anuncios y los flujos (seguirTodo)
+    var f = faltaTodo(p, d.anuncios), soloResto = P.todo && !f.ebooks;      // sin ebooks por hacer solo quedan los anuncios y los flujos: no hay costo que confirmar
+    cargarModelos().then(function (modelos) {
+      var ents = P.prep ? P.prep.entregables : (P.orden ? P.orden.entregables : []);
+      var pend = ents.filter(function (e) { return e.incluir && e.estado !== 'listo'; });
+      var cd = FabricaMotor.costoDeEntregables(modelos, pend.length ? pend : []);
+      var total = cd ? cd.total : null;
+      var escr = FabricaMotor.escriturasDe(ents);
+      var min = Math.max(2, Math.round(pend.reduce(function (t, e) { return t + (Number(e.paginas) || 10) * 15 + 90; }, 180) / 60));
+      var filas = ents.filter(function (e) { return e.incluir; }).map(function (e) {
+        var u = cd && cd.lineas.filter(function (x) { return x.clave === e.clave; })[0];
+        return filaEb(e, e.estado === 'listo' ? 'Ya está listo: no se vuelve a hacer' : (u ? '≈ ' + money(u.usd) : 'Costo sin calcular'));
+      }).join('');
+      var ocupado = P.orden && P.orden.estado === 'produciendo' && P.orden.actualizadoEn && (Date.now() - Date.parse(P.orden.actualizadoEn)) < 180000;
+      var pago = P.datosPago;
+      el('modal-root').innerHTML = '<div class="modal-bg" data-cerrar-fondo><div class="modal" role="dialog" aria-modal="true" aria-label="Confirmar la producción"><div class="m-cab"><b>' + (P.todo ? 'Crear toda la oferta' : 'Producir los ebooks y armar el material') + '</b><button class="btn" data-acc="m-cerrar" aria-label="Cerrar" style="min-width:40px;padding:0">✕</button></div><div class="m-cuerpo">' +
+        (soloResto ? '<div class="aviso-of aviso-bien"><b>Los ebooks y el material ya están listos.</b> No hay nada que pagar en este paso.</div>' : '<div class="eb-lista" style="margin-top:0">' + filas + '</div>' +
+        (total != null ? '<div class="costo"><div class="g">≈ ' + money(total) + '</div><small>de costo previsto con tus modelos de hoy. El mockup y los 2 audios suman unos centavos más. Se detiene solo si el gasto real pasa de <b>' + money(total * 1.5 + 0.3) + '</b>.<br>Tarda unos <b>' + min + ' min</b> y usa ≈ ' + escr + ' escrituras de las 1.000 diarias de Cloudflare.</small></div>'
+          : '<div class="aviso-of">No tengo el precio del modelo para calcular el costo. Se detiene solo si el gasto real pasa de <b>' + money(10) + '</b>. Tarda unos <b>' + min + ' min</b>.</div>') +
+        (ocupado ? '<div class="aviso-of aviso-mal"><b>Parece que ya se está produciendo</b> (el pedido avanzó hace menos de 3 minutos, en otra pestaña o por otra persona). Si empiezas aquí también, se pueden duplicar ebooks y pagarlos dos veces.</div>' : '') +
+        (escr > 700 ? '<div class="aviso-of aviso-mal">Esto gastaría casi todas las escrituras del día en Cloudflare: quita bonos y hazlo en dos tandas.</div>' : '') +
+        '<div class="aviso-of"><b>Deja esta pestaña abierta y visible</b> hasta que termine (el computador despierto: la pantalla no se apaga sola mientras trabaja). Esto hace, en orden: ebooks y bonos → PDF de cada uno → mockup y audios. Lo hecho queda guardado y se retoma si algo se corta.</div>' +
+        '<label class="campo" style="margin-top:12px">Cómo te pagan (última página de cada ebook)<textarea id="c-pago" rows="3" maxlength="300">' + esc(pago) + '</textarea></label>') +
+        (P.todo ? restoHtml(d, f) : '') +
+        '</div><div class="m-pie"><button class="btn prim" data-acc="empezar"' + (soloResto || ents.some(function (e) { return e.incluir; }) ? '' : ' disabled') + '>' + (P.todo ? 'Crear toda la oferta' : 'Empezar') + '</button><button class="btn" data-acc="m-cerrar">Cancelar</button></div></div></div>';
+      S.confirmar = { total: total, modelos: modelos };
+    });
+  }
+  function cerrarModal() { el('modal-root').innerHTML = ''; }
+
+  var wake = null;
+  function despierto() { try { if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then(function (l) { wake = l; }).catch(function () {}); } catch (e) { /* se produce igual */ } }
+  function sueltaDespierto() { try { if (wake) { wake.release().catch(function () {}); wake = null; } } catch (e) {} }
+  function hayCorriendo() { return Object.keys(S.prod).some(function (k) { return S.prod[k].corriendo; }) || Object.keys(S.flujo).some(function (k) { return S.flujo[k].corriendo; }); }
+  window.addEventListener('beforeunload', function (e) { if (hayCorriendo()) { e.preventDefault(); e.returnValue = ''; } });
+  document.addEventListener('visibilitychange', function () { if (hayCorriendo() && document.visibilityState === 'visible') despierto(); });
+
+  function guardarEnProyecto(id, parche, etapas, hecho) {
+    return api({ accion: 'material', id: id, material: parche, etapas: etapas, hecho: hecho }).then(function (j) { if (S.det && S.det.proyecto.id === id) { S.det.proyecto = j.proyecto; } return j; });
+  }
+  function empezar() {
+    var d = S.det; if (!d) return; var p = d.proyecto, P = prod(p.id);
+    if (P.todo && !faltaTodo(p, d.anuncios).ebooks) { cerrarModal(); seguirTodo(p.id); return; }          // «Crear toda la oferta» con los ebooks ya hechos: sigue con los anuncios y los flujos
+    var caja = el('c-pago'); if (caja) P.datosPago = caja.value.trim();
+    try { localStorage.setItem('radar:pago', P.datosPago); } catch (e) {}
+    cerrarModal();
+    var modelos = S.confirmar && S.confirmar.modelos, total = S.confirmar && S.confirmar.total;
+    var tope = total != null ? Math.round((total * 1.5 + 0.3) * 100) / 100 : 10;
+    var c = FabricaMotor.crearCliente({ http: http, modeloImagen: modelos && modelos.idImagen });
+    P.fase = 'produciendo'; P.corriendo = true; P.parar = false; P.gasto = 0; P.ev = null; P.resultado = null; P.avisos = []; P.etapa = 'ebooks'; P.estimado = total || 0; P.msg = '';
+    despierto(); pintarEbooks();
+    var pintaEv = function (ev) { P.ev = ev; P.gasto = c.estado.total; if (S.sel === p.id) pintarEbooks(); };
+    var ordenP;
+    // 1) el pedido de ebooks (el mismo de /radar): el que ya existe sigue; si no hay, se guarda el de la propuesta
+    var paso1;
+    if (P.orden && P.orden.estado !== 'cancelada' && !P.prep) paso1 = Promise.resolve(P.orden);
+    else if (P.prep) paso1 = FabricaMotor.guardarPedido(c, p, P.prep, { pais: P.pais, datosPago: P.datosPago, costo: total || 0, reemplazar: P.reemplazar === true });
+    else paso1 = Promise.reject(new Error('No hay nada que producir: prepara los ebooks primero.'));
+    paso1.then(function (orden) {
+      ordenP = orden; P.orden = orden; P.prep = null; P.reemplazar = false;
+      return guardarEnProyecto(p.id, {}, { ebooks: { estado: 'en-curso', nota: '' } }, null).catch(function () {});
+    }).then(function () {
+      return FabricaMotor.producirEbooks(c, ordenP, { EbookProduccion: window.EbookProduccion, tope: tope, datosPago: P.datosPago, parar: function () { return P.parar; }, alAvanzar: pintaEv });
+    }).then(function (r) {
+      P.gasto = Math.max(P.gasto, r.gasto || 0);
+      if (r.estado !== 'lista') { P.resultado = r; return null; }
+      P.etapa = 'material'; P.ev = { tipo: 'pdf', texto: 'Armando los PDF…' }; if (S.sel === p.id) pintarEbooks();
+      return guardarEnProyecto(p.id, {}, { ebooks: { estado: 'lista', nota: '' }, material: { estado: 'en-curso', nota: '' } }, 'Ebooks listos').then(function () {
+        return FabricaMotor.armarMaterial(c, ordenP, {
+          rasterizar: function (h) { return EbookPdf.rasterizar(h, {}); }, armarPdf: EbookPdf.armarPdf, ordenarHojas: EbookPdf.ordenarHojas,
+          nombreOferta: p.nombre, previo: (S.det && S.det.proyecto.material) || {}, vozId: S.vozId || '',
+          alAvanzar: function (ev) { P.ev = ev.tipo === 'pdf' && ev.hecho ? { tipo: 'pdf', clave: ev.clave, titulo: ev.titulo, texto: 'PDF de «' + ev.titulo + '»: página ' + ev.hecho + ' de ' + ev.total } : ev; if (S.sel === p.id) pintarEbooks(); },
+          guardar: function (parche) { return guardarEnProyecto(p.id, parche, null, null); }
+        });
+      }).then(function (m) {
+        P.avisos = m.avisos;
+        var falta = FabricaMotor.faltaParaFlujos({ material: m.material });
+        return guardarEnProyecto(p.id, { costos: { ebooks: Math.round(c.estado.total * 10000) / 10000, material: 0 } }, { material: { estado: falta.length ? 'error' : 'lista', nota: falta.length ? 'Falta: ' + falta.join(', ') : '' } }, falta.length ? 'Material armado; falta ' + falta.join(', ') : 'PDF, mockup y audios listos').then(function (j) {
+          // El servidor no deja decir «lista» si lo que la hace lista no quedo guardado: si lo bajo a «error», se dice.
+          var guardado = j.proyecto.etapas.material;
+          if (guardado.estado === 'error' && !falta.length) P.avisos.push('El material se armó pero no quedó guardado: ' + (guardado.nota || 'revisa la fábrica') + '.');
+          P.resultado = { estado: 'lista', gasto: c.estado.total };
+        });
+      });
+    }).catch(function (e) {
+      P.resultado = { estado: 'error', error: (e && e.message) || 'Error inesperado' };
+      guardarEnProyecto(p.id, {}, { ebooks: { estado: 'error', nota: String(P.resultado.error).slice(0, 180) } }, null).catch(function () {});
+    }).then(function () {
+      P.corriendo = false; P.fase = 'fin'; sueltaDespierto();
+      c.volcarGasto().catch(function () {});
+      cargarLista();
+      if (S.sel === p.id) { pintarFicha(); pintarEbooks(); }
+      if (P.resultado.estado === 'lista') toast('Ebooks y material de «' + p.nombre + '» listos', 'bien');
+      if (P.todo) {
+        if (P.resultado.estado === 'lista') seguirTodo(p.id);
+        else { P.todo = false; toast('Se detuvo en los ebooks: la orden a los anuncios y los flujos esperan. Cuando esté resuelto, pulsa «Seguir creando la oferta».', 'mal'); if (S.sel === p.id) pintarTodo(); }
+      }
+    });
+  }
+
+  // ============================================================= PASO 3: ANUNCIOS PARA CLAUDIA
+  var ETQ_AD = { pedido: 'Pedido', tomado: 'Claudia lo tomó', 'en-edicion': 'Editando', lista: 'Lista para revisar', aprobada: 'Aprobada', cancelado: 'Cancelado', error: 'Con problema' };
+  // Quien tiene un pedido: si una persona dio la orden de arrancar los anuncios, lo puede tomar el servidor de anuncios (Pulpo) en vez de Claudia, y deja sus avisos por la MISMA puerta. Se distingue por las frases fijas
+  // del corredor (editor-anuncios/scripts/corredor_vps.py: la nota al tomar, «lo hizo solo», «no pudo hacer este anuncio de avatar solo» y «no pudo terminar el anuncio en la etapa…», cada una con su frase completa hasta donde
+  // deja de ser fija): la misma regla que usa /api/oficina (NOTA_SERVIDOR en functions/api/oficina.js; una prueba compara las dos y las contrasta con el corredor). Una nota de Claudia que empiece parecido («El servidor de voz…»,
+  // «El servidor no pudo hacer el render, lo hice a mano») NO es del corredor. Decir «Claudia» de lo que hizo el servidor es mentir sobre quien trabaja.
+  var NOTA_SERVIDOR = /^El servidor (\(VPS\) tomó el pedido y lo está haciendo solo|lo hizo solo y lo dejó en Drive \(ANUNCIOS\)\.|no pudo hacer este anuncio de avatar solo: |no pudo terminar el anuncio en la etapa «[a-z_]+»\.( |$))/;
+  var AVISO_RECIENTE_MS = 30 * 60000;         // «esta trabajando» solo con un aviso de hace menos de 30 minutos (el mismo limite de /oficina)
+  function delServidor(a) { var n = a && a.entrega && typeof a.entrega.nota === 'string' ? a.entrega.nota : ''; return NOTA_SERVIDOR.test(n); }
+  function etiquetaAd(a) { return a.estado === 'tomado' && delServidor(a) ? 'El servidor lo tomó' : (ETQ_AD[a.estado] || a.estado); }
+  // ---- progreso y vista previa de un anuncio: lo avisa el editor (guion, plan por tiempo, una imagen con las tomas y un video chico) y aqui solo se pinta. Todo texto pasa por esc(). ----
+  var ETAPAS_PROG = [['guion', 'Guion'], ['voz', 'Voz'], ['plan', 'Plan'], ['render', 'Render'], ['revision', 'Revisión'], ['entrega', 'Listo']];
+  function urlVista(a, tipo, version) {
+    var p = S.det && S.det.proyecto;
+    return '/api/fabrica?vista=' + encodeURIComponent(p ? p.id : '') + '&anuncio=' + encodeURIComponent(a.id) + '&tipo=' + tipo + '&v=' + encodeURIComponent(version || '');
+  }
+  function progresoHtml(a) {
+    var pr = a.progreso;
+    if (!pr || a.estado === 'cancelado' || (!pr.etapa && !pr.guion && !pr.imagen && !pr.video && !(pr.plan && pr.plan.length))) return '';
+    var cerrado = a.estado === 'lista' || a.estado === 'aprobada';
+    var idx = ETAPAS_PROG.map(function (e) { return e[0]; }).indexOf(pr.etapa);
+    var actual = cerrado ? ETAPAS_PROG.length : idx;
+    var etapas = ETAPAS_PROG.map(function (e, i) { return '<li class="' + (i < actual ? 'hecha' : (i === actual ? 'activa' : '')) + '">' + (i < actual ? '✓ ' : '') + esc(e[1]) + '</li>'; }).join('');
+    var pct = cerrado ? 100 : Math.max(0, Math.min(100, Number(pr.pct) || 0));
+    var cab = '<div class="prog-cab"><b>' + (cerrado ? 'Así quedó' : 'Cómo va') + '</b><small>' + (cerrado ? 'terminado' : (idx >= 0 ? esc(ETAPAS_PROG[idx][1]) + ' · ' + pct + ' %' : '')) + (pr.t ? ' · último aviso ' + esc(hace(pr.t)) : '') + '</small></div>';
+    var barra = '<div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>';
+    var nota = pr.nota ? '<p class="prog-nota">' + esc(pr.nota) + '</p>' : '';
+    var vistas = '';
+    if (pr.imagen) vistas += '<div class="vista vista-img"><a href="' + esc(urlVista(a, 'imagen', pr.imagen)) + '" target="_blank" rel="noopener"><img src="' + esc(urlVista(a, 'imagen', pr.imagen)) + '" alt="Las tomas de ' + esc(a.id) + ', una por frase" loading="lazy"></a><small>Las tomas del plan, una por frase (toca para ampliar)</small></div>';
+    if (pr.video) vistas += '<div class="vista vista-vid"><video controls playsinline preload="metadata" src="' + esc(urlVista(a, 'video', pr.video.t)) + '"></video><small>Vista previa' + (pr.video.seg ? ' · ' + esc(String(pr.video.seg).replace('.', ',')) + ' s' : '') + ' (calidad baja; la buena queda en Drive)</small></div>';
+    var guion = pr.guion ? '<details class="mas"><summary>El guion</summary><div class="guion-txt">' + esc(pr.guion) + '</div></details>' : '';
+    var plan = pr.plan && pr.plan.length ? '<details class="mas"><summary>El plan por tiempo (' + pr.plan.length + ' cortes)</summary><div class="plan-wrap"><table class="plan"><thead><tr><th>Seg.</th><th>Se dice</th><th>Toma</th><th>Texto grande</th></tr></thead><tbody>' +
+      pr.plan.map(function (f) { return '<tr><td>' + esc(f.t) + '</td><td>' + esc(f.frase) + '</td><td>' + esc(f.toma) + '</td><td>' + esc(f.texto) + '</td></tr>'; }).join('') + '</tbody></table></div></details>' : '';
+    return '<div class="prog">' + cab + '<ul class="etapas">' + etapas + '</ul>' + barra + nota + (vistas ? '<div class="vistas">' + vistas + '</div>' : '') + guion + plan + '</div>';
+  }
+  function adHtml(a, abiertoCambios) {
+    var ref = a.referencia || {}, ent = a.entrega || {};
+    var botones = '<button class="btn" data-acc="copiar-orden" data-ad="' + esc(a.id) + '">Copiar la orden para Claudia</button><button class="btn" data-acc="receta-ad" data-ad="' + esc(a.id) + '">Receta de este anuncio</button>';
+    if (a.estado === 'lista') botones += '<button class="btn prim" data-acc="aprobar" data-ad="' + esc(a.id) + '">Aprobar</button><button class="btn" data-acc="pedir-cambios" data-ad="' + esc(a.id) + '">Pedir cambios</button>';
+    if (a.estado === 'aprobada') botones += '<button class="btn" data-acc="pedir-cambios" data-ad="' + esc(a.id) + '">Pedir cambios</button>';
+    if (a.estado !== 'cancelado' && a.estado !== 'aprobada') botones += '<button class="btn peligro" data-acc="cancelar-ad" data-ad="' + esc(a.id) + '">Cancelar</button>';
+    if (a.estado === 'cancelado') botones = '<button class="btn" data-acc="reabrir-ad" data-ad="' + esc(a.id) + '">Volver a pedirlo</button>';
+    var entrega = '', srv = delServidor(a);
+    if (a.estado === 'lista' || a.estado === 'aprobada') {
+      entrega = '<div class="entrega"><b>' + (a.estado === 'aprobada' ? 'Aprobado' : (srv ? 'El servidor lo dejó listo' : 'Claudia lo dejó listo')) + '</b>' + (ent.archivo ? ' · archivo <b>' + esc(ent.archivo) + '</b>' : '') + (href(ent.drive) ? ' · <a href="' + esc(ent.drive) + '" target="_blank" rel="noopener">verlo en Drive ↗</a>' : ' · está en la carpeta ANUNCIOS de la oferta, en Drive') + (ent.costoUsd ? ' · costó ' + money(ent.costoUsd) : '') + (ent.nota ? '<br>' + esc(ent.nota) : '') + '</div>';
+    } else if (a.estado === 'error' && ent.nota) {
+      // La nota del servidor ya empieza por «El servidor…»: no lleva el «Claudia avisó:» delante.
+      entrega = '<div class="aviso-of aviso-mal">' + (srv ? '' : '<b>Claudia avisó:</b> ') + esc(ent.nota) + '</div>';
+    } else if ((a.estado === 'tomado' || a.estado === 'en-edicion') && ent.nota) {
+      entrega = '<p class="nota-p">' + (srv ? '' : 'Claudia dice: ') + esc(ent.nota) + '</p>';
+    }
+    var corr = (a.correcciones || []).slice(-2).map(function (c) { return '<div class="corr">Cambio pedido por ' + esc(quien(c.por)) + ': ' + esc(c.texto) + '</div>'; }).join('');
+    var cambios = abiertoCambios ? '<div class="pedircambios"><label class="campo">Qué hay que cambiar<textarea data-cambios="' + esc(a.id) + '" rows="2" maxlength="400" placeholder="Ej.: el gancho se queda corto, alargarlo a 8 segundos"></textarea></label><div class="acciones"><button class="btn prim" data-acc="enviar-cambios" data-ad="' + esc(a.id) + '">Enviar a Claudia</button><button class="btn" data-acc="cerrar-cambios">Cancelar</button></div></div>' : '';
+    return '<div class="ad" data-ad="' + esc(a.id) + '"><div class="ad-top"><b>' + esc(a.id) + '</b><span class="est ' + esc(a.estado) + '">' + esc(etiquetaAd(a)) + '</span><span class="chip">' + (a.tipo === 'ia' ? 'Avatar con IA' : 'Locución + videos') + '</span><span class="sp"></span><small class="nota-p hace" style="margin:0">' + esc(hace(a.actualizadoEn)) + '</small></div>' + progresoHtml(a) +
+      '<details class="mas ref"' + (ref.videoUrl ? '' : ' open') + '><summary>' + (ref.videoUrl ? 'Video de referencia ✓ (cambiar)' : 'Falta el video del anuncio que se modela') + '</summary>' +
+      '<div class="grid2"><label class="campo">Video del anuncio que se modela (enlace de Drive o directo)<input type="url" data-ref="url" data-ad="' + esc(a.id) + '" maxlength="400" placeholder="https://drive.google.com/…" value="' + esc(ref.videoUrl) + '"></label>' +
+      '<label class="campo">Nota sobre la referencia<input type="text" data-ref="nota" data-ad="' + esc(a.id) + '" maxlength="300" placeholder="Ej.: usa desde el segundo 3" value="' + esc(ref.nota) + '"></label></div>' +
+      '<div class="botones"><button class="btn" data-acc="guardar-ref" data-ad="' + esc(a.id) + '">Guardar la referencia</button></div></details>' +
+      entrega + corr + '<div class="botones">' + botones + '</div>' + cambios + '</div>';
+  }
+  var adCambiosAbierto = '', huellaAd = '';
+  // Cuando Claudia dijo algo por ultima vez de este pedido (sus avisos quedan en `hechos` con por = «Claudia»; si no hay, cuando lo tomo). No cuenta lo que haga una persona con el pedido.
+  function ultimoAvisoDe(a) {
+    var m = Date.parse(a.tomadoEn || '') || 0;
+    (a.hechos || []).forEach(function (h) { if (h && h.por === 'Claudia') { var x = Date.parse(h.t || '') || 0; if (x > m) m = x; } });
+    if (a.progreso && a.progreso.t) { var y = Date.parse(a.progreso.t) || 0; if (y > m) m = y; }          // un aviso de progreso tambien es un aviso
+    return m;
+  }
+  function pintarAnuncios() {
+    pintarTodo();
+    var d = S.det, cont = el('sec-anuncios'); if (!d || !cont) return;
+    var caja = cont.querySelector('.cuerpo-paso');
+    var guardados = {}; [].forEach.call(caja.querySelectorAll('input,textarea'), function (i) { var k = (i.dataset.ref || (i.dataset.cambios ? 'cambios' : '')) + ':' + (i.dataset.ad || i.dataset.cambios || ''); if (i.dataset.ref || i.dataset.cambios) guardados[k] = i.value; });
+    var foco = document.activeElement && caja.contains(document.activeElement) ? ((document.activeElement.dataset.ref || (document.activeElement.dataset.cambios ? 'cambios' : '')) + ':' + (document.activeElement.dataset.ad || document.activeElement.dataset.cambios || '')) : '';
+    var ads = d.anuncios, abiertos = ads.filter(function (a) { return a.estado === 'tomado' || a.estado === 'en-edicion'; });
+    // «Esta trabajando» solo si avisó hace poco: un pedido «tomado» que lleva horas sin aviso es uno que se quedó esperando algo (el caso FIELTRO: tomado a las 10:41, sin el video de referencia), y decir que trabaja es mentir.
+    // Lo que tiene Claudia y lo que tiene el servidor de anuncios se cuenta por separado (cada uno avisa por su lado) y cada uno se nombra solo por lo suyo.
+    var deSrv = abiertos.filter(delServidor), deCla = abiertos.filter(function (a) { return !delServidor(a); });
+    var ultimoDe = function (lista) { return lista.reduce(function (m, a) { return Math.max(m, ultimoAvisoDe(a)); }, 0); };
+    var ultCla = ultimoDe(deCla), ultSrv = ultimoDe(deSrv);
+    var recienteCla = deCla.length > 0 && ultCla > 0 && Date.now() - ultCla < AVISO_RECIENTE_MS;
+    var recienteSrv = deSrv.length > 0 && ultSrv > 0 && Date.now() - ultSrv < AVISO_RECIENTE_MS;
+    var quienes = [recienteCla ? 'Claudia' : '', recienteSrv ? 'el servidor' : ''].filter(Boolean);
+    var haceAviso = function (ms) { return ms ? esc(hace(new Date(ms).toISOString())) : 'hace mucho'; };
+    var callada = (deCla.length > 0 && !recienteCla
+        ? '<span class="callada">Sin novedades de Claudia: su último aviso fue ' + haceAviso(ultCla) + '. Si se quedó esperando algo, lo dice en cada anuncio de abajo; para que siga, ábrela en el editor y dile «revisa los pedidos de la Fábrica».</span>'
+        : '')
+      + (deSrv.length > 0 && !recienteSrv
+        ? (deCla.length > 0 && !recienteCla ? ' ' : '') + '<span class="callada">Sin novedades del servidor de anuncios (Pulpo): su último aviso fue ' + haceAviso(ultSrv) + '. Puede estar en pausa, apagado o esperando algo: lo que reporta se ve en la oficina, en la sala «Fábrica de anuncios».</span>'
+        : '');
+    var listos = ads.filter(function (a) { return a.estado === 'lista' || a.estado === 'aprobada'; }).length;
+    // Sin cambios no se repinta: un video de vista previa que alguien esta viendo (o un guion abierto) no se corta cada 45 s. Solo se renuevan los textos que dependen de la hora.
+    var trabajan = quienes.length ? quienes.join(' y ').replace(/^./, function (c) { return c.toUpperCase(); }) + (quienes.length > 1 ? ' están' : ' está') + ' trabajando…' : '';
+    var estadoTrabajo = (trabajan ? '<span class="girando">' + trabajan + '</span>' + (callada ? ' ' : '') : '') + callada;
+    var huella = JSON.stringify([d.proyecto.id, ads, adCambiosAbierto, d.proyecto.arranque || null]);
+    if (huella === huellaAd && caja.querySelector('.ad')) {
+      var sp = caja.querySelector('#ad-estado-trabajo'); if (sp && sp.innerHTML !== estadoTrabajo) sp.innerHTML = estadoTrabajo;
+      [].forEach.call(caja.querySelectorAll('.ad'), function (n) { var x = ads.filter(function (q) { return q.id === n.dataset.ad; })[0], h = n.querySelector('.hace'); if (x && h) h.textContent = hace(x.actualizadoEn); });
+      return;
+    }
+    huellaAd = huella;
+    caja.innerHTML = '<p style="margin:2px 0 0;color:#bbc7e1">Cada anuncio es un pedido para <b>Claudia</b> (el editor de videos) o, si alguien dio la orden de arrancar, para el servidor de anuncios. Quien lo toma lo edita siguiendo la receta, lo deja en Drive y aquí aparece listo para que lo apruebes. <span id="ad-estado-trabajo">' + estadoTrabajo + '</span></p>' +
+      arranqueHtml(d.proyecto, ads) +
+      '<p class="nota-p">Para cada uno puedes pegar el video del anuncio que se modela (un enlace de Drive). Si no lo pegas y la oferta trae el enlace del anuncio de la biblioteca de Meta, Claudia baja el texto y el video sola al tomar el pedido; si no puede, te avisa y ahí sí lo subes tú (a Drive, o en la carpeta del editor).</p>' +
+      '<div class="anuncios">' + ads.map(function (a) { return adHtml(a, adCambiosAbierto === a.id); }).join('') + '</div>' +
+      '<div class="acciones"><button class="btn" data-acc="ad-nuevo"' + (ads.length >= 12 ? ' disabled' : '') + '>+ Pedir otro anuncio</button></div>' +
+      '<details class="mas"><summary>Cómo se lo paso a Claudia</summary><ol class="nota-p" style="padding-left:18px"><li>En el PC del editor abre el editor de anuncios con Claude (carpeta del editor).</li><li>Dile: <b>«revisa los pedidos de la Fábrica»</b>. Ella baja la orden de cada anuncio (con la receta de abajo), pide el plan, lo edita y lo sube.</li><li>Si el editor no tiene la llave puesta, usa «Copiar la orden para Claudia» y pégasela.</li></ol></details>' +
+      '<p class="nota-p">' + (listos ? listos + ' de ' + ads.length + ' listos.' : 'Todavía no hay ninguno listo.') + '</p>';
+    Object.keys(guardados).forEach(function (k) {
+      var partes = k.split(':'); var sel = partes[0] === 'cambios' ? '[data-cambios="' + partes[1] + '"]' : '[data-ref="' + partes[0] + '"][data-ad="' + partes[1] + '"]';
+      var i = caja.querySelector(sel); if (i && guardados[k] !== i.value) i.value = guardados[k];
+    });
+    if (foco) { var p2 = foco.split(':'); var q = caja.querySelector(p2[0] === 'cambios' ? '[data-cambios="' + p2[1] + '"]' : '[data-ref="' + p2[0] + '"][data-ad="' + p2[1] + '"]'); if (q) q.focus(); }
+  }
+  function ordenDe(ad) {
+    var p = S.det.proyecto;
+    return pedir('/api/fabrica?orden=' + encodeURIComponent(p.id) + '&anuncio=' + encodeURIComponent(ad)).then(function (j) { return j.markdown; });
+  }
+  function copiar(texto) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(texto);
+    return new Promise(function (ok, mal) {
+      var t = document.createElement('textarea'); t.value = texto; t.style.cssText = 'position:fixed;opacity:0;left:-9999px'; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy') ? ok() : mal(new Error('no se pudo copiar')); } catch (e) { mal(e); } document.body.removeChild(t);
+    });
+  }
+  function actualizarAnuncio(ad, cuerpo, mensaje) {
+    var p = S.det.proyecto;
+    return api(Object.assign({ accion: 'anuncio', id: p.id, anuncio: ad }, cuerpo)).then(function (j) {
+      toast(mensaje || 'Listo', 'bien'); return refrescarDetalle(true).then(cargarLista);
+    }).catch(function (e) { toast(e.message, 'mal'); });
+  }
+
+  // ============================================================= CREAR TODA LA OFERTA
+  // Un solo boton que encadena lo que la ficha hace por pasos: ebooks y material (aqui, en este navegador, con el costo a la vista y confirmado) -> orden de arranque de los anuncios (queda para el servidor
+  // del VPS o para Claudia; la orden no gasta) -> flujos de ZapData (nacen apagados). Lo hecho queda guardado: si algo se corta, el boton dice «Seguir» y retoma lo que falta sin volver a pagar.
+  function conteoAds(ads) {
+    var c = { total: 0, pedido: 0, trabajando: 0, listos: 0, error: 0 };
+    (ads || []).forEach(function (a) {
+      if (a.estado === 'cancelado') return;
+      c.total++;
+      if (a.estado === 'pedido') c.pedido++;
+      else if (a.estado === 'tomado' || a.estado === 'en-edicion') c.trabajando++;
+      else if (a.estado === 'lista' || a.estado === 'aprobada') c.listos++;
+      else if (a.estado === 'error') c.error++;
+    });
+    return c;
+  }
+  // Que falta de las tres partes. Los anuncios solo «faltan» si hay pedidos esperando y nadie dio la orden; los flujos, si no hay un pedido de flujos guardado.
+  function faltaTodo(p, ads) {
+    var e = p.etapas || {}, m = p.material || {}, eb = e.ebooks || {}, ma = e.material || {}, fj = e.flujos || {};
+    return { ebooks: !(eb.estado === 'lista' && ma.estado === 'lista'), anuncios: !p.arranque && conteoAds(ads).pedido > 0, flujos: fj.estado !== 'lista' && !(m.flujo && m.flujo.pedidoId) };
+  }
+  function todoCompleto(p, ads) {
+    var f = faltaTodo(p, ads);
+    return !f.ebooks && !f.anuncios && ((p.etapas || {}).flujos || {}).estado === 'lista';
+  }
+  function filaTodo(clase, titulo, texto) {
+    var ic = { hecho: '✓', curso: '⏳', error: '⚠', falta: '○' }[clase] || '○';
+    return '<div class="todo-fila ' + clase + '"><span class="ic" aria-hidden="true">' + ic + '</span><div><b>' + esc(titulo) + '</b><small>' + texto + '</small></div></div>';
+  }
+  function pintarTodo() {
+    var d = S.det, cont = el('sec-todo'); if (!d || !cont) return;
+    var p = d.proyecto, P = prod(p.id), Fz = fl(p.id), e = p.etapas || {}, m = p.material || {}, ads = d.anuncios || [], c = conteoAds(ads), f = faltaTodo(p, ads), ar = p.arranque;
+    var eb = e.ebooks || {}, ma = e.material || {}, fj = e.flujos || {}, creado = !!(m.flujo && m.flujo.pedidoId);
+    var ocupado = !!(P.corriendo || P.fase === 'preparando' || Fz.corriendo);
+    var filas = '';
+    var tEb = 'Ebooks, bonos, PDF, mockup y audios';
+    if (!f.ebooks) filas += filaTodo('hecho', tEb, 'Listos.');
+    else if (P.corriendo || P.fase === 'preparando') filas += filaTodo('curso', tEb, 'Se están haciendo en este navegador: déjalo abierto.');
+    else if (eb.estado === 'error' || ma.estado === 'error') filas += filaTodo('error', tEb, 'Se detuvo' + (eb.nota || ma.nota ? ': ' + esc(eb.nota || ma.nota) : '') + '. «Seguir» retoma lo que falta sin volver a pagar lo hecho.');
+    else filas += filaTodo('falta', tEb, 'Sin hacer. Antes de gastar te muestro el costo y te pido confirmar.');
+    if (!c.total) filas += filaTodo('falta', 'Anuncios', 'No hay pedidos de anuncio: usa «Pedir otro anuncio» más abajo.');
+    else if (c.listos === c.total) filas += filaTodo('hecho', 'Anuncios', c.listos + ' de ' + c.total + ' listos para revisar y aprobar.');
+    else if (ar) filas += filaTodo(c.error ? 'error' : 'curso', 'Anuncios', 'Orden dada ' + esc(hace(ar.t)) + '. ' + c.listos + ' de ' + c.total + ' listos' + (c.trabajando ? ', ' + c.trabajando + ' en trabajo' : (c.pedido ? ', ' + c.pedido + ' en cola' : '')) + (c.error ? ', ' + c.error + ' con problema (ver abajo)' : '') + '.');
+    else filas += filaTodo('falta', 'Anuncios', c.total + ' pedido' + (c.total === 1 ? '' : 's') + ' esperando la orden de arrancar (los hace el servidor de anuncios, no tú).');
+    if (fj.estado === 'lista') filas += filaTodo('hecho', 'Flujos en ZapData', 'Creados (apagados y sin número). Falta el inicio, la rama de pagos y activarlos: abajo, «Copiar la orden para Claude».');
+    else if (Fz.corriendo) filas += filaTodo('curso', 'Flujos en ZapData', 'Creándose…');
+    else if (creado) filas += filaTodo(fj.estado === 'error' ? 'error' : 'curso', 'Flujos en ZapData', 'Quedaron a medias' + (fj.nota ? ': ' + esc(fj.nota) : '') + '. Sigue desde «Abrir Flujos ZapData».');
+    else filas += filaTodo('falta', 'Flujos en ZapData', 'Sin crear. Se crean al final, cuando el ebook principal ya tiene su PDF.');
+    // «Completa» exige los flujos en «lista»; unos flujos que quedaron a medias (hay pedido guardado pero no «lista») no se vuelven a crear solos: se terminan en /ofertas.
+    var completa = todoCompleto(p, ads), sinTrabajo = !f.ebooks && !f.anuncios && !f.flujos;
+    var algo = !f.ebooks || !!ar || creado || !!(P.orden && entregablesIncluidos(P.orden).some(function (x) { return x.estado === 'listo'; }));
+    var boton = ocupado ? '<button class="btn prim grande" disabled>Trabajando…</button>'
+      : (completa ? '<button class="btn grande" disabled>La oferta está completa ✓</button>'
+        : (sinTrabajo ? '<a class="btn grande" href="/ofertas">Terminar los flujos en Flujos ZapData</a>' : '<button class="btn prim grande" data-acc="crear-todo">' + (algo ? 'Seguir creando la oferta' : 'Crear toda la oferta') + '</button>'));
+    cont.innerHTML = '<h3>Crear toda la oferta</h3><p class="sub2">Un solo botón: ebooks y bonos, la orden a los anuncios y los flujos de ZapData.</p>' + filas + boton +
+      '<p class="nota-p">Lo que ninguna máquina hace sola: aprobar cada anuncio, asignar el número de WhatsApp y activar el flujo. Nada de esto toca campañas ni activa nada en WhatsApp. Eso va en la guía de lanzamiento, aquí abajo.</p>';
+    pintarLanzar();
+  }
+
+  // ============================================================= GUIA DE LANZAMIENTO
+  // Lo que va DESPUES de «Crear toda la oferta» (la guia vive en functions/_fabrica.js, GUIA_LANZAMIENTO, y llega con la ficha): cinco pasos POR PAIS, cada tarea con su responsable. Las `auto` salen de lo que
+  // la ficha ya sabe; las demas se marcan con un toque y se guardan en el proyecto (accion 'lanzamiento'). El numero de WhatsApp se elige de la lista EN VIVO de ZapData (/api/zapdata-canales) y su «WPP #N»
+  // sale de la lista del build (LINEAS): con el, la guia arma el nombre de campaña que el dash y las reglas entienden («ZAP #N | OFERTA | INT - COM | 6 NOV | 101»).
+  var LINEAS = [].concat(__FABRICA_LINEAS_JSON__ || []).filter(function (x) { return x && typeof x === 'object' && x.id; });
+  // Las ventas de PRUEBA del equipo que el build vio en las hojas (pais, pestaña y dia; sin nombres ni telefonos), con la hora de ese refresco: con ellas se marca sola «La venta de prueba quedó en la hoja».
+  var PRUEBAS = (function (x) { return x && typeof x === 'object' && !Array.isArray(x) ? x : {}; })(__FABRICA_PRUEBAS_JSON__);
+  var MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+  var LZ = { pais: {}, abiertos: {}, canales: null, canalesEn: 0, cargando: false, guardando: '', guardadoEn: 0, flujos: {}, flujosEn: {}, flujosCargando: {} };
+  function plano(s) { return String(s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim(); }
+  function lineaDe(id) { return LINEAS.filter(function (x) { return String(x.id).toLowerCase() === String(id || '').toLowerCase(); })[0] || null; }
+  function propio(o, k) { return !!o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k); }
+  function marcasDe(p, pais) { var l = propio(p.lanzamiento, pais) ? p.lanzamiento[pais] : null; return l && typeof l === 'object' ? { m: propio(l, 'm') && l.m ? l.m : {}, num: propio(l, 'num') ? l.num : null } : { m: {}, num: null }; }
+  // Los numeros EN VIVO: se piden al abrir la guia y despues cada 2 min mientras la pagina esta abierta (el reloj de abajo); si ZapData no contesto, se reintenta a los 20 s. Solo se repinta si algo cambio.
+  function cargarCanales() {
+    var vida = LZ.canales && LZ.canales.ok ? 120000 : 20000;
+    if (LZ.cargando || (LZ.canales && Date.now() - LZ.canalesEn < vida)) return;
+    LZ.cargando = true;
+    var antes = JSON.stringify(LZ.canales);
+    fetch('/api/zapdata-canales', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (j) { LZ.canales = j && typeof j === 'object' ? { ok: j.ok === true, mensaje: j.mensaje || '', canales: Array.isArray(j.canales) ? j.canales : null } : { ok: false, mensaje: 'ZapData no contestó.' }; })
+      .catch(function () { LZ.canales = { ok: false, mensaje: 'No pude preguntarle a ZapData por los números en este momento.' }; })
+      .then(function () { LZ.cargando = false; LZ.canalesEn = Date.now(); if (JSON.stringify(LZ.canales) !== antes) pintarLanzar(); });
+  }
+  // El numero elegido para el pais, como lo ve ZapData AHORA: 'conectado' | 'caido' | 'sin-saber' (ZapData no contesto) | '' (no hay numero).
+  function estadoNumero(num) {
+    if (!num) return '';
+    var c = LZ.canales;
+    if (!c) return 'cargando';
+    if (!c.ok || !Array.isArray(c.canales)) return 'sin-saber';
+    var vivo = c.canales.filter(function (x) { return x.id === num.id; })[0];
+    return vivo && vivo.estado === 'connected' ? 'conectado' : 'caido';
+  }
+  function etiquetaNumero(n) {
+    var ln = lineaDe(n.id), wpp = n.wpp || (ln && ln.wpp) || '';
+    return (wpp ? 'WPP #' + wpp + ' · ' : '') + (n.nombre || 'conexión') + (n.tel4 ? ' …' + n.tel4 : '');
+  }
+  // ---- Venta y Entrega encendidos (paso 2): lo dice ZapData por /api/zapdata-flujos, con el pedido con el que se crearon los flujos. Se pide al abrir la guia y despues cada 2 min mientras se usa la
+  // pagina (20 s si ZapData no contesto); el servidor tiene su propia memoria de 2 min. Solo se repinta si algo cambio.
+  function pedidoFlujos(p) { var m = p.material || {}; return ((p.etapas || {}).flujos || {}).estado === 'lista' && m.flujo && /^[a-z0-9]{2,40}$/.test(String(m.flujo.pedidoId || '')) ? String(m.flujo.pedidoId) : ''; }
+  function cargarFlujos(p) {
+    var id = pedidoFlujos(p); if (!id || LZ.flujosCargando[id]) return;
+    // mientras falten flujos por revisar (inicio y rama de pagos), cada 20 s; con ZapData en su tope del dia, 30 min; si ZapData no dejo leer un flujo completo o un error que no se arregla solo
+    // (sin permiso, sin conexion): 5 min
+    var x = LZ.flujos[id], vida = x && x.ok ? (x.limite ? 1800000 : (x.revisionFallo ? 300000 : (x.pendientes > 0 ? 20000 : 120000))) : (x && x.motivo === 'limite' ? 1800000 : (x && x.motivo !== 'red' ? 300000 : 20000));
+    if (x && Date.now() - (LZ.flujosEn[id] || 0) < vida) return;
+    LZ.flujosCargando[id] = true;
+    var antes = JSON.stringify(x || null);
+    fetch('/api/zapdata-flujos?pedido=' + encodeURIComponent(id), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (j) { LZ.flujos[id] = j && typeof j === 'object' && j.ok === true ? { ok: true, fuente: j.fuente === 'lista' ? 'lista' : 'borradores', revisable: j.revisable === true, paises: j.paises && typeof j.paises === 'object' ? j.paises : {}, pendientes: Number(j.pendientes) > 0 ? Number(j.pendientes) : 0, revisionFallo: j.revisionFallo === true, limite: j.limite === true } : { ok: false, motivo: String((j && j.motivo) || ''), mensaje: String((j && (j.mensaje || j.error)) || 'ZapData no contestó sobre los flujos.') }; })
+      .catch(function () { LZ.flujos[id] = { ok: false, motivo: 'red', mensaje: 'No pude preguntarle a ZapData por los flujos en este momento.' }; })
+      .then(function () { delete LZ.flujosCargando[id]; LZ.flujosEn[id] = Date.now(); if (JSON.stringify(LZ.flujos[id]) !== antes) pintarLanzar(); });
+  }
+  var ID_FLUJO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // { venta:{ id, activo, canales }, entrega:{...} } de este pais segun la ultima respuesta, o null si no hay respuesta buena para el.
+  function flujosDelPais(p, pais) {
+    var x = LZ.flujos[pedidoFlujos(p)];
+    if (!x || !x.ok || !x.paises || typeof x.paises !== 'object') return null;
+    // el pais tal cual y, si no esta, el que se escribe igual sin tildes ni mayusculas (el pedido guarda el nombre como lo tenia la pestaña Paises al crear los flujos)
+    var k = propio(x.paises, pais) ? pais : Object.keys(x.paises).filter(function (z) { return plano(z) === plano(pais); })[0];
+    var par = k != null ? x.paises[k] : null; return par && typeof par === 'object' ? par : null;
+  }
+  function estadoFlujosActivos(p, pais, mk) {
+    var id = pedidoFlujos(p), paisesF = ((p.material || {}).flujo || {}).paises || [];
+    if (!id || (paisesF.length && paisesF.indexOf(pais) < 0)) return { hecho: false, nota: 'Primero se crean los flujos de ' + esc(pais) + ' (la primera tarea de este paso).' };
+    var x = LZ.flujos[id];
+    if (!x) { cargarFlujos(p); return { hecho: false, nota: 'Preguntándole a ZapData si están encendidos…' }; }
+    if (!x.ok) return { hecho: false, nota: esc(x.mensaje) + ' Queda sin marcar hasta que ZapData lo confirme.' };
+    var par = flujosDelPais(p, pais);
+    if (!par) return { hecho: false, nota: 'El pedido de los flujos de esta oferta no trae los de ' + esc(pais) + ': no lo puedo confirmar. Queda sin marcar.' };
+    var dos = [{ n: 'Venta', f: par.venta }, { n: 'Entrega', f: par.entrega }].map(function (z) { var f = z.f && typeof z.f === 'object' ? z.f : {}; return { n: z.n, id: ID_FLUJO.test(String(f.id || '')) ? String(f.id) : '', activo: f.activo, canales: Array.isArray(f.canales) ? f.canales : null }; });
+    var nombres = function (l) { return l.map(function (z) { return z.n; }).join(' y '); };
+    var sinCrear = dos.filter(function (z) { return !z.id; }), apagados = dos.filter(function (z) { return z.id && z.activo === false; }), sinSaber = dos.filter(function (z) { return z.id && z.activo !== true && z.activo !== false; });
+    if (sinCrear.length) return { hecho: false, nota: 'El flujo de ' + nombres(sinCrear) + ' no se terminó de crear: termínalo en Flujos ZapData.' };
+    if (apagados.length) return { hecho: false, nota: (apagados.length > 1 ? 'Venta y Entrega están apagados' : 'El flujo de ' + apagados[0].n + ' está apagado') + ' en ZapData.' + (sinSaber.length ? ' Y el de ' + nombres(sinSaber) + ' no lo pude confirmar.' : '') };
+    if (sinSaber.length) return { hecho: false, nota: 'No pude confirmar el flujo de ' + nombres(sinSaber) + ': ZapData no lo trae entre sus flujos más recientes. Queda sin marcar.' };
+    if (!mk.num) return { hecho: false, nota: 'Los dos están encendidos. Elige el número arriba para comprobar que tengan ese.' };
+    if (x.fuente === 'lista' && dos.every(function (z) { return Array.isArray(z.canales); })) {
+      var sinNum = dos.filter(function (z) { return z.canales.indexOf(mk.num.id) < 0; });
+      if (sinNum.length) return { hecho: false, error: true, nota: 'Encendidos, pero ' + (sinNum.length > 1 ? 'ninguno de los dos tiene' : 'el de ' + sinNum[0].n + ' no tiene') + ' el número elegido (<b>' + esc(etiquetaNumero(mk.num)) + '</b>): asígnaselo en ZapData.' };
+      return { hecho: true, nota: 'Encendidos con <b>' + esc(etiquetaNumero(mk.num)) + '</b>, según ZapData.' };
+    }
+    // La conexion de hoy no deja ver el numero de cada flujo: lo confirma una persona con un toque (una escritura). Sin esa confirmacion no se da por hecha; con ella, solo si ZapData sigue diciendo «encendidos».
+    var conf = mk.m['flujos-activos'];
+    if (conf) return { hecho: true, confirmar: 'si', nota: 'Encendidos, según ZapData. Que tengan <b>' + esc(etiquetaNumero(mk.num)) + '</b> lo confirmó ' + esc(quien(conf.por)) + ' ' + esc(hace(conf.t)) + '.' };
+    return { hecho: false, confirmar: 'no', nota: 'Encendidos, según ZapData. Con qué número quedaron no lo deja ver la conexión del dash: revisa en ZapData que los dos tengan <b>' + esc(etiquetaNumero(mk.num)) + '</b> y confírmalo aquí.' };
+  }
+  // ---- Inicio y rama de pagos (paso 2): lo dice ZapData en la misma consulta de los flujos encendidos. functions/_zapdata-revision.js lee la Venta (su inicio tiene que ser start-1) y el flujo de Pagos
+  // del pais (tiene que tener una condicion con la etiqueta «Pago Pendiente …» de esta Venta que lleve a la Entrega de ESTE pedido). Solo lee: arreglarlo lo sigue haciendo Claude con la orden.
+  function estadoInicioPagos(p, pais) {
+    var id = pedidoFlujos(p), paisesF = ((p.material || {}).flujo || {}).paises || [];
+    if (!id || (paisesF.length && paisesF.indexOf(pais) < 0)) return { hecho: false, nota: 'Primero se crean los flujos de ' + esc(pais) + ' (la primera tarea de este paso).' };
+    var x = LZ.flujos[id];
+    if (!x) { cargarFlujos(p); return { hecho: false, nota: 'Preguntándole a ZapData…' }; }
+    if (!x.ok) return { hecho: false, nota: esc(x.mensaje) + ' Queda sin marcar hasta que ZapData lo confirme.' };
+    if (x.fuente !== 'lista' || !x.revisable) return { hecho: false, nota: 'La conexión del dash con ZapData no deja leer el inicio ni la rama de pagos: queda sin marcar. El dueño puede pegar en Flujos ZapData → Conexión una credencial que lea los flujos.' };
+    var par = flujosDelPais(p, pais), v = par && par.venta && typeof par.venta === 'object' ? par.venta : {};
+    if (!par || !ID_FLUJO.test(String(v.id || ''))) return { hecho: false, nota: 'El flujo de Venta de ' + esc(pais) + ' no se terminó de crear: no lo puedo revisar.' };
+    var ini = par.inicio, pg = par.pagos && typeof par.pagos === 'object' ? par.pagos : {}, est = pg.estado;
+    var nom = pg.nombre ? '«' + esc(pg.nombre) + '»' : 'el flujo de Pagos de ' + esc(pais);
+    var males = [];
+    if (ini === 'mal') males.push('el inicio de la Venta no está arreglado (al escribir la palabra clave no sale ningún mensaje)');
+    if (est === 'falta') males.push(nom + ' no tiene la rama de esta oferta (quien pague no recibe la entrega)');
+    if (est === 'suelta') males.push(nom + ' tiene la rama de esta oferta, pero no está conectada (quien pague no recibe la entrega)');
+    if (est === 'otra') males.push('la rama de esta oferta en ' + nom + ' lleva a otro flujo, no a la Entrega de esta oferta');
+    if (est === 'casi') males.push('en ' + nom + ' la etiqueta de la rama no está escrita igual que en la Venta (tildes, mayúsculas o espacios): ZapData puede no reconocerla');
+    if (males.length) return { hecho: false, error: true, nota: 'Falta: ' + males.join('; ') + '. Copia la orden y pégasela a Claude con ZapData abierto.' };
+    if ((ini !== 'ok' && ini !== 'mal') || est == null) {
+      if (x.limite) return { hecho: false, nota: 'ZapData llegó a su tope de consultas de hoy: lo reviso más tarde. Queda sin marcar.' };
+      if (par.fallo || x.revisionFallo) return { hecho: false, nota: 'ZapData no dejó leer el flujo completo; se intenta de nuevo más tarde. Queda sin marcar.' };
+      if (ini == null && est != null && x.pendientes === 0) return { hecho: false, nota: 'ZapData no mostró el inicio de la Venta: no lo puedo confirmar. Queda sin marcar.' };
+      return { hecho: false, nota: 'Revisando en ZapData el inicio y la rama de pagos…' };
+    }
+    if (est === 'sin-pagos') return { hecho: false, nota: 'El inicio está bien. No encontré el flujo de Pagos de ' + esc(pais) + ' entre los de ZapData: la rama no la puedo confirmar. Queda sin marcar.' };
+    if (est === 'no-aplica') return { hecho: false, nota: 'El inicio está bien, pero la Venta no pone la etiqueta «Pago Pendiente…»: la rama de pagos no la puedo confirmar. Queda sin marcar.' };
+    return { hecho: true, nota: 'ZapData lo confirma: la Venta arranca bien y ' + nom + ' lleva a quien paga a la Entrega de esta oferta.' };
+  }
+  // ---- La venta de prueba en la hoja (paso 3): la pestaña de una oferta de la Fabrica es «zapdata <oferta>» en el libro del pais (scripts/zapdata-webhook.gs la arma con la etiqueta «Compra realizada
+  // <oferta>» que le ponen los flujos, sin el pais del final). La guia la compara con lo que vio el build (PRUEBAS), por su nombre y por su archivo (col_zapdata_<oferta>), sin tildes ni signos.
+  var PAIS_AL_FINAL = /\s+(colombia|m[eé]xico|venezuela|per[uú]|guatemala|argentina|ecuador|bolivia)\s*$/i;
+  function normPestana(s) { return plano(s).replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function soloAscii(s) { return String(s || '').split('').filter(function (c) { return c.charCodeAt(0) < 128; }).join(''); }
+  function clavesPestana(nombre) {
+    var n = String(nombre || '').replace(/\s+/g, ' ').trim(), sin = n.replace(PAIS_AL_FINAL, '').trim() || n;
+    var sin2 = sin.replace(/^(de|en|del)\s+/i, '');                                            // el webhook le quita un «de», «en» o «del» del principio al nombre de la oferta
+    var out = [];
+    [sin, sin2].forEach(function (n2) { [normPestana('zapdata ' + n2), normPestana('zapdata ' + soloAscii(n2))].forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); }); });   // soloAscii: archivos que pierden las letras con tilde (zapdata_bebs = «zapdata bebés»)
+    return out;
+  }
+  function esDeLaPestana(v, claves) {
+    var o = normPestana(v.o), k = normPestana(v.k);
+    return claves.some(function (c) { return o === c || k === c || (k.length > c.length && k.slice(-(c.length + 1)) === ' ' + c); });
+  }
+  function diaCorto(f) { var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(String(f || '')); return m ? Number(m[3]) + ' ' + MESES[Number(m[2]) - 1] : ''; }
+  function estadoPruebaHoja(p, pais) {
+    var lista = Array.isArray(PRUEBAS.ventas) ? PRUEBAS.ventas : null;
+    if (!lista || !Date.parse(PRUEBAS.generadoEn)) return { hecho: false, nota: 'No lo puedo confirmar: esta página no trae las ventas de la hoja del último refresco. Queda sin marcar.' };
+    var cuando = 'según la hoja del último refresco (' + esc(hace(PRUEBAS.generadoEn)) + ')';
+    // desde el dia anterior a crear la oferta (la hora del proyecto va en UTC y la hoja en hora del pais): una prueba de una oferta vieja con el mismo nombre no cuenta
+    var t0 = Date.parse(p.creadoEn), desde = t0 ? new Date(t0 - 86400000).toISOString().slice(0, 10) : '';
+    var pp = plano(pais), claves = clavesPestana(p.nombre);
+    var deEste = lista.filter(function (v) { return v && typeof v === 'object' && plano(v.p) === pp && /^\d{4}-\d\d-\d\d$/.test(String(v.f || '')) && String(v.f) >= desde; });
+    var mias = deEste.filter(function (v) { return esDeLaPestana(v, claves); });
+    if (mias.length) {
+      var ult = mias.map(function (v) { return String(v.f); }).sort().pop();
+      return { hecho: true, nota: 'Sí: la hoja de ' + esc(pais) + ' tiene ' + (mias.length === 1 ? 'una venta' : mias.length + ' ventas') + ' de prueba del equipo para esta oferta (la última del ' + esc(diaCorto(ult)) + '), en cero como debe ser, ' + cuando + '.' };
+    }
+    var sinOferta = deEste.filter(function (v) { return / sin oferta$/.test(' ' + normPestana(v.o)) || / sin oferta$/.test(' ' + normPestana(v.k)); });
+    if (sinOferta.length) return { hecho: false, nota: 'Todavía no aparece en la pestaña de esta oferta, ' + cuando + '. Hay una venta de prueba del equipo en «sin oferta» (' + esc(diaCorto(sinOferta.map(function (v) { return String(v.f); }).sort().pop())) + '): si es esta, a la venta no le llegó la etiqueta de la oferta. Revisa la rama de pagos con Claude.' };
+    return { hecho: false, nota: 'Todavía no aparece, ' + cuando + '. Se reconoce sola si la compra se hizo desde el WhatsApp de pruebas del equipo (el de Ana); si se hizo desde otro número, la hoja la cuenta como venta real: avísale al dueño para que lo agregue a las ventas de prueba. Si ese WhatsApp ya tenía la etiqueta de compra de otra oferta, la venta puede haber caído en la pestaña de esa: quítale las etiquetas viejas en ZapData antes de probar.' };
+  }
+  // El dia de arranque en Colombia (la campaña se programa para mañana temprano): «6 NOV».
+  function diaDeArranque() { var d = new Date(Date.now() - 5 * 3600000 + 86400000); return d.getUTCDate() + ' ' + MESES[d.getUTCMonth()]; }
+  function nombresDeCampana(p, num, ads) {
+    var ln = num ? lineaDe(num.id) : null, wpp = (num && (num.wpp || (ln && ln.wpp))) || '?';
+    var vivos = (ads || []).filter(function (a) { return a.estado !== 'cancelado'; });
+    var aprobados = vivos.filter(function (a) { return a.estado === 'aprobada'; }).map(function (a) { return a.id; });
+    if (!aprobados.length) aprobados = [vivos.length ? vivos[0].id : '101'];       // sin aprobados todavia: un ejemplo con el primer anuncio
+    var of = String(p.nombre || '').toUpperCase().replace(/[|#\[\]()\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return aprobados.slice(0, 12).map(function (id) { return 'ZAP #' + wpp + ' | ' + of + ' | INT - COM | ' + diaDeArranque() + ' | ' + id; });
+  }
+  // El estado de una tarea: { hecho, error, nota } (nota = HTML ya escapado). Las `auto` salen de la ficha; las de mano, de las marcas guardadas.
+  function estadoTarea(t, p, pais, ads, mk) {
+    var e = p.etapas || {}, m = p.material || {};
+    if (t.k === 'material') {
+      var ok = (e.ebooks || {}).estado === 'lista' && (e.material || {}).estado === 'lista';
+      return { hecho: ok, nota: ok ? 'Listos.' : 'Todavía no: termínalos con «Crear toda la oferta».' };
+    }
+    if (t.k === 'anuncios') {
+      var vivos = (ads || []).filter(function (a) { return a.estado !== 'cancelado'; });
+      var apr = vivos.filter(function (a) { return a.estado === 'aprobada'; }).length, rev = vivos.filter(function (a) { return a.estado === 'lista'; }).length;
+      return { hecho: apr > 0, nota: apr ? apr + ' de ' + vivos.length + ' aprobado' + (apr === 1 ? '' : 's') + (rev ? ' y ' + rev + ' por revisar' : '') + '.' : (rev ? rev + ' listo' + (rev === 1 ? '' : 's') + ' para revisar en el paso 3.' : 'Ninguno terminado todavía.') };
+    }
+    if (t.k === 'flujos') {
+      var hechos = (e.flujos || {}).estado === 'lista', paisesF = (m.flujo && m.flujo.paises) || [];
+      var deEste = hechos && (!paisesF.length || paisesF.indexOf(pais) >= 0);
+      return { hecho: deEste, nota: deEste ? 'Creados.' : (hechos ? 'Se crearon para ' + esc(paisesF.join(', ')) + ', no para ' + esc(pais) + ': créalos en Flujos ZapData.' : 'Todavía no: se crean con «Crear toda la oferta».') };
+    }
+    if (t.k === 'numero') {
+      var st = estadoNumero(mk.num);
+      if (!st) return { hecho: false, nota: '' };
+      if (st === 'caido') return { hecho: false, error: true, nota: '<b>' + esc(etiquetaNumero(mk.num)) + '</b> está desconectado ahora: elige otro o pide que lo reconecten antes de anunciar.' };
+      return { hecho: st === 'conectado', nota: esc(etiquetaNumero(mk.num)) + (st === 'conectado' ? ' · conectado ahora.' : (st === 'cargando' ? ' · comprobando con ZapData…' : ' · no pude confirmar con ZapData si sigue conectado: queda sin marcar hasta que conteste.')) };
+    }
+    if (t.k === 'flujos-activos') return estadoFlujosActivos(p, pais, mk);
+    if (t.k === 'inicio-pagos') return estadoInicioPagos(p, pais);
+    if (t.k === 'prueba-hoja') return estadoPruebaHoja(p, pais);
+    if (t.auto) return { hecho: false, nota: '' };                // una tarea automatica que esta pagina no sabe calcular no se da por hecha
+    var mm = mk.m[t.k];
+    return { hecho: !!mm, nota: mm ? '<span class="lz-por">Marcado por ' + esc(quien(mm.por)) + ' ' + esc(hace(mm.t)) + '</span>' : '' };
+  }
+  // Lo de mas que lleva una tarea: el selector del numero, la orden para Claude, la palabra clave, los nombres de campaña, el enlace a Reglas.
+  function extraTarea(t, p, pais, ads, mk) {
+    var m = p.material || {}, clave = ((m.copy || {}).claves || [])[0] || '';
+    var claveHtml = clave ? '<span class="lz-clave">' + esc(clave) + '</span>' : 'la palabra clave del flujo (está en el inicio del flujo de Venta en ZapData)';
+    if (t.k === 'inicio-pagos') {
+      return ((p.etapas || {}).flujos || {}).estado === 'lista' && m.flujo && m.flujo.pedidoId ? '<div class="acciones"><button class="btn" data-acc="copiar-claude">Copiar la orden para Claude</button></div>' : '';
+    }
+    if (t.k === 'numero') return numeroHtml(p, pais, mk);
+    if (t.k === 'flujos-activos') {
+      var par = flujosDelPais(p, pais), ab = [];
+      if (par) [['Venta', par.venta], ['Entrega', par.entrega]].forEach(function (z) { var f = z[1] && typeof z[1] === 'object' ? z[1] : {}; if (ID_FLUJO.test(String(f.id || ''))) ab.push('<a class="btn" href="https://zapdata.co/inbox/flows/' + esc(String(f.id).toLowerCase()) + '" target="_blank" rel="noopener noreferrer">Abrir ' + z[0] + ' en ZapData</a>'); });
+      var cf = estadoFlujosActivos(p, pais, mk).confirmar;
+      if (cf) ab.push('<button type="button" class="btn" data-acc="lz-marcar" data-k="flujos-activos" aria-pressed="' + (cf === 'si') + '"' + (LZ.guardando ? ' disabled' : '') + '>' + (cf === 'si' ? 'Quitar la confirmación del número' : 'Confirmo que los dos tienen ese número') + '</button>');
+      return ab.length ? '<div class="acciones">' + ab.join('') + '</div>' : '';
+    }
+    if (t.k === 'prueba-chat') return '<small>Escribe ' + claveHtml + '.</small>';
+    if (t.k === 'boton') return '<small>Número: ' + (mk.num ? '<b>' + esc(etiquetaNumero(mk.num)) + '</b>' : 'elígelo en el paso 2') + '. Palabra clave: ' + claveHtml + '.</small>';
+    if (t.k === 'campanas') {
+      var nombres = nombresDeCampana(p, mk.num, ads);
+      return '<code class="lz-nombres">' + esc(nombres.join('\n')) + '</code>' +
+        '<small>Uno por anuncio aprobado. La fecha es la de arranque (mañana): cámbiala si arranca otro día.' + (mk.num ? '' : ' Falta el número: elígelo en el paso 2 y aquí cambia el «#?».') + '</small>' +
+        '<div class="acciones">' + (S.rol === 'owner' || S.rol === 'trafficker' ? '<button class="btn prim" data-acc="lz-programar">Programar campañas en Facebook</button>' : '') + '<button class="btn" data-acc="lz-copiar-nombres">Copiar los nombres</button></div>' +
+        (S.rol === 'owner' || S.rol === 'trafficker' ? '<small>«Programar campañas» las crea solas en Facebook EN PAUSA, con vista previa del gasto: ustedes las revisan, las encienden y marcan «hora de inicio» (arrancan a las 5 a. m.).</small>' : '<small>Las crea la trafficker con el botón «Programar campañas en Facebook» (nacen en pausa).</small>');
+    }
+    if (t.k === 'reglas') return '<div class="acciones"><a class="btn" href="/reglas">Abrir Reglas</a></div>';
+    return '';
+  }
+  function numeroHtml(p, pais, mk) {
+    var c = LZ.canales, sel = mk.num ? mk.num.id : '', pp = plano(pais), op = [];
+    if (!c) { cargarCanales(); return '<p class="girando" style="margin:6px 0 0">Preguntándole a ZapData por los números…</p>'; }
+    var lista;
+    if (c.ok && Array.isArray(c.canales)) {
+      lista = c.canales.map(function (x) { var ln = lineaDe(x.id); return { id: x.id, wpp: ln ? ln.wpp : '', pais: ln ? ln.pais : '', nombre: x.nombre, tel4: x.tel4, vivo: x.estado === 'connected' ? 1 : 0 }; });
+    } else {
+      lista = LINEAS.map(function (x) { return { id: x.id, wpp: x.wpp, pais: x.pais, nombre: x.nombre || '', tel4: '', vivo: x.estado === 'connected' ? -1 : -2 }; });
+    }
+    // el numero ya elegido siempre esta en la lista (si ZapData ya no lo trae), para que se pueda ver y quitar
+    if (sel && !lista.some(function (x) { return x.id === sel; })) lista.unshift({ id: sel, wpp: mk.num.wpp || '', pais: '', nombre: (mk.num.nombre || 'conexión') + ' (ya no aparece en ZapData)', tel4: mk.num.tel4 || '', vivo: 0 });
+    // primero los del pais y conectados; los caidos van al final y no se pueden elegir
+    lista.sort(function (a, b) { return (plano(b.pais) === pp) - (plano(a.pais) === pp) || (b.vivo === 1 || b.vivo === -1) - (a.vivo === 1 || a.vivo === -1) || (Number(a.wpp) || 999) - (Number(b.wpp) || 999); });
+    op.push('<option value="">' + (sel ? 'Quitar el número' : 'Elige el número…') + '</option>');
+    lista.forEach(function (x) {
+      var et = (x.wpp ? 'WPP #' + x.wpp + ' · ' : '') + (x.nombre || 'conexión') + (x.tel4 ? ' …' + x.tel4 : '') + (x.pais && plano(x.pais) !== pp ? ' · ' + x.pais : '') + (x.vivo === 0 ? ' · desconectado' : (x.vivo === -2 ? ' · desconectado en el último refresco' : ''));
+      op.push('<option value="' + esc(x.id) + '"' + (x.id === sel ? ' selected' : '') + ((x.vivo === 0 || x.vivo === -2) && x.id !== sel ? ' disabled' : '') + ' data-wpp="' + esc(x.wpp) + '" data-nombre="' + esc(x.nombre) + '" data-tel4="' + esc(x.tel4) + '">' + esc(et) + '</option>');
+    });
+    var aviso = c.ok ? '' : '<small>' + esc(c.mensaje || 'ZapData no contestó') + ' Te muestro la lista del último refresco, sin saber cuáles están conectados ahora.</small>';
+    return '<select data-lz="numero" aria-label="Número de WhatsApp para ' + esc(pais) + '"' + (LZ.guardando ? ' disabled' : '') + '>' + op.join('') + '</select>' + aviso;
+  }
+  function paisElegido(p) {
+    var l = p.paises || [], ya = LZ.pais[p.id];
+    if (ya && l.indexOf(ya) >= 0) return ya;
+    var ads = (S.det && S.det.anuncios) || [];
+    var sinTerminar = l.filter(function (x) { return !paisLanzado(p, x, ads); })[0];
+    return sinTerminar || l[0] || '';
+  }
+  function avancePais(p, pais, ads) {
+    var mk = marcasDe(p, pais), guia = (S.det && S.det.guia) || [], pasos = [];
+    guia.forEach(function (g) {
+      var est = g.tareas.map(function (t) { return estadoTarea(t, p, pais, ads, mk); });
+      pasos.push({ g: g, est: est, hechas: est.filter(function (x) { return x.hecho; }).length, error: est.some(function (x) { return x.error; }) });
+    });
+    return { mk: mk, pasos: pasos };
+  }
+  function paisLanzado(p, pais, ads) { var a = avancePais(p, pais, ads); return a.pasos.length > 0 && a.pasos.every(function (x) { return x.hechas === x.g.tareas.length; }); }
+  function pintarLanzar() {
+    var d = S.det, cont = el('sec-lanzar'); if (!d || !cont) return;
+    var p = d.proyecto, guia = d.guia || [], ads = d.anuncios || [];
+    if (!guia.length || !(p.paises || []).length) { cont.hidden = true; return; }
+    cont.hidden = false;
+    cargarCanales(); cargarFlujos(p);
+    var pais = paisElegido(p), av = avancePais(p, pais, ads), clave = p.id + '|' + pais;
+    // lo que la persona tenia abierto se queda abierto al repintar; la primera vez se abre el primer paso sin terminar
+    var abiertos = LZ.abiertos[clave];
+    if (!abiertos) { var prim = av.pasos.filter(function (x) { return x.hechas < x.g.tareas.length; })[0]; abiertos = {}; if (prim) abiertos[prim.g.n] = 1; LZ.abiertos[clave] = abiertos; }
+    var tabs = (p.paises.length > 1) ? '<div class="lz-paises" role="tablist">' + p.paises.map(function (x) { return '<button type="button" class="lz-pais' + (x === pais ? ' on' : '') + '" role="tab" aria-selected="' + (x === pais) + '" data-acc="lz-pais" data-pais="' + esc(x) + '">' + esc(x) + (paisLanzado(p, x, ads) ? ' ✓' : '') + '</button>'; }).join('') + '</div>' : '';
+    var todo = av.pasos.every(function (x) { return x.hechas === x.g.tareas.length; });
+    var h = '<h3>Lanzar la oferta' + (p.paises.length > 1 ? '' : ' en ' + esc(pais)) + '</h3><p class="sub2">Lo que va después de crearla: revisar, dejar los flujos cobrando, probar, montar en Facebook y vigilar el primer día. Lo que el dash ya sabe se marca solo; lo demás, con un toque.</p>' + tabs;
+    av.pasos.forEach(function (x) {
+      var g = x.g, completo = x.hechas === g.tareas.length;
+      h += '<details class="lz-paso' + (completo ? ' hecho' : (x.error ? ' error' : '')) + '" data-n="' + g.n + '"' + (abiertos[g.n] ? ' open' : '') + '><summary><span class="lz-n">' + (completo ? '✓' : g.n) + '</span><span class="lz-t"><b>' + esc(g.titulo) + '</b><small>' + esc(g.quien) + '</small></span><span class="lz-c">' + x.hechas + ' de ' + g.tareas.length + '</span></summary><div class="lz-tareas">';
+      g.tareas.forEach(function (t, i) {
+        var s = x.est[i], chk;
+        if (t.auto) chk = '<span class="lz-chk auto' + (s.hecho ? ' on' : '') + (s.error ? ' error' : '') + '" role="img" aria-label="' + (s.hecho ? 'Hecho' : (s.error ? 'Con problema' : 'Pendiente')) + ' (se marca solo)">' + (s.hecho ? '✓' : (s.error ? '!' : '·')) + '</span>';
+        else chk = '<button type="button" class="lz-chk' + (s.hecho ? ' on' : '') + '" data-acc="lz-marcar" data-k="' + esc(t.k) + '" aria-pressed="' + (s.hecho ? 'true' : 'false') + '" aria-label="' + (s.hecho ? 'Desmarcar: ' : 'Marcar como hecho: ') + esc(t.t) + '"' + (LZ.guardando ? ' disabled' : '') + '>' + (s.hecho ? '✓' : '') + '</button>';
+        h += '<div class="lz-tarea" data-k="' + esc(t.k) + '">' + chk + '<div><b>' + esc(t.t) + '</b>' + (t.quien ? '<span class="lz-quien">' + esc(t.quien) + (t.auto && t.k !== 'numero' ? ' · se marca solo' : '') + '</span>' : (t.auto ? '<span class="lz-quien">Se marca solo</span>' : '')) +
+          '<small>' + esc(t.a) + '</small>' + (s.nota ? '<small>' + s.nota + '</small>' : '') + '<div class="lz-extra">' + extraTarea(t, p, pais, ads, av.mk) + '</div></div></div>';
+      });
+      h += '</div></details>';
+    });
+    if (todo) {
+      var otros = p.paises.filter(function (x) { return x !== pais && !paisLanzado(p, x, ads); });
+      h += '<div class="aviso-of aviso-bien"><b>Oferta lanzada en ' + esc(pais) + '.</b> ' + (otros.length ? 'Cuando funcione aquí, sigue con ' + esc(otros.join(', ')) + '.' : 'Todos sus países están lanzados.') + '</div>';
+    }
+    if (cont.__h === h) return;              // igual que lo que ya se ve: no se toca (un selector abierto en el celular no se cierra solo)
+    cont.innerHTML = h; cont.__h = h;
+  }
+  // Lo que la lista dice de la guia sin abrir el proyecto (la metadata `l`, ver metadataProyecto): se actualiza aqui mismo al marcar, para no gastar un listado de KV por toque.
+  function avanceLocal(p) {
+    var h = 0, guia = (S.det && S.det.guia) || [], manos = 0;
+    guia.forEach(function (g) { g.tareas.forEach(function (t) { if (!t.auto || t.confirmar) manos++; }); });
+    (p.paises || []).forEach(function (x) { var mk = marcasDe(p, x); h += Object.keys(mk.m).length + (mk.num ? 1 : 0); });
+    return h ? [h, (manos + 1) * Math.max(1, (p.paises || []).length)] : null;
+  }
+  function guardarLanzamiento(cuerpo, ocupado) {
+    var d = S.det; if (!d) return; var p = d.proyecto, pais = paisElegido(p);
+    LZ.pais[p.id] = pais; LZ.guardando = ocupado; pintarLanzar();
+    return api(Object.assign({ accion: 'lanzamiento', id: p.id, pais: pais }, cuerpo)).then(function (j) {
+      if (S.det && S.det.proyecto.id === p.id) S.det.proyecto = j.proyecto;
+      var en = S.proyectos.filter(function (x) { return x.id === p.id; })[0]; if (en) { var l = avanceLocal(j.proyecto); if (l) en.l = l; else delete en.l; pintarLista(); }
+    }).catch(function (e) { toast(e.message || 'No se pudo guardar.', 'mal'); })
+      .then(function () { LZ.guardando = ''; LZ.guardadoEn = Date.now(); pintarLanzar(); });
+  }
+  // El aviso de la orden de arranque en el paso de anuncios, con su boton. La orden en si no cobra: el gasto en IA lo manda el tope de la receta (solo el dueño) o, sin tope, el techo del servidor (corredor.json).
+  function arranqueHtml(p, ads) {
+    var c = conteoAds(ads), ar = p.arranque;
+    if (!ar) {
+      if (!c.pedido) return '';
+      return '<div class="aviso-of"><b>Falta dar la orden.</b> ' + c.pedido + (c.pedido === 1 ? ' pedido espera' : ' pedidos esperan') + ' a que alguien diga «arranca»: hasta entonces el servidor de anuncios (VPS) no los toma por su cuenta.' +
+        '<div class="acciones"><button class="btn prim" data-acc="arrancar">Arrancar los anuncios</button></div></div>';
+    }
+    var tomados = ads.some(function (a) { return a.estado !== 'pedido' && a.estado !== 'cancelado'; });
+    var espera = !tomados && c.pedido > 0 && Date.now() - (Date.parse(ar.t) || 0) > 30 * 60000;
+    return '<div class="aviso-of' + (espera ? '' : ' aviso-bien') + '"><b>Orden dada</b> ' + esc(hace(ar.t)) + ' por ' + esc(quien(ar.por)) + '. ' +
+      (espera ? 'Pasó más de media hora y nadie ha tomado ningún pedido: el servidor de anuncios todavía no está encendido o está ocupado. Si tienes prisa, ábrele a Claudia el editor y dile «revisa los pedidos de la Fábrica».'
+        : 'Los pedidos quedan en cola: los toma el servidor de anuncios (VPS) de uno en uno cuando esté encendido, y aquí ves cómo avanza cada uno. Si pasa media hora sin que nadie los tome, aquí lo dirá. La orden en sí no cuesta nada, pero cada anuncio gasta centavos de IA (guion y voz): hasta el tope de la receta y, si la receta no trae tope, hasta el techo del servidor (hoy US$ 0,30 por anuncio y US$ 1,00 por día).') +
+      (c.pedido ? '<div class="acciones"><button class="btn" data-acc="quitar-arranque">Quitar la orden</button></div>' : '') + '</div>';
+  }
+  function arrancarAnuncios(id, parar) {
+    return api({ accion: 'arrancar', id: id, parar: parar === true }).then(function (j) { if (S.det && S.det.proyecto.id === id) S.det.proyecto = j.proyecto; return j; });
+  }
+  // Lo que se le dice a la persona antes de gastar: lo que viene despues de los ebooks (si falta) y que la orden a los anuncios no gasta.
+  function restoHtml(d, f) {
+    var c = conteoAds(d.anuncios), tope = Number(((d.recetaFinal || {}).aprobacion || {}).topeUsd) || 0, items = '';
+    if (f.anuncios) items += '<li><b>Dar la orden de arrancar los anuncios</b> (' + c.pedido + ' pedido' + (c.pedido === 1 ? '' : 's') + ').<small>Los hace el servidor de anuncios (VPS) de uno en uno. La orden en sí no cuesta nada; el gasto en IA lo manda el tope de la receta (' + (tope > 0 ? 'hasta ' + money(tope) + ' por anuncio sin preguntar' : 'sin tope propio: el servidor gasta hasta su techo, hoy US$ 0,30 por anuncio y US$ 1,00 por día') + ').</small></li>';
+    if (f.flujos) items += '<li><b>Crear en ZapData los flujos de Venta y Entrega.</b><small>Nacen apagados y sin número; no cuestan nada. Después falta el inicio, la rama de pagos (Claude, con el navegador) y activarlos.</small></li>';
+    return items ? '<p class="nota-p" style="margin:14px 0 0"><b>Y después, sin que hagas nada más:</b></p><ol class="pasos-modal">' + items + '</ol>' : '';
+  }
+  function crearTodo() {
+    var d = S.det; if (!d) return; var p = d.proyecto, P = prod(p.id), f = faltaTodo(p, d.anuncios);
+    if (P.corriendo || fl(p.id).corriendo || P.fase === 'preparando') return;
+    if (todoCompleto(p, d.anuncios)) { toast('Esta oferta ya está completa.', 'bien'); return; }
+    if (!f.ebooks && !f.anuncios && !f.flujos) { toast('No queda nada que crear solo: los flujos quedaron a medias, termínalos en Flujos ZapData.', 'mal'); return; }
+    // Con el temario ya propuesto (o con un pedido de ebooks hecho antes) se confirma ya; si no, primero se prepara (centavos) y al terminar se abre la confirmacion con el costo.
+    if (!f.ebooks || P.prep || P.orden) { abrirConfirmar(true); return; }
+    P.todo = true; preparar();
+  }
+  function seguirTodo(id) {
+    var P = prod(id); P.todo = true;
+    var abrir = S.sel === id && S.det && S.det.proyecto.id === id ? refrescarDetalle(true) : abrirProyecto(id, true);
+    return abrir.then(function () {
+      var d = S.det; if (!d || d.proyecto.id !== id) throw new Error('No pude abrir la oferta para seguir.');
+      var f = faltaTodo(d.proyecto, d.anuncios);
+      // Los anuncios usan el material (portada, mockup, promesa): sin ebooks y material listos no se da la orden ni se crean los flujos.
+      if (f.ebooks) { toast('El material no quedó completo: revisa el paso 2 y pulsa «Seguir creando la oferta».', 'mal'); return null; }
+      var paso = Promise.resolve();
+      if (f.anuncios) paso = arrancarAnuncios(id).then(function () { toast('Orden dada: los anuncios quedan en cola para el servidor', 'bien'); }).catch(function (e) { toast('No se pudo dar la orden a los anuncios: ' + e.message, 'mal'); });
+      return paso.then(function () {
+        var p2 = S.det.proyecto, m = p2.material || {};
+        if (!faltaTodo(p2, S.det.anuncios).flujos) return null;
+        if (!(m.pdfs || []).some(function (x) { return x.clave === 'principal'; })) { toast('No se crearon los flujos: falta el PDF del ebook principal.', 'mal'); return null; }
+        return crearFlujos({ sinPreguntar: true });
+      });
+    }).catch(function (e) { toast(e.message || 'Se cortó el proceso.', 'mal'); })
+      .then(function () {
+        P.todo = false; cargarLista();
+        if (S.det && S.det.proyecto.id === id) { pintarFicha(); if (todoCompleto(S.det.proyecto, S.det.anuncios)) toast('«' + S.det.proyecto.nombre + '» está completa: ebooks, anuncios en cola y flujos creados', 'bien'); }
+      });
+  }
+  function cancelarModal() { var d = S.det; if (d) { var P = prod(d.proyecto.id); if (!P.corriendo) P.todo = false; } cerrarModal(); }
+
+  // ============================================================= PASO 4: FLUJOS
+  function fl(id) { if (!S.flujo[id]) S.flujo[id] = { corriendo: false, msg: '', resultado: null }; return S.flujo[id]; }
+  function pintarFlujos() {
+    pintarTodo();
+    var d = S.det, cont = el('sec-flujos'); if (!d || !cont) return;
+    var p = d.proyecto, F = fl(p.id), caja = cont.querySelector('.cuerpo-paso');
+    var falta = FabricaMotor.faltaParaFlujos(p), m = p.material || {}, creado = m.flujo && m.flujo.pedidoId;
+    cont.classList.toggle('hecho', p.etapas.flujos.estado === 'lista'); var n = cont.querySelector('.n'); if (n) n.textContent = p.etapas.flujos.estado === 'lista' ? '✓' : '4';
+    var h = '<p style="margin:2px 0 0;color:#bbc7e1">Crea en ZapData el flujo de <b>Venta</b> y el de <b>Entrega</b> de esta oferta con el guion que ya vende (los flujos nacen apagados y sin número). Usa el PDF, el mockup y los audios del paso 2.</p>';
+    var listosPais = (p.paises || []).map(function (x) { var c = S.paises.filter(function (q) { return q.nombre === x; })[0]; return c ? (c.listo ? '' : esc(x)) : ''; }).filter(Boolean);
+    if (listosPais.length) h += '<div class="aviso-of aviso-mal"><b>Falta configurar en Países:</b> ' + listosPais.join(', ') + ' (precios, Pixel y datos de pago). Eso lo hace el dueño en la pestaña Países de Flujos ZapData.</div>';
+    if (F.corriendo) {
+      h += '<p class="girando" style="margin:10px 0 0">' + esc(F.msg || 'Creando los flujos en ZapData…') + '</p>';
+    } else if (creado && F.resultado == null) {
+      h += '<div class="aviso-of aviso-bien"><b>Flujos creados</b> (pedido ' + esc(m.flujo.pedidoId) + '): ' + ((m.flujo.flujos || []).map(esc).join(' · ') || 'ver en /ofertas') + '.</div>' + pasosFinalesHtml(p, m.flujo);
+    } else if (F.resultado) {
+      var r = F.resultado;
+      if (r.estado === 'hecho') h += '<div class="aviso-of aviso-bien"><b>Flujos creados.</b> ' + esc(r.nota) + '</div>' + pasosFinalesHtml(p, { pedidoId: r.id, flujos: r.flujos });
+      else if (r.estado === 'trabado') h += '<div class="aviso-of aviso-mal"><b>Se trabó:</b> ' + esc(r.nota) + '<br>Reintenta desde /ofertas (sigue desde donde quedó).</div>';
+      else h += '<div class="aviso-of"><b>' + esc(r.nota || 'El pedido quedó guardado.') + '</b></div>';
+    }
+    if (F.msg && !F.corriendo && !F.resultado) h += '<div class="aviso-of aviso-mal">' + esc(F.msg) + '</div>';
+    if (!F.corriendo && !creado) {
+      h += (falta.length ? '<div class="aviso-of"><b>Todavía falta:</b> ' + esc(falta.join(', ')) + '.' + (falta.length && (m.pdfs || []).some(function (x) { return x.clave === 'principal'; }) ? ' Se puede crear igual: el flujo nace sin eso y se completa después en /ofertas.' : '') + '</div>' : '') +
+        '<div class="acciones"><button class="btn prim" data-acc="crear-flujos"' + ((m.pdfs || []).some(function (x) { return x.clave === 'principal'; }) && (p.paises || []).length ? '' : ' disabled') + '>Crear los flujos en ZapData</button><a class="btn" href="/ofertas">Abrir Flujos ZapData</a></div>';
+    }
+    caja.innerHTML = h;
+  }
+  function pasosFinalesHtml(p, fj) {
+    return '<div class="aviso-of"><b>Falta un último paso que la API de ZapData no deja hacer sola (solo crea flujos, no los edita):</b> el inicio <code>start-1</code> del flujo de Venta y la rama de pagos del país. Claude lo hace en segundos y lo verifica recargando, con su navegador y ZapData abiertos: copia la orden (ya trae los enlaces de cada flujo) y pégasela.' +
+      '<div class="acciones"><button class="btn prim" data-acc="copiar-claude">Copiar la orden para Claude</button></div>' +
+      '<small>Después: asignar el número de WhatsApp, activar el flujo y probarlo con una palabra clave desde otro número.</small></div>';
+  }
+  function crearFlujos(opts) {
+    var d = S.det; if (!d) return Promise.resolve(); var p = d.proyecto, F = fl(p.id), P = prod(p.id);
+    var falta = FabricaMotor.faltaParaFlujos(p);
+    // `sinPreguntar` es de «Crear toda la oferta»: la persona ya confirmo el conjunto y lo que falte se completa despues en /ofertas (el flujo nace apagado).
+    if (falta.length && !(opts && opts.sinPreguntar) && !confirm('Falta ' + falta.join(', ') + '.\n\nEl flujo se crea igual, pero nace sin eso. ¿Crear los flujos de todas formas?')) return Promise.resolve();
+    F.corriendo = true; F.msg = ''; F.resultado = null; pintarFlujos(); despierto();
+    var c = nuevoCliente();
+    var ordenAnt = P.orden || { brief: {} };
+    return FabricaMotor.crearFlujos(c, p, ordenAnt, { alAvanzar: function (e) { F.msg = e.texto; if (S.sel === p.id) pintarFlujos(); } }).then(function (r) {
+      F.resultado = r;
+      var estado = r.estado === 'hecho' ? 'lista' : (r.estado === 'trabado' ? 'error' : 'en-curso');
+      return guardarEnProyecto(p.id, { flujo: { pedidoId: r.id, estado: r.estado, flujos: r.flujos || [], paises: p.paises } }, { flujos: { estado: estado, nota: r.estado === 'hecho' ? '' : (r.nota || '').slice(0, 180) } }, 'Flujos de ZapData: ' + r.estado);
+    }).catch(function (e) { F.msg = e.message || 'No se pudieron crear los flujos.'; })
+      .then(function () { F.corriendo = false; sueltaDespierto(); cargarLista(); if (S.sel === p.id) { pintarFicha(); } });
+  }
+
+  // ============================================================= RECETAS
+  var ETQ_GRUPOS_ABIERTOS = { anuncio: 1, gancho: 1, ritmo: 1 };
+  function valorDe(obj, ruta) { var cur = obj; var ps = ruta.split('.'); for (var i = 0; i < ps.length; i++) { if (cur == null || typeof cur !== 'object' || !Object.prototype.hasOwnProperty.call(cur, ps[i])) return undefined; cur = cur[ps[i]]; } return cur; }
+  function ponerValor(obj, ruta, v) { var ps = ruta.split('.'), cur = obj; for (var i = 0; i < ps.length - 1; i++) { if (!cur[ps[i]] || typeof cur[ps[i]] !== 'object') cur[ps[i]] = {}; cur = cur[ps[i]]; } cur[ps[ps.length - 1]] = v; }
+
+  // El formulario de una receta. modo: 'base' (todos los campos activos), 'oferta' o 'anuncio' (cada campo hereda hasta que se marca «cambiar»).
+  // heredado: la receta completa que se ve por debajo (para mostrar el valor que se hereda); propio: lo que ya cambia esta oferta o este anuncio.
+  function RecetaForm(raiz, o) {
+    var modo = o.modo, dueno = esDueno(), heredado = o.heredado, propio = copia(o.propio || {});
+    var valores = {};              // ruta -> valor actual (solo las cambiadas en modo oferta/anuncio; todas en base)
+    S.esquema.forEach(function (g) { g.campos.forEach(function (c) {
+      var mio = valorDe(propio, c.k);
+      if (modo === 'base') valores[c.k] = mio !== undefined ? mio : valorDe(heredado, c.k);
+      else if (mio !== undefined) valores[c.k] = mio;
+    }); });
+    function actual(c) { return valores[c.k] !== undefined ? valores[c.k] : valorDe(heredado, c.k); }
+    function activo(c) { return modo === 'base' || valores[c.k] !== undefined; }
+    function bloqueado(g) { return g.soloDueno && !dueno; }
+
+    function control(c, g) {
+      var v = actual(c), dis = !activo(c) || bloqueado(g) ? ' disabled' : '', k = esc(c.k);
+      if (c.t === 'bool') return '<label class="opc' + (v ? ' on' : '') + '"><input type="checkbox" data-rk="' + k + '"' + (v ? ' checked' : '') + dis + '> ' + (v ? 'Sí' : 'No') + '</label>';
+      if (c.t === 'int' || c.t === 'num') return '<input class="num" type="number" data-rk="' + k + '" min="' + c.min + '" max="' + c.max + '" step="' + (c.t === 'int' ? 1 : (c.max <= 2 ? 0.05 : 0.1)) + '" value="' + esc(v) + '"' + dis + '>';
+      if (c.t === 'enum') return '<select data-rk="' + k + '"' + dis + '>' + c.op.map(function (p) { return '<option value="' + esc(p[0]) + '"' + (p[0] === v ? ' selected' : '') + '>' + esc(p[1]) + '</option>'; }).join('') + '</select>';
+      if (c.t === 'lista') return c.op.map(function (p) { var on = (v || []).indexOf(p[0]) >= 0; return '<label class="opc' + (on ? ' on' : '') + '"><input type="checkbox" data-rk="' + k + '" data-op="' + esc(p[0]) + '"' + (on ? ' checked' : '') + dis + '> ' + esc(p[1]) + '</label>'; }).join('');
+      if (c.t === 'color') return '<input type="color" data-rk="' + k + '" value="' + esc(String(v || '#FFFFFF').toLowerCase()) + '"' + dis + '><input class="num" type="text" data-rk="' + k + '" data-hex="1" maxlength="7" value="' + esc(String(v || '').toUpperCase()) + '"' + dis + '>';
+      if (c.t === 'texto') return c.max > 100 ? '<textarea data-rk="' + k + '" rows="3" maxlength="' + c.max + '"' + dis + '>' + esc(v) + '</textarea>' : '<input type="text" data-rk="' + k + '" maxlength="' + c.max + '" value="' + esc(v) + '"' + dis + '>';
+      return '';
+    }
+    function campoHtml(c, g) {
+      var cambiar = modo === 'base' ? '' : '<label class="r-cambiar"><input type="checkbox" data-rc="' + esc(c.k) + '"' + (valores[c.k] !== undefined ? ' checked' : '') + (bloqueado(g) ? ' disabled' : '') + '> cambiar aquí</label>';
+      return '<div class="campo-r' + (c.t === 'texto' && c.max > 100 ? ' ancho2' : '') + (activo(c) ? '' : ' hereda') + '" data-campo="' + esc(c.k) + '"><div class="r-et"><span>' + esc(c.et) + '</span>' + cambiar + '</div><div class="r-ctl">' + control(c, g) + '</div>' + (c.ay ? '<small class="ay">' + esc(c.ay) + '</small>' : '') + '</div>';
+    }
+    function pintar() {
+      raiz.innerHTML = S.esquema.map(function (g) {
+        return '<details class="grupo"' + (ETQ_GRUPOS_ABIERTOS[g.id] || (modo !== 'base' && g.id === 'notas') ? ' open' : '') + '><summary>' + esc(g.titulo) + (g.soloDueno ? '<span class="solo">' + (dueno ? 'solo tú' : 'solo el dueño') + '</span>' : '') + '</summary><div class="campos">' + g.campos.map(function (c) { return campoHtml(c, g); }).join('') + '</div></details>';
+      }).join('');
+    }
+    // Un cambio en un control actualiza `valores` (y repinta solo la clase de «hereda» y la etiqueta Sí/No, para no perder el foco).
+    function leer(ctl) {
+      var c = S.esquema.reduce(function (a, g) { return a || g.campos.filter(function (x) { return x.k === ctl.dataset.rk; })[0]; }, null); if (!c) return;
+      if (c.t === 'bool') valores[c.k] = ctl.checked;
+      else if (c.t === 'lista') { var l = []; [].forEach.call(raiz.querySelectorAll('[data-rk="' + c.k + '"]'), function (x) { if (x.checked) l.push(x.dataset.op); }); valores[c.k] = l; }
+      else if (c.t === 'int' || c.t === 'num') { var n = Number(ctl.value); if (ctl.value !== '' && isFinite(n)) valores[c.k] = Math.min(c.max, Math.max(c.min, n)); }
+      else if (c.t === 'color') { var h = ctl.dataset.hex ? ctl.value.trim() : ctl.value; if (/^#[0-9a-fA-F]{6}$/.test(h)) { valores[c.k] = h.toUpperCase(); var otro = raiz.querySelectorAll('[data-rk="' + c.k + '"]'); [].forEach.call(otro, function (x) { if (x !== ctl) x.value = x.dataset.hex ? h.toUpperCase() : h.toLowerCase(); }); } }
+      else valores[c.k] = ctl.value;
+      if (c.t === 'bool' || c.t === 'lista') { var pad = ctl.closest('.opc'); if (pad && c.t === 'bool') { pad.classList.toggle('on', ctl.checked); pad.lastChild.nodeValue = ctl.checked ? ' Sí' : ' No'; } else if (pad) pad.classList.toggle('on', ctl.checked); }
+    }
+    raiz.addEventListener('input', function (e) { if (e.target.dataset.rk !== undefined) leer(e.target); });
+    raiz.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t.dataset.rc !== undefined) {
+        var c = CAMPOS_POR_RUTA()[t.dataset.rc];
+        if (t.checked) valores[c.k] = copia({ v: valorDe(heredado, c.k) }).v; else delete valores[c.k];
+        var cont = t.closest('.campo-r'); var g = S.esquema.filter(function (x) { return x.campos.some(function (y) { return y.k === c.k; }); })[0];
+        cont.outerHTML = campoHtml(c, g); return;
+      }
+      if (t.dataset.rk !== undefined) leer(t);
+    });
+    pintar();
+    return {
+      // La receta que se guarda. En modo base solo lo que difiere de la de fabrica (el resto se hereda); en oferta/anuncio, solo lo marcado «cambiar».
+      resultado: function () {
+        var out = {};
+        S.esquema.forEach(function (g) { if (bloqueado(g)) return; g.campos.forEach(function (c) {
+          var v = valores[c.k]; if (v === undefined) return;
+          if (modo === 'base' && JSON.stringify(v) === JSON.stringify(valorDe(S.defecto, c.k))) return;
+          ponerValor(out, c.k, v);
+        }); });
+        return out;
+      },
+      cargar: function (parcial) {   // aplica un punto de partida
+        if (modo === 'base') { S.esquema.forEach(function (g) { g.campos.forEach(function (c) { var v = valorDe(parcial, c.k); valores[c.k] = v !== undefined ? copia({ v: v }).v : valorDe(S.defecto, c.k); }); }); }
+        else { valores = {}; S.esquema.forEach(function (g) { g.campos.forEach(function (c) { var v = valorDe(parcial, c.k); if (v !== undefined && !bloqueado(g)) valores[c.k] = copia({ v: v }).v; }); }); }
+        pintar();
+      }
+    };
+  }
+  var _cp = null;
+  function CAMPOS_POR_RUTA() { if (!_cp) { _cp = {}; S.esquema.forEach(function (g) { g.campos.forEach(function (c) { _cp[c.k] = c; }); }); } return _cp; }
+
+  function presetsTodos() {
+    var o = {}; Object.keys(S.recetas.presetsBase || {}).forEach(function (k) { o[k] = { receta: S.recetas.presetsBase[k], base: true }; });
+    Object.keys(S.recetas.presets || {}).forEach(function (k) { o[k] = { receta: S.recetas.presets[k], base: false }; }); return o;
+  }
+  function pintarRecetas() {
+    var v = el('vista-recetas'); if (!S.esquema.length) { v.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+    _cp = null;
+    var pr = presetsTodos();
+    v.innerHTML = '<p class="sub" style="margin:0 0 12px">Aquí dices cómo quieres que Claudia edite los anuncios. Esta es la <b>receta base</b>: vale para todas las ofertas, y cada oferta (o cada anuncio) puede cambiar lo suyo, porque no todas se editan igual. ' + (S.recetas.tocadoPor ? 'Última vez la cambió ' + esc(quien(S.recetas.tocadoPor)) + ' ' + esc(hace(S.recetas.tocadoEn)) + '.' : '') + '</p>' +
+      '<div class="receta-bar"><select id="r-preset" aria-label="Puntos de partida"><option value="">Punto de partida…</option>' + Object.keys(pr).map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + (pr[k].base ? '' : ' (tuyo)') + '</option>'; }).join('') + '</select>' +
+      '<button class="btn" id="r-cargar">Cargar en el formulario</button><button class="btn" id="r-guardar-preset">Guardar como punto de partida</button><button class="btn peligro" id="r-borrar-preset">Borrar</button></div>' +
+      '<div id="r-form"></div><div class="acciones" style="position:sticky;bottom:10px"><button class="btn prim" id="r-guardar">Guardar la receta base</button></div>';
+    S.recetaForm = RecetaForm(el('r-form'), { modo: 'base', heredado: S.defecto, propio: S.recetas.base });
+  }
+  function guardarBase() {
+    var b = el('r-guardar'); b.disabled = true;
+    api({ accion: 'recetas', base: S.recetaForm.resultado() }).then(function (j) { S.recetas.base = j.recetas.base; toast('Receta base guardada', 'bien'); return cargarLista(); }).catch(function (e) { toast(e.message, 'mal'); }).then(function () { b.disabled = false; });
+  }
+  function guardarPreset() {
+    var nombre = prompt('Nombre del punto de partida (ej.: «Manualidades con avatar»):'); if (!nombre || !nombre.trim()) return;
+    var presets = copia(S.recetas.presets || {}); presets[nombre.trim().slice(0, 40)] = S.recetaForm.resultado();
+    api({ accion: 'recetas', presets: presets }).then(function (j) { S.recetas.presets = j.recetas.presets; var rech = j.rechazados || []; if (rech.length) toast('«' + rech.join('», «') + '» es del dueño: no se cambia. Guárdalo con otro nombre.', 'mal'); else toast('Punto de partida guardado', 'bien'); pintarRecetas(); }).catch(function (e) { toast(e.message, 'mal'); });
+  }
+  function borrarPreset() {
+    var k = el('r-preset').value; var pr = presetsTodos();
+    if (!k || !pr[k] || pr[k].base) { toast('Elige uno de los tuyos para borrarlo (los de la fábrica no se borran).', 'mal'); return; }
+    if (S.rol !== 'owner') { toast('Solo el dueño borra puntos de partida (pueden llevar su libertad de gasto).', 'mal'); return; }
+    if (!confirm('¿Borrar el punto de partida «' + k + '»?')) return;
+    var presets = copia(S.recetas.presets); delete presets[k];
+    api({ accion: 'recetas', presets: presets }).then(function (j) { S.recetas.presets = j.recetas.presets; pintarRecetas(); }).catch(function (e) { toast(e.message, 'mal'); });
+  }
+
+  function recetaResumenHtml() {
+    var d = S.det; if (!d) return '';
+    var r = d.recetaFinal, propios = JSON.stringify(d.proyecto.receta || {}) !== '{}';
+    var g = r.gancho, t = r.transiciones, s = r.sonidos;
+    return '<p style="margin:2px 0 6px;color:#bbc7e1">' + (propios ? 'Esta oferta cambia algo de la receta base.' : 'Esta oferta usa la receta base tal cual.') + '</p>' +
+      '<div class="chips"><span class="chip">' + (r.tipoAnuncio === 'ia' ? 'Avatar con IA' : 'Locución + videos') + '</span><span class="chip">Español ' + esc(r.idioma.variante) + '</span><span class="chip">' + (r.subtitulos.activos ? 'Con subtítulos' : 'Sin subtítulos') + '</span>' +
+      '<span class="chip">Gancho: ' + esc({ 'nuevo-modelado': 'nuevo y modelado, ' + g.segundos + ' s', conservar: 'el original', 'sin-gancho': 'ninguno' }[g.modo]) + '</span>' +
+      '<span class="chip">Transiciones: ' + (t.activas ? esc((t.tipos || []).join(', ') || 'sí') : 'no') + '</span><span class="chip">Efectos: ' + (s.activos ? 'sí' : 'no') + '</span>' +
+      '<span class="chip">Claudia ' + (r.aprobacion.plan === 'automatico' ? 'sigue sin esperar tu OK' : 'pide el OK del plan') + (r.aprobacion.topeUsd > 0 ? ' · puede gastar hasta ' + money(r.aprobacion.topeUsd) : ' · pregunta el costo') + '</span></div>' +
+      '<div class="acciones"><button class="btn prim" data-acc="receta-oferta">Editar la receta de esta oferta</button><button class="btn" data-acc="ir-recetas">Ver la receta base</button></div>';
+  }
+  function abrirRecetaModal(titulo, propio, heredado, modo, alGuardar) {
+    var pr = presetsTodos();
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(titulo) + '"><div class="m-cab"><b>' + esc(titulo) + '</b><button class="btn" data-acc="m-cerrar" aria-label="Cerrar" style="min-width:40px;padding:0">✕</button></div><div class="m-cuerpo">' +
+      '<p class="nota-p" style="margin:0 0 10px">Marca «cambiar aquí» solo en lo que esta ' + (modo === 'anuncio' ? 'pieza' : 'oferta') + ' hace distinto. Lo demás sigue la receta base.</p>' +
+      '<div class="receta-bar"><select id="rm-preset" aria-label="Partir de un punto de partida"><option value="">Partir de…</option>' + Object.keys(pr).map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('') + '</select><button class="btn" id="rm-cargar">Aplicar</button></div>' +
+      '<div id="rm-form"></div></div><div class="m-pie"><button class="btn prim" id="rm-guardar">Guardar</button><button class="btn" data-acc="m-cerrar">Cancelar</button></div></div></div>';
+    _cp = null;
+    var form = RecetaForm(el('rm-form'), { modo: modo, heredado: heredado, propio: propio });
+    el('rm-cargar').addEventListener('click', function () { var k = el('rm-preset').value; if (k && pr[k]) form.cargar(pr[k].receta); });
+    el('rm-guardar').addEventListener('click', function () { var b = this; b.disabled = true; alGuardar(form.resultado()).then(function () { cerrarModal(); }, function (e) { toast(e.message, 'mal'); b.disabled = false; }); });
+  }
+
+  // ============================================================= NUEVA OFERTA
+  function cargarTarjetas() {
+    if (S.tarjetas) return Promise.resolve(S.tarjetas);
+    return pedir('/api/tablero').then(function (j) { S.tarjetas = j.tarjetas || []; S.etapas = j.etapas || []; return S.tarjetas; });
+  }
+  function cargarRadar() {
+    if (S.radar) return Promise.resolve(S.radar);
+    return pedir('/api/radar-ofertas').then(function (j) { S.radar = j.ofertas || []; return S.radar; }).catch(function () { S.radar = []; return S.radar; });
+  }
+  function idDeProyecto(t) { return t.radarId || t.id; }
+  function abrirNueva(tarjetaId) {
+    el('modal-root').innerHTML = '<div class="modal-bg"><div class="modal chico" role="dialog" aria-modal="true" aria-label="Fabricar una oferta"><div class="m-cab"><b>Fabricar una oferta</b><button class="btn" data-acc="m-cerrar" aria-label="Cerrar" style="min-width:40px;padding:0">✕</button></div><div class="m-cuerpo"><p class="girando">Buscando las ofertas del tablero…</p></div></div></div>';
+    Promise.all([cargarTarjetas(), cargarPaises(), cargarRadar()]).then(function () {
+      if (tarjetaId) { var t = S.tarjetas.filter(function (x) { return x.id === tarjetaId; })[0]; if (t) { pasoConfirmarNueva(t); return; } }
+      pasoElegirTarjeta();
+    }).catch(function (e) { var c = document.querySelector('#modal-root .m-cuerpo'); if (c) c.innerHTML = '<div class="aviso-of aviso-mal">' + esc(e.message) + '</div>'; });
+  }
+  function nombreDeColumna(t) { var e = (S.etapas || []).filter(function (x) { return x.id === t.etapa; })[0]; return e ? e.nombre : ''; }
+  function pasoElegirTarjeta() {
+    var ya = {}; S.proyectos.forEach(function (p) { ya[p.id] = 1; });
+    var libres = S.tarjetas.filter(function (t) { return !ya[idDeProyecto(t)]; }).sort(function (a, b) { return (b.origen === 'radar' ? 1 : 0) - (a.origen === 'radar' ? 1 : 0) || String(b.creadoEn).localeCompare(String(a.creadoEn)); });
+    var c = document.querySelector('#modal-root .m-cuerpo');
+    c.innerHTML = '<p style="margin:0;color:#bbc7e1">Elige una oferta del tablero. Primero salen las que vienen del radar.</p>' +
+      '<div class="tarj-lista">' + (libres.length ? libres.map(function (t) { return '<div class="tarj-fila"><div class="t"><b>' + esc(t.nombre) + '</b><small>' + esc(nombreDeColumna(t)) + (t.origen === 'radar' ? ' · del radar' : '') + '</small></div><button class="btn prim" data-acc="elegir-tarjeta" data-id="' + esc(t.id) + '">Fabricar</button></div>'; }).join('') : '<div class="vacio">Todas las ofertas del tablero ya están en la fábrica.</div>') + '</div>' +
+      '<details class="mas"><summary>O escribe una oferta a mano</summary><label class="campo" style="margin-top:8px">Nombre<input type="text" id="n-nombre" maxlength="100"></label><label class="campo" style="margin-top:8px">Enlace al anuncio de la biblioteca de Meta, o a la página de su anunciante (opcional)<input type="url" id="n-enlace" maxlength="1000"></label><div class="acciones"><button class="btn prim" data-acc="elegir-manual">Continuar</button></div></details>';
+  }
+  function origenDeTarjeta(t) {
+    var of = null; if (t.radarId) of = (S.radar || []).filter(function (x) { return x.id === t.radarId; })[0] || null;
+    var nombre = String(t.nombre || '').split(' · ')[0];
+    return { radarId: t.radarId || '', tarjetaId: t.id, anunciante: (of && of.anunciante) || nombre, nicho: of ? of.nicho : '', nichoCorto: of ? of.nichoCorto : '', entregable: of ? of.entregable : '', angulo: of ? of.angulo : '', precio: of ? of.precio : '', embudo: of ? of.embudo : '', hueco: of ? of.hueco : '', idioma: of ? of.idioma : '', fecha: of ? of.fecha : '', linkAnuncio: (of && of.linkAnuncio) || (t.biblioteca || [])[0] || '', linkPagina: of ? of.linkPagina : '' };
+  }
+  var nuevaEnCurso = null;
+  function pasoConfirmarNueva(t, manual) {
+    var id = manual ? '' : idDeProyecto(t);
+    var yaEsta = id && S.proyectos.filter(function (p) { return p.id === id; })[0];
+    if (yaEsta) { cerrarModal(); abrirProyecto(id); return; }
+    var origen = manual ? { anunciante: t.nombre, linkAnuncio: t.enlace || '', tarjetaId: '' } : origenDeTarjeta(t);
+    nuevaEnCurso = { t: t, manual: manual, origen: origen };
+    var prs = presetsTodos(), ceros = (S.paises || []);
+    var paisesHtml = (ceros.length ? ceros : [{ nombre: 'Colombia', listo: true }]).map(function (c) { return '<label class="' + (c.nombre === 'Colombia' ? 'on' : '') + '"><input type="checkbox" data-npais="' + esc(c.nombre) + '"' + (c.nombre === 'Colombia' ? ' checked' : '') + '> ' + esc(c.nombre) + (c.listo ? '' : ' <small>(sin configurar)</small>') + '</label>'; }).join('');
+    var baseR = S.recetas.base || {}, cantidadBase = valorDe(baseR, 'cantidad') || valorDe(S.defecto, 'cantidad') || 3;
+    var c = document.querySelector('#modal-root .m-cuerpo');
+    c.innerHTML = '<label class="campo">Nombre de la oferta (el que ve la clienta)<input type="text" id="n-nombre2" maxlength="100" value="' + esc(origen.anunciante) + '"></label>' +
+      '<p class="nota-p" style="margin:6px 0 0">Ponle el nombre que va a llevar en español (el del anunciante original suele estar en portugués).</p>' +
+      '<p class="nota-p" style="margin:12px 0 0"><b>Países</b></p><div class="paises-sel" id="n-paises">' + paisesHtml + '</div>' +
+      '<div class="fila2"><label class="campo">Cuántos anuncios pedir<input type="number" id="n-cantidad" min="1" max="12" value="' + esc(cantidadBase) + '"></label><label class="campo">Punto de partida de la receta<select id="n-preset"><option value="">La receta base</option>' + Object.keys(prs).map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('') + '</select></label></div>' +
+      '<div class="aviso-of aviso-bien" style="margin-top:12px"><b>Crear el proyecto no gasta nada</b> y deja pedidos los anuncios para Claudia. Enseguida se prepara el temario de los ebooks (centavos de IA, que quedan anotados en el gasto). Producirlos se confirma aparte, con su costo.</div>' +
+      '<div class="acciones"><button class="btn prim" data-acc="crear-proyecto">Crear y preparar</button><button class="btn" data-acc="m-cerrar">Cancelar</button></div>';
+  }
+  function crearProyecto() {
+    var n = nuevaEnCurso; if (!n) return;
+    var nombre = el('n-nombre2').value.trim(); if (!nombre) { toast('Ponle un nombre a la oferta.', 'mal'); return; }
+    var paises = [].map.call(document.querySelectorAll('#n-paises input:checked'), function (i) { return i.dataset.npais; });
+    if (!paises.length) { toast('Elige al menos un país.', 'mal'); return; }
+    var b = document.querySelector('[data-acc="crear-proyecto"]'); b.disabled = true; b.textContent = 'Creando…';
+    api({ accion: 'crear', nombre: nombre, paises: paises, origen: n.origen, cantidad: Number(el('n-cantidad').value) || undefined, preset: el('n-preset').value || undefined }).then(function (j) {
+      cerrarModal(); return cargarLista().then(function () {
+        S.det = null; return abrirProyecto(j.proyecto.id).then(function () {
+          if (j.ya) return;
+          var P = prod(j.proyecto.id); P.pais = paises[0];
+          // Si la oferta ya tenia sus ebooks pedidos (por ejemplo desde /radar) se usan ESOS: preparar otro los reemplazaria y se volveria a producir y a pagar.
+          if (P.orden && P.orden.estado !== 'cancelada') { toast('Esta oferta ya tenía sus ebooks pedidos (desde el radar): se usan esos, no se paga otra vez.', 'bien'); return; }
+          preparar();
+        });
+      });
+    }).catch(function (e) { toast(e.message, 'mal'); b.disabled = false; b.textContent = 'Crear y preparar'; });
+  }
+
+  // ============================================================= EVENTOS
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var tab = t.closest('[data-tab]');
+    if (tab) { S.tab = tab.dataset.tab; [].forEach.call(document.querySelectorAll('#tabs .tab'), function (x) { x.classList.toggle('on', x === tab); }); el('vista-proyectos').hidden = S.tab !== 'proyectos'; el('vista-recetas').hidden = S.tab !== 'recetas'; if (S.tab === 'recetas') pintarRecetas(); return; }
+    if (t.closest('#b-nueva')) { abrirNueva(); return; }
+    var card = t.closest('.proy'); if (card) { abrirProyecto(card.dataset.id); return; }
+    var fondo = t.closest('[data-cerrar-fondo]'); if (fondo && t === fondo) { cancelarModal(); return; }
+    var b = t.closest('[data-acc]'); if (!b) {
+      if (t.id === 'r-cargar') { var k = el('r-preset').value, pr = presetsTodos(); if (k && pr[k]) S.recetaForm.cargar(pr[k].receta); return; }
+      if (t.id === 'r-guardar') { guardarBase(); return; }
+      if (t.id === 'r-guardar-preset') { guardarPreset(); return; }
+      if (t.id === 'r-borrar-preset') { borrarPreset(); return; }
+      return;
+    }
+    var acc = b.dataset.acc, d = S.det, p = d && d.proyecto, ad = b.dataset.ad;
+    if (acc === 'cerrar') { cerrarFicha(); return; }
+    if (acc === 'rev-abrir') { if (b.dataset.id) abrirProyecto(b.dataset.id); return; }
+    if (acc === 'm-cerrar') { cancelarModal(); return; }
+    if (acc === 'preparar') { preparar(); return; }
+    if (acc === 'confirmar') { abrirConfirmar(); return; }
+    if (acc === 'crear-todo') { crearTodo(); return; }
+    if (acc === 'arrancar' || acc === 'quitar-arranque') {
+      if (!p) return;
+      if (acc === 'quitar-arranque' && !confirm('¿Quitar la orden de arrancar los anuncios de «' + p.nombre + '»?\n\nLos pedidos que nadie ha tomado dejan de esperar; lo que ya se está haciendo sigue.')) return;
+      arrancarAnuncios(p.id, acc === 'quitar-arranque').then(function () { toast(acc === 'arrancar' ? 'Orden dada: los anuncios quedan en cola para el servidor' : 'Orden quitada', 'bien'); return refrescarDetalle(true).then(cargarLista); }).catch(function (er) { toast(er.message, 'mal'); });
+      return;
+    }
+    if (acc === 'empezar') { empezar(); return; }
+    if (acc === 'parar') { var P = prod(p.id); P.parar = true; pintarEbooks(); return; }
+    if (acc === 'ir-recetas') { document.querySelector('[data-tab="recetas"]').click(); return; }
+    if (acc === 'elegir-tarjeta') { var tj = S.tarjetas.filter(function (x) { return x.id === b.dataset.id; })[0]; if (tj) pasoConfirmarNueva(tj); return; }
+    if (acc === 'elegir-manual') { var nm = el('n-nombre').value.trim(); if (!nm) { toast('Escribe el nombre de la oferta.', 'mal'); return; } pasoConfirmarNueva({ nombre: nm, enlace: el('n-enlace').value.trim() }, true); return; }
+    if (acc === 'crear-proyecto') { crearProyecto(); return; }
+    if (!p) return;
+    if (acc === 'drive-guardar') { guardarDrive(p); return; }
+    if (acc === 'drive-quitar') { quitarDrive(p); return; }
+    if (acc === 'guardar-oferta') {
+      var paises = [].map.call(document.querySelectorAll('#p-paises input:checked'), function (i) { return i.dataset.pais; });
+      api({ accion: 'editar', id: p.id, nombre: el('p-nombre').value, paises: paises.length ? paises : undefined, notas: el('p-notas').value, linkAnuncio: el('p-enlace').value.trim() }).then(function (j) { toast('Guardado', 'bien'); S.det.proyecto = j.proyecto; cargarLista(); pintarFicha(); }).catch(function (er) { toast(er.message, 'mal'); });
+      return;
+    }
+    if (acc === 'borrar') { if (!confirm('¿Quitar «' + p.nombre + '» de la fábrica?\n\nSe borran sus pedidos de anuncio. Los ebooks, los flujos y lo que Claudia ya entregó no se tocan.')) return; fetch('/api/fabrica?id=' + encodeURIComponent(p.id), { method: 'DELETE', credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.error); marcarQuitada(p.id); cerrarFicha(); cargarLista(); toast('Quitada', 'bien'); }).catch(function (er) { toast(er.message, 'mal'); }); return; }
+    if (acc === 'copiar-orden') { ordenDe(ad).then(copiar).then(function () { toast('Orden copiada: pégasela a Claudia'); }).catch(function (er) { toast(er.message, 'mal'); }); return; }
+    if (acc === 'guardar-ref') {
+      var u = document.querySelector('[data-ref="url"][data-ad="' + ad + '"]').value.trim(), nt = document.querySelector('[data-ref="nota"][data-ad="' + ad + '"]').value.trim();
+      if (u && !/^https:\/\//i.test(u)) { toast('El enlace debe empezar con https://', 'mal'); return; }
+      actualizarAnuncio(ad, { referencia: { videoUrl: u, nota: nt } }, 'Referencia guardada'); return;
+    }
+    if (acc === 'aprobar') { actualizarAnuncio(ad, { estado: 'aprobada' }, ad + ' aprobado'); return; }
+    if (acc === 'pedir-cambios') { adCambiosAbierto = ad; pintarAnuncios(); var q = document.querySelector('[data-cambios="' + ad + '"]'); if (q) q.focus(); return; }
+    if (acc === 'cerrar-cambios') { adCambiosAbierto = ''; pintarAnuncios(); return; }
+    if (acc === 'enviar-cambios') { var tx = document.querySelector('[data-cambios="' + ad + '"]').value.trim(); if (!tx) { toast('Di qué hay que cambiar.', 'mal'); return; } adCambiosAbierto = ''; actualizarAnuncio(ad, { estado: 'pedido', texto: tx }, 'Cambios enviados: Claudia lo verá en su cola'); return; }
+    if (acc === 'cancelar-ad') { if (confirm('¿Cancelar el pedido ' + ad + '?')) actualizarAnuncio(ad, { estado: 'cancelado' }, ad + ' cancelado'); return; }
+    if (acc === 'reabrir-ad') { actualizarAnuncio(ad, { estado: 'pedido' }, ad + ' vuelve a la cola de Claudia'); return; }
+    if (acc === 'ad-nuevo') { api({ accion: 'anuncio_nuevo', id: p.id }).then(function (j) { toast(j.anuncio.id + ' pedido'); return refrescarDetalle(true).then(cargarLista); }).catch(function (er) { toast(er.message, 'mal'); }); return; }
+    if (acc === 'receta-oferta') {
+      abrirRecetaModal('Receta de «' + p.nombre + '»', p.receta, d.recetaBase ? F_mezclar(d.recetaBase) : S.defecto, 'oferta', function (r) { return api({ accion: 'editar', id: p.id, receta: r }).then(function (j) { S.det.proyecto = j.proyecto; return refrescarDetalle().then(cargarLista); }); });
+      return;
+    }
+    if (acc === 'receta-ad') {
+      var a = d.anuncios.filter(function (x) { return x.id === ad; })[0];
+      abrirRecetaModal('Receta de ' + ad + ' (' + p.nombre + ')', a.receta, d.recetaFinal, 'anuncio', function (r) { return api({ accion: 'anuncio', id: p.id, anuncio: ad, receta: r }).then(function () { return refrescarDetalle(true).then(cargarLista); }); });
+      return;
+    }
+    if (acc === 'crear-flujos') { crearFlujos(); return; }
+    if (acc === 'lz-pais') { LZ.pais[p.id] = b.dataset.pais; pintarLanzar(); return; }
+    if (acc === 'lz-marcar') { if (LZ.guardando) return; guardarLanzamiento({ tarea: b.dataset.k, hecho: b.getAttribute('aria-pressed') !== 'true' }, b.dataset.k); return; }
+    if (acc === 'lz-programar') { if (window.FabricaCampanas) window.FabricaCampanas.abrir({ id: p.id, pais: paisElegido(p), nombre: p.nombre, alTerminar: function () { refrescarDetalle(); } }); return; }
+    if (acc === 'lz-copiar-nombres') { var mkN = marcasDe(p, paisElegido(p)); copiar(nombresDeCampana(p, mkN.num, d.anuncios).join(String.fromCharCode(10))).then(function () { toast('Nombres copiados: pégalos en Facebook, uno por campaña'); }).catch(function (er) { toast(er.message, 'mal'); }); return; }
+    if (acc === 'copiar-claude') {
+      var Fz = fl(p.id), fj = (Fz.resultado && Fz.resultado.estado === 'hecho') ? Fz.resultado : { id: p.material.flujo && p.material.flujo.pedidoId, flujos: p.material.flujo && p.material.flujo.flujos };
+      // La orden lleva los enlaces y los ids de cada flujo: se piden al pedido guardado (si no se pueden leer, sale la orden con los nombres solos).
+      var traerFlujos = fj && fj.id ? pedir('/api/zapflow?id=' + encodeURIComponent(fj.id)).then(function (jz) { return jz && jz.pedido ? { creados: jz.pedido.creados || [], pagos: jz.pedido.pagos || [], flujos: jz.pedido.flujos || (fj && fj.flujos) || [] } : {}; }).catch(function () { return {}; }) : Promise.resolve({});
+      traerFlujos.then(function (extra) { return copiar(FabricaMotor.ordenParaClaude(p, Object.assign({}, fj, extra))); }).then(function () { toast('Orden copiada: pégasela a Claude'); }).catch(function (er) { toast(er.message, 'mal'); }); return;
+    }
+  });
+  // La receta que se ve «por debajo» de una oferta: la de fabrica con la base del dueño encima.
+  function F_mezclar(base) {
+    var out = copia(S.defecto);
+    S.esquema.forEach(function (g) { g.campos.forEach(function (c) { var v = valorDe(base, c.k); if (v !== undefined) ponerValor(out, c.k, copia({ v: v }).v); }); });
+    return out;
+  }
+  document.addEventListener('toggle', function (e) {
+    var t = e.target; if (!t || !t.classList || !t.classList.contains('lz-paso') || !S.det) return;
+    var p = S.det.proyecto, clave = p.id + '|' + paisElegido(p), ab = LZ.abiertos[clave] || (LZ.abiertos[clave] = {});
+    if (t.open) ab[t.getAttribute('data-n')] = 1; else delete ab[t.getAttribute('data-n')];
+  }, true);
+  document.addEventListener('change', function (e) {
+    var t = e.target, d = S.det, p = d && d.proyecto;
+    if (t.dataset && t.dataset.pais !== undefined && t.closest('#p-paises')) { t.closest('label').classList.toggle('on', t.checked); return; }
+    if (t.dataset && t.dataset.npais !== undefined) { t.closest('label').classList.toggle('on', t.checked); return; }
+    if (!p) return;
+    if (t.dataset && t.dataset.lz === 'numero') {
+      var o = t.options[t.selectedIndex];
+      guardarLanzamiento({ numero: t.value ? { id: t.value, wpp: o.getAttribute('data-wpp') || '', nombre: o.getAttribute('data-nombre') || '', tel4: o.getAttribute('data-tel4') || '' } : null }, 'numero');
+      return;
+    }
+    var P = prod(p.id);
+    if (t.dataset && t.dataset.campo === 'pais') { P.pais = t.value; }
+    else if (t.dataset && t.dataset.campo === 'leerPagina') { P.leerPagina = t.checked; }
+    else if (t.dataset && t.dataset.eb !== undefined && P.prep) { P.prep.entregables[Number(t.dataset.eb)].incluir = t.checked; pintarEbooks(); }
+  });
+  document.addEventListener('input', function (e) { var t = e.target; if (t.dataset && t.dataset.campo === 'datosPago' && S.det) prod(S.det.proyecto.id).datosPago = t.value; });
+  el('lista').addEventListener('keydown', function (e) { if (e.key !== 'Enter' && e.key !== ' ') return; var c = e.target.closest('.proy'); if (!c) return; e.preventDefault(); abrirProyecto(c.dataset.id); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (el('modal-root').firstChild) cancelarModal(); } });
+
+  // ---------- mirar a Claudia: el detalle se refresca solo mientras esta abierto y visible ----------
+  // Cada vuelta cuesta lecturas de KV (el detalle) y, si se recarga la lista, 3 LISTADOS: el plan gratuito da 1.000 listados al dia para TODA la suite (el ejecutor de reglas, el
+  // libro de gasto y el tablero tambien los usan). Por eso:
+  //  - el detalle (solo lecturas por clave) se mira cada 45 s mientras Claudia trabaja, cada 3 min si solo hay pedidos esperando, y no se mira si todo esta quieto;
+  //  - la lista (los listados) se recarga como mucho cada 10 min y solo si algo cambio en el detalle;
+  //  - tras 20 min sin tocar la pagina se deja de mirar hasta que la persona vuelve a usarla.
+  var vistoEn = Date.now(), ultimaLista = Date.now(), ultimoDetalle = 0, huellaDet = '';
+  ['click', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { vistoEn = Date.now(); }, { passive: true }); });
+  setInterval(function () {
+    if (!S.sel || document.visibilityState !== 'visible' || !S.det || hayCorriendo() || LZ.guardando) return;
+    if (el('sec-lanzar') && !el('sec-lanzar').hidden) cargarCanales();       // los numeros en vivo (con su propio freno de 2 min)
+    if (Date.now() - vistoEn > 20 * 60000) return;
+    if (el('sec-lanzar') && !el('sec-lanzar').hidden) cargarFlujos(S.det.proyecto);   // los flujos encendidos (con su propio freno de 2 min); no se le pregunta a ZapData si nadie usa la pagina
+    var ads = S.det.anuncios || [];
+    var trabajando = ads.some(function (a) { return a.estado === 'tomado' || a.estado === 'en-edicion'; });
+    var esperando = ads.some(function (a) { return a.estado === 'pedido'; });
+    var cada = trabajando ? 45000 : (esperando ? 180000 : 0);
+    if (!cada || Date.now() - ultimoDetalle < cada - 1000) return;
+    ultimoDetalle = Date.now();
+    refrescarDetalle(true).then(function () {
+      var h = JSON.stringify(((S.det && S.det.anuncios) || []).map(function (a) { return [a.id, a.estado, a.actualizadoEn]; }));
+      if (h !== huellaDet && Date.now() - ultimaLista > 10 * 60000) { ultimaLista = Date.now(); cargarLista(); }
+      huellaDet = h;
+    });
+  }, 15000);
+
+  // ---------- La revision de los flujos de venta encendidos (2026-11-06) ----------
+  // Pedido del dueño despues de que «Embarazo» de Colombia recibiera trafico con el flujo sin terminar: «que me de alguna alerta en el dash si eso esta mal». /api/zapdata-flujos?revision=1 dice que
+  // Ventas ENCENDIDAS tienen el inicio sin arreglar o no tienen su rama en el flujo de Pagos del pais (functions/_zapdata-revision.js). El menu pone el aviso rojo en todas las paginas; aqui va el detalle:
+  // que esta mal, que pasa por eso y que hacer. Se pide al abrir la pagina; cada 20 s mientras falten flujos por revisar (la primera vez son unos 30, uno por consulta) y cada 5 min despues (tambien
+  // si ZapData no dejo leer alguno), solo con la pagina a la vista y en uso (el servidor guarda el resultado 30 min para todos: casi siempre contesta sin preguntarle a ZapData).
+  // Con algo mal: la lista en rojo (las 3 primeras a la vista, el resto plegado) y role="alert" solo cuando la lista cambia (un lector de pantalla no la repite cada 5 min). Sin nada mal pero sin poder
+  // confirmar todo (no esta el flujo de Pagos del pais, la Venta no pone la etiqueta, ZapData no dejo leer el flujo): una linea en amarillo, nunca el «✓».
+  var REV = { x: null, en: 0, cargando: false, intentos: 0, huella: '', bajado: false };
+  function cargarRevision() {
+    if (REV.cargando) return;
+    REV.cargando = true;
+    fetch('/api/zapdata-flujos?revision=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (j) { REV.x = j && typeof j === 'object' ? j : { ok: false, mensaje: 'ZapData no contestó.' }; })
+      .catch(function () { REV.x = { ok: false, motivo: 'red', mensaje: 'No pude preguntarle a ZapData en este momento.' }; })
+      .then(function () {
+        REV.cargando = false; REV.en = Date.now(); REV.intentos++;
+        pintarRevision();
+        try { if (typeof window.__avisoFlujos === 'function') window.__avisoFlujos(REV.x); } catch (e) { /* el aviso del menu es un accesorio */ }
+      });
+  }
+  function ofertaDeLaFabrica(nombre) {
+    var n = plano(nombre); if (!n) return null;
+    return (S.proyectos || []).filter(function (p) { return plano(p.n) === n; })[0] || null;
+  }
+  function cuandoRevision(x) { return Date.parse(x.revisadoEn) ? ' Revisado ' + esc(hace(x.revisadoEn)) + '.' : ''; }
+  var MOTIVO_DUDA = { 'sin-pagos': 'no encontré el flujo de Pagos de su país', 'no-aplica': 'la Venta no pone la etiqueta «Pago Pendiente…»', 'sin-inicio': 'ZapData no mostró su inicio' };
+  function esObjeto(p) { return p && typeof p === 'object'; }
+  function nombreRev(p) { return esc(p.oferta || 'Oferta sin nombre') + (p.pais ? ' · ' + esc(p.pais) : ''); }
+  function problemaRev(p) {
+    var nom = p.pagosNombre ? '«' + esc(p.pagosNombre) + '»' : 'el flujo de Pagos del país', males = [];
+    if (p.inicio === 'mal') males.push('el inicio de la Venta no está arreglado: al escribir la palabra clave no sale ningún mensaje');
+    if (p.pagos === 'falta') males.push(nom + ' no tiene su rama: quien paga no recibe la entrega');
+    if (p.pagos === 'suelta') males.push(nom + ' tiene su rama, pero no está conectada: quien paga no recibe la entrega');
+    if (p.pagos === 'otra') males.push('su rama en ' + nom + ' lleva a un flujo apagado: quien paga no recibe la entrega');
+    if (p.pagos === 'casi') males.push('en ' + nom + ' su rama tiene la etiqueta escrita distinto que en la Venta (tildes, mayúsculas o espacios): ZapData puede no reconocerla');
+    var of = ofertaDeLaFabrica(p.oferta), acc = [];
+    if (ID_FLUJO.test(String(p.venta || ''))) acc.push('<a class="btn" href="https://zapdata.co/inbox/flows/' + esc(String(p.venta).toLowerCase()) + '" target="_blank" rel="noopener noreferrer">Abrir la Venta en ZapData</a>');
+    if (of) acc.push('<button type="button" class="btn" data-acc="rev-abrir" data-id="' + esc(of.id) + '">Abrir la oferta aquí</button>');
+    return '<li><b>' + nombreRev(p) + '</b>: ' + (males.join('; ') || 'algo no cuadra') + '.' + (acc.length ? '<div class="acciones">' + acc.join('') + '</div>' : '') + '</li>';
+  }
+  function pintarRevision() {
+    var c = el('revision'), x = REV.x; if (!c) return;
+    if (!x) { c.hidden = true; c.innerHTML = ''; return; }
+    var h = '', ok = x.ok === true;
+    var l = ok && Array.isArray(x.problemas) ? x.problemas.filter(esObjeto) : [], du = ok && Array.isArray(x.dudas) ? x.dudas.filter(esObjeto) : [];
+    var tot = Number(x.total) || 0, rev = Number(x.revisadas) || 0, nl = Number(x.noLeidas) || 0;
+    var viejo = ok && x.aviso ? ' ' + esc(x.aviso) + ' Esto es lo último que se supo.' : '';
+    var mas = [];
+    if (ok && !x.completo) mas.push('Revisando en ZapData el inicio y la rama de pagos de las ventas encendidas: van ' + rev + ' de ' + tot + '.' + (x.limite ? ' ZapData llegó a su tope de consultas de hoy: sigo más tarde.' : ''));
+    if (nl) mas.push((nl === 1 ? 'De una venta encendida' : 'De ' + nl + ' ventas encendidas') + ' ZapData no dejó leer el flujo: lo intento de nuevo más tarde.');
+    if (du.length) mas.push('No pude confirmar todo de ' + (du.length === 1 ? 'una venta' : du.length + ' ventas') + ': ' + du.slice(0, 5).map(function (p) { return nombreRev(p) + ' (' + (MOTIVO_DUDA[p.motivo] || 'sin confirmar') + ')'; }).join('; ') + (du.length > 5 ? '; y ' + (du.length - 5) + ' más' : '') + '.');
+    if (l.length) {
+      var huella = JSON.stringify(l.map(function (p) { return [p.venta, p.inicio, p.pagos]; })), nueva = huella !== REV.huella, li = l.map(problemaRev);
+      REV.huella = huella;
+      h = '<div class="aviso-of aviso-mal"' + (nueva ? ' role="alert"' : '') + '><b>⚠ ' + (l.length === 1 ? 'Una oferta tiene el flujo de venta encendido sin terminar' : l.length + ' ofertas tienen el flujo de venta encendido sin terminar') + '</b>' +
+        '<ul>' + li.slice(0, 3).join('') + '</ul>' + (li.length > 3 ? '<details><summary>Ver ' + (li.length - 3 === 1 ? 'una más' : 'las otras ' + (li.length - 3)) + '</summary><ul>' + li.slice(3).join('') + '</ul></details>' : '') +
+        '<small>Qué hacer: en la guía de esa oferta (paso 2) usa «Copiar la orden para Claude» y pégasela a Claude con ZapData abierto. Si ya tiene anuncios encendidos, páusalos hasta que quede arreglada.' + cuandoRevision(x) + viejo + '</small>' +
+        (mas.length ? '<small>' + mas.join(' ') + '</small>' : '') + '</div>';
+    } else if (ok) {
+      REV.huella = '';
+      if (x.completo && !du.length && !nl) h = '<p class="rev-linea bien">✓ ' + (tot === 1 ? 'La venta encendida tiene' : 'Las ' + tot + ' ventas encendidas tienen') + ' el inicio y la rama de pagos bien, según ZapData.' + cuandoRevision(x) + viejo + '</p>';
+      else if (x.completo) { var bien = Math.max(0, rev - du.length); h = '<p class="rev-linea ojo">' + (bien === 1 ? 'Una venta encendida tiene' : bien + ' de ' + tot + ' ventas encendidas tienen') + ' el inicio y la rama de pagos bien, según ZapData. ' + mas.join(' ') + cuandoRevision(x) + viejo + '</p>'; }
+      else h = '<p class="rev-linea">' + mas.join(' ') + viejo + '</p>';
+    } else {
+      h = '<p class="rev-linea">No pude revisar los flujos de venta en ZapData: ' + esc(x.mensaje || 'no contestó') + '</p>';
+    }
+    var plegado = c.querySelector('details'), abierto = !!(plegado && plegado.open);   // si la persona abrio «Ver las otras…», sigue abierto al repintar
+    c.innerHTML = h; c.hidden = false;
+    if (abierto && c.querySelector('details')) c.querySelector('details').open = true;
+    // quien llega desde el aviso del menu (/fabrica#revision) ve la caja de una vez
+    if (!REV.bajado && location.hash === '#revision') { REV.bajado = true; try { c.scrollIntoView({ block: 'start' }); } catch (e) { /* navegador viejo */ } }
+  }
+  setInterval(function () {
+    if (document.visibilityState !== 'visible' || Date.now() - vistoEn > 20 * 60000 || REV.cargando) return;
+    var x = REV.x, falta = x && x.ok === true && !x.completo && !x.limite && !x.revisionFallo && REV.intentos < 80;
+    if (!x || (falta && Date.now() - REV.en > 19000) || Date.now() - REV.en > 5 * 60000) cargarRevision();
+  }, 20000);
+
+  // ---------- arranque ----------
+  function desdeLaDireccion() {
+    var h = location.hash, m;
+    if ((m = h.match(/^#p=([\w-]+)$/))) { abrirProyecto(m[1], true); return; }
+    if ((m = h.match(/^#nueva=([\w-]+)$/))) {
+      var tid = m[1];
+      cargarTarjetas().then(function () {
+        var t = S.tarjetas.filter(function (x) { return x.id === tid; })[0];
+        var id = t ? idDeProyecto(t) : tid;
+        if (S.proyectos.filter(function (p) { return p.id === id; })[0]) { abrirProyecto(id, true); return; }
+        try { history.replaceState(null, '', location.pathname); } catch (er) {}
+        abrirNueva(tid);
+      }).catch(function () { abrirNueva(); });
+    }
+  }
+  cargarLista().then(function () { cargarRevision(); return cargarPaises(); }).then(function () { cargarModelos().catch(function () {}); desdeLaDireccion(); });
+})();
+</script>

@@ -1,0 +1,55 @@
+[Unit]
+Description=Fabrica de ofertas: cuando una oferta nueva llega a la Fabrica, baja sus anuncios originales mas antiguos, los transcribe y trae b-rolls de TikTok a la carpeta de la oferta en Drive
+After=network-online.target
+Wants=network-online.target
+# No insiste en bucle: como mucho 6 arranques por hora (el timer ya corre cada hora)
+StartLimitIntervalSec=1h
+StartLimitBurst=6
+
+[Service]
+Type=oneshot
+User=broll
+Group=broll
+WorkingDirectory=/opt/broll-tiktok
+# Las fechas de los registros salen en hora de Bogota, no en UTC
+Environment=TZ=America/Bogota
+Environment=HOME=/opt/broll-tiktok/estado
+Environment=XDG_CACHE_HOME=/opt/broll-tiktok/estado/cache
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/broll-tiktok/correr_fabrica.sh
+TimeoutStartSec=90min
+# Es un trabajo de fondo: no le quita aire al radar ni al runner de GitHub que viven en el mismo servidor
+Nice=10
+IOSchedulingClass=idle
+CPUQuota=150%
+MemoryMax=3G
+TasksMax=512
+# 2 = la corrida termino con algo pendiente; 3 = el dash, Meta o TikTok no contestaron: ninguno es una falla del servicio (el timer lo vuelve a intentar).
+# 1 (configuracion mala) y 4 (Drive sin permiso: hay que volver a autorizar) SI quedan como falla a la vista (systemctl --failed).
+SuccessExitStatus=2 3
+# Aislamiento: solo escribe en sus carpetas de datos; el codigo, el entorno de Python, el modelo de Whisper y las llaves los ve de solo lectura.
+# Baja y abre archivos de terceros (anuncios y videos): si algo fallara en ffmpeg o en un lector de video, no puede reescribir el codigo.
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/opt/broll-tiktok/public /opt/broll-tiktok/logs /opt/broll-tiktok/estado
+# No ve las carpetas de los otros servicios del servidor (el "-" ignora la que no exista)
+InaccessiblePaths=-/opt/radar-de-ofertas -/opt/actions-runner -/root

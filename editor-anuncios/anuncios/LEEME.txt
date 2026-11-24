@@ -1,0 +1,3 @@
+AQUÍ NO GUARDAS NADA: todo lo produce Claude. Solo entras a recoger el video terminado:
+  anuncios/[producto]/tiktok/[anuncio]/final/   y   anuncios/[producto]/ia/[anuncio]/final/
+Cada anuncio tiene además su videoData.json, pruebas/ (fotogramas de revisión) y, en los de IA, cuadros/ y clips/. historial.json está en la carpeta del producto.

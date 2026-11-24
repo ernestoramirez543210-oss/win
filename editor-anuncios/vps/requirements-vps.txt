@@ -1,0 +1,27 @@
+# Lo que corre el b-roll de TikTok en el VPS (venv propio en /opt/broll-tiktok/venv). Mismas versiones que ../requirements.txt:
+# si una se sube alla, se sube aqui (autoprueba_broll_vps.py lo comprueba).
+# Se instalan con --only-binary=:all: (solo ruedas ya armadas: ninguna instalacion ejecuta codigo de un paquete).
+# TikTok cambia sus paginas seguido: si un dia deja de bajar, se sube yt-dlp en los dos archivos, se prueba y se vuelve a desplegar.
+requests==2.34.2
+yt-dlp==2026.8.19
+curl_cffi==0.16.3
+# Detector de texto quemado (scripts/texto_quemado.py): el detector de RapidOCR (modelo PP-OCR dentro del paquete) sobre onnxruntime. Solo en el servidor.
+# numpy y pillow usan la misma version que el editor. Probado el 2026-10-20 con estas versiones.
+rapidocr-onnxruntime==1.4.4
+onnxruntime==1.31.0
+opencv-python==5.0.0.93
+numpy==2.5.4
+pillow==12.3.0
+shapely==2.2.0
+pyclipper==1.4.0
+# Transcripcion de los anuncios originales de la Fabrica (scripts/transcribir_vps.py): faster-whisper sobre CTranslate2. Las dos primeras tienen la misma version que el
+# editor (../requirements.txt); las otras son las que quedaron instaladas en el PC del editor con esas (probado el 2026-10-21). El modelo `small` NO es un paquete: lo baja
+# vps/instalar-vps.sh a /opt/broll-tiktok/modelos con su SHA-256.
+faster-whisper==1.2.1
+tokenizers==0.23.3
+ctranslate2==4.8.3
+av==19.0.1
+huggingface-hub==2.2.0
+# Ebooks que ya vienen hechos (scripts/pdf_a_imagenes.py, etapa «entregables» del corredor): saca la portada y las paginas del PDF principal. Misma version que ../requirements.txt.
+# Se instala en el servidor a mano, con --only-binary=:all:  (ver «Ebooks que ya vienen hechos» en LEEME.md).
+pymupdf==1.28.2

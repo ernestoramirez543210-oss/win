@@ -1,0 +1,19 @@
+LICENCIAS DE LOS EFECTOS DE SONIDO
+==================================
+
+Todos los efectos de esta carpeta fueron FABRICADOS en este equipo con scripts/crear_sfx.py (síntesis con Python + ffmpeg).
+No salen de ninguna biblioteca ni de ningún sitio de internet: no tienen licencia de terceros ni exigen atribución.
+Uso comercial libre.
+
+  whoosh.mp3, whoosh_corto.mp3   transiciones (ruido filtrado con barrido)
+  pop.mp3, pop_suave.mp3         aparición de textos (tono corto con caída)
+  click.mp3                      llamada a la acción
+  ding.mp3                       notificación
+  hit.mp3                        golpe grave para el gancho
+  kaching.mp3                    caja registradora
+  click_camara.mp3               obturador de cámara
+
+Si reemplazas alguno por un efecto de una biblioteca gratuita (por ejemplo Mixkit o Pixabay), copia el archivo con el mismo nombre
+y anota aquí de dónde salió y su licencia (debe permitir uso comercial sin atribución):
+
+  (ninguno reemplazado todavía)

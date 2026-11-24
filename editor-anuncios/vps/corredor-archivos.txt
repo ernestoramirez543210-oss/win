@@ -1,0 +1,133 @@
+# Lo que desplegar-corredor.sh sube al servidor (/opt/anuncios). Una linea por archivo:  origen  destino  modo
+#   origen  = ruta dentro de editor-anuncios/ (se lee del commit que se despliega, no del arbol de trabajo: en Windows esta en CRLF y el servidor necesita LF)
+#   destino = ruta bajo /opt/anuncios (sin espacios, sin «..»)
+#   modo    = 644 o 755
+# Es una LISTA CERRADA: lo que no esta aqui no viaja. Quien agregue un archivo que corra en el servidor lo agrega tambien a DENEGADAS (functions/api/equipo.js) y a
+# equipo-kit/zonas.json (el servidor no se propone desde el equipo); las pruebas del equipo y autoprueba_corredor.py lo exigen.
+# Las llaves, los modelos, node_modules y lo que genera el servidor NUNCA estan aqui.
+
+# --- scripts del editor, TAL CUAL (los mismos que corren en el PC; el servidor no los reescribe)
+scripts/_comun.py                       scripts/_comun.py                       644
+scripts/anotar_historial.py             scripts/anotar_historial.py             644
+scripts/anuncio_comun.py                scripts/anuncio_comun.py                644
+scripts/apimart.py                      scripts/apimart.py                      644
+scripts/apimart_chat.py                 scripts/apimart_chat.py                 644
+scripts/aplicar_receta.py               scripts/aplicar_receta.py               644
+scripts/avatar_auto.py                  scripts/avatar_auto.py                  644
+scripts/avatar_comun.py                 scripts/avatar_comun.py                 644
+scripts/broll_tiktok.py                 scripts/broll_tiktok.py                 644
+scripts/clip_local.py                   scripts/clip_local.py                   644
+scripts/crear_sfx.py                    scripts/crear_sfx.py                    644
+scripts/drive_api.py                    scripts/drive_api.py                    644
+scripts/emparejar_tomas.py              scripts/emparejar_tomas.py              644
+scripts/fabrica.py                      scripts/fabrica.py                      644
+scripts/gancho_ia.py                    scripts/gancho_ia.py                    644
+scripts/guion_auto.py                   scripts/guion_auto.py                   644
+scripts/hoja_fotogramas.py              scripts/hoja_fotogramas.py              644
+scripts/indexar_broll.py                scripts/indexar_broll.py                644
+scripts/mezclar_audio.py                scripts/mezclar_audio.py                644
+scripts/montaje_auto.py                 scripts/montaje_auto.py                 644
+scripts/nuevo_producto.py               scripts/nuevo_producto.py               644
+scripts/pdf_a_imagenes.py               scripts/pdf_a_imagenes.py               644
+scripts/referencia_meta.py              scripts/referencia_meta.py              644
+scripts/revisar_prompts.py              scripts/revisar_prompts.py              644
+scripts/remotion.mjs                    scripts/remotion.mjs                    644
+scripts/texto_quemado.py                scripts/texto_quemado.py                644
+scripts/transcribir.py                  scripts/transcribir.py                  644
+scripts/unir_clips.py                   scripts/unir_clips.py                   644
+scripts/validar_videodata.py            scripts/validar_videodata.py            644
+scripts/voz_auto.py                     scripts/voz_auto.py                     644
+
+# --- el corredor (orquestador y espejo de Drive) y las pruebas que se pueden correr en el servidor
+scripts/corredor_vps.py                 scripts/corredor_vps.py                 644
+scripts/espejo_drive.py                 scripts/espejo_drive.py                 644
+scripts/originales.py                   scripts/originales.py                   644
+scripts/variacion_auto.py               scripts/variacion_auto.py               644
+scripts/variaciones_vps.py              scripts/variaciones_vps.py              644
+scripts/autoprueba_variacion.py         scripts/autoprueba_variacion.py         644
+scripts/autoprueba_avatar.py            scripts/autoprueba_avatar.py            644
+scripts/autoprueba_corredor.py          scripts/autoprueba_corredor.py          644
+scripts/autoprueba_drive.py             scripts/autoprueba_drive.py             644
+scripts/autoprueba_montaje.py           scripts/autoprueba_montaje.py           644
+scripts/prueba_servidor.py              scripts/prueba_servidor.py              644
+
+# --- Remotion (la composicion del video)
+src/FullVideo.tsx                       src/FullVideo.tsx                       644
+src/Root.tsx                            src/Root.tsx                            644
+src/components/CtaVista.tsx             src/components/CtaVista.tsx             644
+src/components/ProductoVista.tsx        src/components/ProductoVista.tsx        644
+src/components/Sonido.tsx               src/components/Sonido.tsx               644
+src/components/Subtitulos.tsx           src/components/Subtitulos.tsx           644
+src/components/TextoGrandeVista.tsx     src/components/TextoGrandeVista.tsx     644
+src/components/Tomas.tsx                src/components/Tomas.tsx                644
+src/config/videoData.json               src/config/videoData.json               644
+src/index.css                           src/index.css                           644
+src/index.ts                            src/index.ts                            644
+src/types.ts                            src/types.ts                            644
+package.json                            package.json                            644
+package-lock.json                       package-lock.json                       644
+remotion.config.ts                      remotion.config.ts                      644
+tsconfig.json                           tsconfig.json                           644
+
+# --- el espacio del editor (2026-10-29): la cuenta de cada persona del equipo de video en el servidor, sus topes y la PUERTA de Drive (instalar-editor-vps.sh; no es parte del corredor,
+#     viaja con el por el mismo despliegue y las mismas comprobaciones). espacio/ es lo que se copia al espacio de trabajo de la persona la primera vez.
+scripts/puerta_editor.py                scripts/puerta_editor.py                644
+scripts/autoprueba_puerta.py            scripts/autoprueba_puerta.py            644
+scripts/editor_promover.py              scripts/editor_promover.py              644
+scripts/revisar_src.mjs                 scripts/revisar_src.mjs                 644
+scripts/autoprueba_promover.py          scripts/autoprueba_promover.py          644
+vps/editor-promover.service             vps/editor-promover.service             644
+vps/editor-promover.path                vps/editor-promover.path                644
+vps/promover-fixture.json               vps/promover-fixture.json               644
+vps/instalar-editor-vps.sh              vps/instalar-editor-vps.sh              755
+vps/pesado                              vps/pesado                              755
+vps/editor-puerta.service               vps/editor-puerta.service               644
+vps/editor-puerta.path                  vps/editor-puerta.path                  644
+vps/editor-puerta.json                  vps/editor-puerta.json                  644
+vps/CLAUDE-VPS.md                       vps/CLAUDE-VPS.md                       644
+CLAUDE.md                                                           vps/espacio/CLAUDE.md                                                           644
+.claude/skills/editor-video/SKILL.md                                vps/espacio/.claude/skills/editor-video/SKILL.md                                644
+.claude/skills/editor-video/references/emparejar-tomas.md           vps/espacio/.claude/skills/editor-video/references/emparejar-tomas.md           644
+.claude/skills/editor-video/references/preferencias.md              vps/espacio/.claude/skills/editor-video/references/preferencias.md              644
+.claude/skills/editor-video/references/prompts-ia.md                vps/espacio/.claude/skills/editor-video/references/prompts-ia.md                644
+.claude/skills/editor-video/references/tiktok-busqueda-chrome.md    vps/espacio/.claude/skills/editor-video/references/tiktok-busqueda-chrome.md    644
+.claude/skills/editor-video/references/videodata.md                 vps/espacio/.claude/skills/editor-video/references/videodata.md                 644
+.claude/skills/fabrica-ofertas/SKILL.md                             vps/espacio/.claude/skills/fabrica-ofertas/SKILL.md                             644
+.claude/skills/fabrica-ofertas/references/receta.md                 vps/espacio/.claude/skills/fabrica-ofertas/references/receta.md                 644
+.claude/skills/fabrica-ofertas/references/voces-hombre.md           vps/espacio/.claude/skills/fabrica-ofertas/references/voces-hombre.md           644
+
+# --- la plantilla de un producto nuevo (nuevo_producto.py la copia) y los avisos de las carpetas
+public/productos/LEEME.txt                                          public/productos/LEEME.txt                                          644
+public/productos/producto-ejemplo/LEEME.txt                         public/productos/producto-ejemplo/LEEME.txt                         644
+public/productos/producto-ejemplo/avatares/LEEME.txt                public/productos/producto-ejemplo/avatares/LEEME.txt                644
+public/productos/producto-ejemplo/avatares/avatar-ejemplo/LEEME.txt    public/productos/producto-ejemplo/avatares/avatar-ejemplo/LEEME.txt    644
+public/productos/producto-ejemplo/avatares/avatar-ejemplo/avatar.json  public/productos/producto-ejemplo/avatares/avatar-ejemplo/avatar.json  644
+public/productos/producto-ejemplo/broll-tiktok/LEEME.txt            public/productos/producto-ejemplo/broll-tiktok/LEEME.txt            644
+public/productos/producto-ejemplo/broll.json                        public/productos/producto-ejemplo/broll.json                        644
+public/productos/producto-ejemplo/guiones/LEEME.txt                 public/productos/producto-ejemplo/guiones/LEEME.txt                 644
+public/productos/producto-ejemplo/paginas/LEEME.txt                 public/productos/producto-ejemplo/paginas/LEEME.txt                 644
+public/productos/producto-ejemplo/producto.json                     public/productos/producto-ejemplo/producto.json                     644
+public/productos/producto-ejemplo/voces/LEEME.txt                   public/productos/producto-ejemplo/voces/LEEME.txt                   644
+public/sfx/LEEME.txt                                                public/sfx/LEEME.txt                                                644
+public/sfx/LICENCIAS.txt                                            public/sfx/LICENCIAS.txt                                            644
+public/musica/biblioteca/LEEME.txt                                  public/musica/biblioteca/LEEME.txt                                  644
+
+# --- version y versiones fijadas de lo que usa el editor
+VERSION                                 VERSION                                 644
+requirements.txt                        requirements.txt                        644
+
+# --- el corredor (instalacion, arranque, control, unidades de systemd y configuracion)
+vps/instalar-corredor.sh                vps/instalar-corredor.sh                755
+vps/correr_corredor.sh                  vps/correr_corredor.sh                  755
+vps/corredor-ctl                        vps/corredor-ctl                        755
+vps/anuncios-corredor.service           vps/anuncios-corredor.service           644
+vps/anuncios-corredor.timer             vps/anuncios-corredor.timer             644
+vps/corredor.json                       vps/corredor.json                       644
+src/components/BotonCtaVista.tsx         src/components/BotonCtaVista.tsx         644
+src/components/CajaLineasVista.tsx       src/components/CajaLineasVista.tsx       644
+src/components/DestelloVista.tsx         src/components/DestelloVista.tsx         644
+src/components/FijosVista.tsx            src/components/FijosVista.tsx            644
+src/components/LibroVista.tsx            src/components/LibroVista.tsx            644
+src/components/NavidadVista.tsx          src/components/NavidadVista.tsx          644
+src/components/RotuloVista.tsx           src/components/RotuloVista.tsx           644
+.claude/skills/editor-video/references/adaptacion-guion.md vps/espacio/.claude/skills/editor-video/references/adaptacion-guion.md 644

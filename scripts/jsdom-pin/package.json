@@ -1,0 +1,8 @@
+{
+  "name": "jsd",
+  "private": true,
+  "description": "jsdom fijado con candado para scripts/reglas-auto.cjs: se instala con npm ci --ignore-scripts (ver cargarJsdom). Para subir de version: cambiar aqui y correr npm install --package-lock-only --ignore-scripts.",
+  "dependencies": {
+    "jsdom": "25.0.1"
+  }
+}

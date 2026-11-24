@@ -1,0 +1,5 @@
+Carpeta de datos del dashboard.
+
+Aqui el refresco (scripts\Refresh-Headless.ps1) deja lo que baja de tus hojas de ventas, de tus cuentas de anuncios y las tasas de cambio.
+Los archivos de ventas (*.csv) traen datos de tus clientes: NO se suben a GitHub (.gitignore los deja fuera). Tampoco las llaves.
+Si quieres ver el dashboard con datos inventados, usa Ver-Ejemplo.cmd: escribe en la carpeta _ejemplo, no aqui.

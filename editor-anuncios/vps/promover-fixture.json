@@ -1,0 +1,32 @@
+{
+  "meta": {"anuncio": "prueba", "producto": "producto-ejemplo", "tipo": "tiktok", "fps": 30, "ancho": 1080, "alto": 1920, "duracion": 8},
+  "estilo": {
+    "fondo": "#0B1020",
+    "colorPrimario": "#E11D48",
+    "subtitulos": {"tamano": 82, "color": "#FFFFFF", "colorActivo": "#FFE14D", "contorno": "#000000", "maxPalabras": 3, "mayusculas": true},
+    "textoGrande": {"tamano": 112}
+  },
+  "zonaInferiorLibre": 280,
+  "tomas": [],
+  "palabras": [
+    {"texto": "Prueba", "inicio": 0.3, "fin": 0.8},
+    {"texto": "de", "inicio": 0.8, "fin": 0.95},
+    {"texto": "estilos", "inicio": 0.95, "fin": 1.6},
+    {"texto": "nuevos", "inicio": 1.6, "fin": 2.2}
+  ],
+  "textosGrandes": [
+    {"texto": "Letras que caen", "inicio": 0.5, "fin": 2.0, "estilo": "caja", "animacion": "letras"},
+    {"texto": "Se escribe solo", "inicio": 2.2, "fin": 3.6, "estilo": "plano", "animacion": "tipeo"},
+    {"texto": "Entra con zoom", "inicio": 3.8, "fin": 5.0, "animacion": "zoom"},
+    {"texto": "Desliza", "inicio": 5.2, "fin": 6.4, "animacion": "deslizar", "fuente": "Impact", "tamano": 96, "grosorContorno": 6},
+    {"texto": "COMPLICACIONES", "inicio": 6.5, "fin": 7.8, "estilo": "caja"}
+  ],
+  "destellos": [{"t": 2.0, "dur": 0.2}],
+  "navidad": {"nieve": {"cantidad": 40}, "luces": {}},
+  "cajaLineas": {"inicio": 6.5, "fin": 7.8, "lineas": [{"t": "PRIMERA LINEA"}, {"t": "SEGUNDA", "color": "#E11D48"}]},
+  "rotulos": [{"inicio": 1.0, "fin": 3.0, "lineas": ["ROTULO", "DE PRUEBA"], "y": 0.3}],
+  "fijos": {"inicio": 0, "fin": 8, "caja": [{"t": "Frase "}, {"t": "fija", "b": true}], "insignia": {"texto": "MATERIAL EN PDF"}},
+  "producto": [],
+  "cta": null,
+  "audio": {}
+}

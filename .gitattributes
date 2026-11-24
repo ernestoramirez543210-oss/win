@@ -1,0 +1,7 @@
+# Lo que corre en Linux (el servidor del radar) siempre con fin de linea LF; lo que corre en Windows (.cmd, .bat) con CRLF.
+*.sh text eol=lf
+*.service text eol=lf
+*.timer text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.woff2 binary

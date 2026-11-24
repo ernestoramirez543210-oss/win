@@ -1,0 +1,72 @@
+[Unit]
+Description=Corredor de anuncios: toma los pedidos de la Fabrica y deja el anuncio terminado en Drive (guion, voz, plan, render y revision), sin PC y sin tokens de Claude
+After=network-online.target
+Wants=network-online.target
+# No insiste en bucle: como mucho 4 arranques por hora (el timer corre cada hora)
+StartLimitIntervalSec=1h
+StartLimitBurst=4
+
+[Service]
+Type=oneshot
+User=broll
+Group=broll
+WorkingDirectory=/opt/anuncios
+# Las fechas de los registros salen en hora de Bogota, no en UTC
+Environment=TZ=America/Bogota
+Environment=HOME=/opt/anuncios/estado
+Environment=XDG_CACHE_HOME=/opt/anuncios/.cache/xdg
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Whisper y CLIP ya estan en disco: nada se baja en una corrida
+Environment=HF_HUB_OFFLINE=1
+Environment="OFERTAS_LATAM_DIR=/opt/anuncios/drive/OFERTAS LATAM"
+# Medido el 23-oct al renderizar un anuncio de 52 s: el compositor de Remotion guarda por defecto la MITAD de la RAM (2 GB) de fotogramas de video en cache y la unidad llegaba a 5,9 GB. Con 384 MB rinde igual y deja de competir con el radar y el runner (scripts/remotion.mjs lo lee; sin esta variable no cambia nada)
+Environment=OFFTHREADVIDEO_CACHE_MB=384
+ExecStart=/opt/anuncios/correr_corredor.sh
+# Sin LoadCredential: desde la version 2026.11.10-2 el corredor no usa la llave de APIMart (imagenes, clips y texto pasan por el dash con la llave del editor, que lee corredor_vps.py
+# de /opt/broll-tiktok/secretos/dash.env). /opt/anuncios/secretos/apimart.key ya sobra: la borra el dueno.
+# Tiempo maximo de toda la pasada (cada etapa tiene el suyo dentro del corredor)
+TimeoutStartSec=3h
+# Es un trabajo de fondo: no le quita aire al radar, al runner de GitHub ni a Hermes, que viven en el mismo servidor
+Nice=10
+IOSchedulingClass=idle
+CPUWeight=20
+CPUQuota=150%
+# Memoria, medida el 23-oct con un render de 52 s y la cache de arriba: lo que NO se puede soltar sin swap (anonima + compartida) llega a ~3,7 GB y el total con archivos a ~5 GB. Con MemoryHigh de 2500M y de 3500M
+# la unidad se ahogaba (el limite la frenaba: presion de memoria de 65 %) y el render tardaba mucho mas; con 5G / 5500M no hubo ni un solo freno. El servidor tiene 8 GB sin swap: lo que sobra de los 3,7 GB es cache de
+# archivos (el sistema la suelta sola si el radar, el runner o Hermes piden memoria). Y si de verdad se acabara la memoria, OOMScoreAdjust hace que el sistema sacrifique primero esta unidad (trabajo de fondo).
+MemoryHigh=5G
+MemoryMax=5500M
+MemorySwapMax=0
+OOMScoreAdjust=500
+TasksMax=1024
+# 2 = la pasada termino con algo pendiente o un anuncio con error; 3 = el dash, Drive o una API no contestaron: ninguno es una falla del servicio (el timer lo vuelve a intentar).
+# 1 (configuracion mala) y 4 (Drive sin permiso: hay que volver a autorizar) SI quedan como falla a la vista (systemctl --failed).
+SuccessExitStatus=2 3
+# Aislamiento: solo escribe en sus carpetas de datos; el codigo, node_modules, los modelos, el Python y las llaves los ve de solo lectura.
+# Abre videos de terceros (b-roll) con ffmpeg, onnx y Chrome: si algo fallara ahi, no puede reescribir el codigo ni ver el radar, el runner ni los datos del b-roll.
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+# AF_NETLINK: Remotion/Node preguntan por las interfaces de red (os.networkInterfaces); sin esto fallan con «uv_interface_addresses ... error 97». Solo lectura: sin capacidades no pueden cambiar la red.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/opt/anuncios/public /opt/anuncios/anuncios /opt/anuncios/.cache /opt/anuncios/logs /opt/anuncios/estado /opt/anuncios/drive /opt/anuncios/costos.jsonl
+# No ve las carpetas de los otros servicios del servidor ni los datos del b-roll (el "-" ignora la que no exista)
+InaccessiblePaths=-/opt/radar-de-ofertas -/opt/actions-runner -/root -/home -/opt/broll-tiktok/public -/opt/broll-tiktok/estado -/opt/broll-tiktok/logs -/run/docker.sock

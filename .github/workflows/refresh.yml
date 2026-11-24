@@ -1,0 +1,178 @@
+# Refresco del dashboard: baja tus ventas (Google Sheets) y tu gasto (Facebook), arma las paginas y las publica en Cloudflare Pages.
+#
+# Antes de que funcione hay que poner, en GitHub > Settings > Secrets and variables > Actions (CLAUDE.md lo explica paso a paso):
+#   Secrets:   FACEBOOK_TOKENS, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID   (y REGLAS_CLAVE si usas las reglas automaticas;
+#              AVISO_TELEGRAM_TOKEN y AVISO_TELEGRAM_CHAT si quieres avisos por Telegram)
+#   Variables: CLOUDFLARE_PROYECTO (el nombre de tu proyecto de Cloudflare Pages), DASH_URL (https://<tu-proyecto>.pages.dev)
+#   Secrets (tambien): SHEET_ID_<PAIS> con el ID del libro de ventas de cada pais donde vendes (SHEET_ID_CO, SHEET_ID_MX...)
+# Las llaves de las herramientas (IA, voz, ZapData, editor) NO van aqui: viven en Cloudflare (pagina /apis y variables del proyecto). Ver CLAUDE.md.
+#
+# Corre cada tres horas (el horario de GitHub a veces se atrasa o se salta una vuelta: es normal) y cuando lo disparas a mano en la pestana Actions.
+# Por que cada tres horas: en un repositorio PRIVADO GitHub regala unos 2.000 minutos de Actions al mes. Cada vuelta gasta unos 5 minutos;
+# cada hora serian unos 4.000 (te cobran o se detiene), cada tres horas unos 1.300. Si lo cambias, mira tu consumo en Settings > Billing.
+# NUNCA hagas publico este repositorio para tener minutos gratis: el historial guarda tu gasto de Facebook y el registro de tus reglas.
+name: Refresco del dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 */3 * * *'     # 23 minutos despues de las 0, 3, 6, 9, 12, 15, 18 y 21 UTC (incluye las 7:23 a. m. de Colombia)
+
+permissions:
+  contents: write            # guarda el historial de gasto y el registro de las reglas
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    # Mientras no configures la variable CLOUDFLARE_PROYECTO, el refresco no corre (asi no te llegan correos de fallas cada hora).
+    if: ${{ vars.CLOUDFLARE_PROYECTO != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Las acciones de terceros van fijadas por su commit (no por la etiqueta v5/v4, que su dueno puede mover): esta corrida maneja tus llaves.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09   # v5
+        with:
+          persist-credentials: false
+
+      - name: Temporales en la carpeta del runner
+        shell: bash
+        run: echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Llaves de Facebook
+        shell: pwsh
+        run: |
+          $raw = $env:FB_TOKENS
+          if (-not $raw) { Write-Host '::error::Falta el secreto FACEBOOK_TOKENS (ver CLAUDE.md).'; exit 1 }
+          Set-Content -Path 'data/facebook-tokens.json' -Value $raw -Encoding utf8
+          try {
+            $j = (Get-Content 'data/facebook-tokens.json' -Raw -Encoding UTF8) | ConvertFrom-Json
+            $paises = @($j.PSObject.Properties.Name | Where-Object { $_ -notlike '_*' })
+            # GitHub tapa el secreto entero, pero no cada llave suelta dentro de el: si una sale en un mensaje de error, que tambien salga tapada.
+            foreach ($p in $paises) {
+              $v = $j.$p
+              $bloques = if ($v.tokens) { @($v.tokens) } else { @($v) }
+              foreach ($b in $bloques) { if ($b.systemUserToken) { Write-Host "::add-mask::$($b.systemUserToken)" } }
+            }
+            Write-Host "Llaves OK: $($paises.Count) pais(es): $($paises -join ', ')"
+          } catch {
+            Write-Host '::error::El secreto FACEBOOK_TOKENS no es JSON valido. Copia el archivo ENTERO y pegalo reemplazando todo lo que haya en la caja.'
+            exit 1
+          }
+        env:
+          FB_TOKENS: ${{ secrets.FACEBOOK_TOKENS }}
+
+      # Los IDs de tus libros de ventas salen de los SECRETOS de GitHub (no del codigo): SHEET_ID_CO, SHEET_ID_MX... Un pais sin ese secreto no se baja.
+      - name: Bajar ventas y gasto, y armar el dashboard
+        shell: pwsh
+        env:
+          SHEET_ID_MX: ${{ secrets.SHEET_ID_MX }}
+          SHEET_ID_VE: ${{ secrets.SHEET_ID_VE }}
+          SHEET_ID_CO: ${{ secrets.SHEET_ID_CO }}
+          SHEET_ID_PE: ${{ secrets.SHEET_ID_PE }}
+          SHEET_ID_GT: ${{ secrets.SHEET_ID_GT }}
+          SHEET_ID_AR: ${{ secrets.SHEET_ID_AR }}
+          SHEET_ID_EC: ${{ secrets.SHEET_ID_EC }}
+          SHEET_ID_BO: ${{ secrets.SHEET_ID_BO }}
+        run: ./scripts/Refresh-Headless.ps1 -Root $env:GITHUB_WORKSPACE -DataDir "$env:GITHUB_WORKSPACE/data" -SkipDeploy
+
+      # Las llaves de Facebook ya no hacen falta: fuera del disco ANTES de correr las reglas y de publicar (si algo falla despues, no quedan ahi).
+      - name: Borrar las llaves de Facebook del disco
+        if: ${{ always() }}
+        shell: bash
+        run: rm -f data/facebook-tokens.json
+
+      - name: Armar las herramientas (radar, tablero, ebooks, flujos, fabrica, editor) y el menu
+        shell: pwsh
+        run: ./scripts/Armar-Suite.ps1
+
+      - name: Reglas automaticas (revisar)
+        shell: bash
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          REGLAS_CLAVE: ${{ secrets.REGLAS_CLAVE }}
+          REGLAS_URL: ${{ vars.DASH_URL }}
+          AVISO_TELEGRAM_TOKEN: ${{ secrets.AVISO_TELEGRAM_TOKEN }}
+          AVISO_TELEGRAM_CHAT:  ${{ secrets.AVISO_TELEGRAM_CHAT }}
+          TZ: America/Bogota
+        run: node scripts/reglas-auto.cjs
+
+      - name: Juntar lo que se publica
+        shell: bash
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp dashboard-ventas.html dist/index.html
+          cp dashboard-*.html dist/
+          rm -f dist/dashboard-ventas.html
+          # la pagina de cada socio de pais (solo su pais, sin los nombres de las ofertas): la abre su contrasena de pais
+          if ls socio-*.html >/dev/null 2>&1; then cp socio-*.html dist/; fi
+          cp reglas.html radar.html banderas.woff2 dist/
+          cp tablero.html pdf.html modelar-pdf.html apis.html ofertas.html fabrica.html editor-anuncios.html dist/
+          if [ -f editor-anuncios.zip ]; then cp editor-anuncios.zip dist/; fi
+          cp -r vendor dist/vendor
+          if [ -f data/reglas-auto-log.json ]; then cp data/reglas-auto-log.json dist/reglas-auto-log.json; fi
+          cp templates/404.html dist/404.html
+          cp -r functions dist/functions
+          # No se publica algo viejo: el dashboard tiene que haberse armado en esta corrida.
+          ahora=$(date -u +%s)
+          sello=$(grep -oE '"generatedAt":"[^"]+"' dist/index.html | head -1 | cut -d'"' -f4)
+          if [ -z "$sello" ]; then echo "::error::El dashboard no trae fecha de armado; no se publica."; exit 1; fi
+          edad=$(( ahora - $(date -u -d "$sello" +%s) ))
+          echo "  dashboard armado $sello (hace ${edad}s)"
+          if [ "$edad" -gt 2700 ] || [ "$edad" -lt -300 ]; then echo "::error::El dashboard no se armo en esta corrida; no se publica."; exit 1; fi
+
+      - name: Publicar en Cloudflare Pages
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0   # v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROYECTO }} --branch=main
+
+      - name: Reglas automaticas (ejecutar)
+        shell: bash
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          REGLAS_CLAVE: ${{ secrets.REGLAS_CLAVE }}
+          REGLAS_URL: ${{ vars.DASH_URL }}
+          AVISO_TELEGRAM_TOKEN: ${{ secrets.AVISO_TELEGRAM_TOKEN }}
+          AVISO_TELEGRAM_CHAT:  ${{ secrets.AVISO_TELEGRAM_CHAT }}
+          TZ: America/Bogota
+        run: node scripts/reglas-auto.cjs --ejecutar
+
+      # Guarda en el repositorio lo que tiene que sobrevivir entre corridas: el registro de las reglas (siempre que cambie) y, una vez al dia
+      # (7 a. m. de Colombia) o al dispararlo a mano, el gasto de Facebook (Facebook solo se vuelve a pedir de la ultima semana; lo anterior sale de aqui).
+      - name: Guardar registro de reglas e historial de gasto
+        shell: bash
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          A_MANO: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          set -u
+          ARCHIVOS=""
+          [ -f data/reglas-auto-log.json ] && ARCHIVOS="data/reglas-auto-log.json"
+          if [ "$A_MANO" = "true" ] || [ "$(TZ=America/Bogota date +%H)" = "07" ]; then
+            for f in data/facebook-graph.json data/fx-overrides.json; do [ -f "$f" ] && ARCHIVOS="$ARCHIVOS $f"; done
+          fi
+          if [ -z "$ARCHIVOS" ]; then echo "nada que guardar"; exit 0; fi
+          tmp=$(mktemp -d)
+          git clone --depth 1 --branch "${GITHUB_REF_NAME}" --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$tmp/repo"
+          for f in $ARCHIVOS; do mkdir -p "$tmp/repo/$(dirname "$f")"; cp "$f" "$tmp/repo/$f"; done
+          cd "$tmp/repo"
+          git config user.name  'dashboard-bot'
+          git config user.email 'dashboard-bot@users.noreply.github.com'
+          git add $ARCHIVOS
+          if git diff --cached --quiet; then echo "ya estaba al dia"; else git commit -q -m 'Registro de reglas e historial de gasto' && git push -q && echo "guardado"; fi
+          cd /; rm -rf "$tmp"
+
+      - name: Limpiar secretos del area de trabajo
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          rm -f data/facebook-tokens.json data/reglas-auto-pendientes.json
+          find "$RUNNER_TEMP" -mindepth 1 -maxdepth 1 -name 'tmp.*' -exec rm -rf {} + 2>/dev/null || true

@@ -1,0 +1,42 @@
+# Esta carpeta es la FUENTE del Editor de anuncios (codigo, plantillas y guias). Lo que se instala o se
+# produce en cada PC no se sube al repo. La plantilla de la clave se llama env-ejemplo.txt (y no .env.example)
+# porque Auditar-Seguridad.ps1 del dash falla con cualquier archivo que empiece por .env.
+
+# Secretos
+.env
+.env.*
+# la conexion que se baja del dash lleva la llave del editor (Conectar-Editor.cmd la pasa a .env y la borra)
+conexion-editor*.txt
+
+# Dependencias y modelos: se bajan en cada PC con Instalar-Editor.cmd
+node_modules/
+.venv/
+modelos/
+.cache/
+__pycache__/
+*.pyc
+
+# Estado de cada instalacion y paquetes armados
+.instalado.json
+instalacion.log
+_paquete/
+*.nuevo
+
+# Material de trabajo y resultados (pesado o de cada PC)
+pruebas/
+costos.jsonl
+anuncios/*
+!anuncios/LEEME.txt
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+*.pdf
+
+# Productos de mentira de las autopruebas (se borran solos; si una prueba se corta a la mitad, que no se suban por error)
+public/productos/_autoprueba_*/

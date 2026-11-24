@@ -1,0 +1,2 @@
+UNA CARPETA POR PRODUCTO, con nombre corto, en minúsculas y sin espacios (por ejemplo velas, brownies).
+Para uno nuevo: copia producto-ejemplo y cámbiale el nombre, o dile a Claude «hay un producto nuevo en public/productos/[producto], arma su ficha».

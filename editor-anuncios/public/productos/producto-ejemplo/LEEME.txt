@@ -1,0 +1,2 @@
+CARPETA DE EJEMPLO. Tú subes aquí: ebook.pdf (el ebook o material que se vende; es lo único que necesitas del producto).
+Claude genera aquí: portada.jpg, paginas/, producto.json y broll-tiktok/indice.json. Las subcarpetas tienen su propio LEEME.txt.

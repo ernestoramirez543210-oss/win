@@ -1,0 +1,46 @@
+INSTALAR EL EDITOR DE ANUNCIOS EN UN PC NUEVO (el del editor)
+==============================================================
+
+De donde sale el instalador
+  - Del dash (el sitio de la suite): menu "Herramientas" > "Editor de anuncios" > "Descargar instalador (.zip)". Esa pagina tambien trae
+    estos mismos pasos y las frases para pedirle los anuncios a Claude. Lo ven el dueno y el editor de video.
+  - O del .zip que te mande el dueno (lo arma Empaquetar-Editor.ps1; es el mismo archivo).
+
+Antes de empezar
+  - Windows 10 u 11, 16 GB de RAM y unos 15 GB libres en disco.
+  - La app de escritorio de Claude (claude.ai/download) con una cuenta Pro o Max.
+  - Internet. La instalacion descarga unos 2,5 GB (incluye los modelos de CLIP del anuncio automatico, ~300 MB) y tarda de 10 a 20 minutos.
+  - Para los anuncios con IA: la conexion con el dash (un archivo conexion-editor.txt que se baja del dash; es privado).
+    El editor ya no usa la clave de APIMart: imagenes, clips, texto y voz se piden por el dash.
+
+Paso a paso
+  1. Descomprime el .zip en cualquier carpeta (por ejemplo en Descargas).
+  2. Doble clic en  Instalar-Editor.cmd
+       - Si Windows dice "Windows protegio su PC": clic en "Mas informacion" y luego "Ejecutar de todas formas".
+       - Te pregunta en que carpeta instalar (Enter = D:\editor-anuncios; si no hay disco D:, C:\editor-anuncios).
+         No uses el Escritorio ni OneDrive: los videos pesan mucho.
+       - Si faltan Node.js, Python 3.12 o ffmpeg, los instala con winget (Windows puede pedir permiso: acepta).
+       - Si al final dice que cierres la ventana y lo abras otra vez, hazlo: es para que Windows vea los programas nuevos.
+  3. Cuando diga LISTO:
+       - Abre la app de Claude, entra a la pestana Code y abre la carpeta de instalacion (D:\editor-anuncios) COMO PROYECTO.
+         Abre la carpeta del proyecto, no una subcarpeta.
+       - Musica de fondo: dile a Claude  "crea musica de fondo"  (usa scripts\crear_musica.py: pistas propias, sin licencia de terceros)
+         o copia mp3 libres de derechos en  public\musica\biblioteca\
+       - Para anuncios con IA, conecta el editor con el dash: en el dash, menu "Herramientas" > "Editor de anuncios" >
+         "Descargar conexion" (queda en Descargas como conexion-editor.txt) y doble clic en  Conectar-Editor.cmd  (en la carpeta
+         de instalacion). Pasa sus dos lineas a .env, quita la clave vieja de APIMart y borra el archivo bajado. Si la bajas ANTES
+         de instalar, el instalador la toma solo. No escribas esas lineas a mano ni las pegues en el chat.
+  4. Comprueba que todo funciona: doble clic en  Probar-Editor.cmd  (tarda unos minutos y no gasta nada; al final dice PRUEBA OK).
+  5. Empieza: en Claude, dile  "Hay un producto nuevo en public/productos/[producto], arma su ficha."  o lee LEEME.txt.
+
+Actualizar a una version nueva
+  Cuando el dueno mande un .zip nuevo: descomprimelo (donde quieras) y haz doble clic en su Instalar-Editor.cmd.
+  Actualiza el codigo y NO toca tus productos, videos, musica ni preferencias.md (en .env solo pone la conexion con el dash si
+  encuentra el archivo bajado). Si editaste algun archivo del codigo (por ejemplo CLAUDE.md), conserva el tuyo y deja el nuevo al lado
+  con la terminacion .nuevo.
+  Si un comando dice que "este editor esta viejo (426)", el dash ya no atiende esa version: baja el instalador nuevo y actualiza asi.
+
+Si algo falla
+  - Vuelve a correr Instalar-Editor.cmd: se puede repetir sin problema y retoma lo que falte.
+  - Si vuelve a fallar, manda al dueno el archivo instalacion.log que queda en la carpeta de instalacion.
+  - Para ver que falta:  Instalar-Editor.cmd -SoloVerificar

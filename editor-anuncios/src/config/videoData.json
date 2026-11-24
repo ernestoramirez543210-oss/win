@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "anuncio": "demo",
+    "producto": "producto-ejemplo",
+    "tipo": "tiktok",
+    "fps": 30,
+    "ancho": 1080,
+    "alto": 1920,
+    "duracion": 6
+  },
+  "estilo": {
+    "fondo": "#0B1020",
+    "colorPrimario": "#E11D48",
+    "subtitulos": {
+      "tamano": 82,
+      "color": "#FFFFFF",
+      "colorActivo": "#FFE14D",
+      "contorno": "#000000",
+      "maxPalabras": 3,
+      "mayusculas": true
+    },
+    "textoGrande": {"tamano": 112}
+  },
+  "zonaInferiorLibre": 280,
+  "tomas": [],
+  "palabras": [
+    {"texto": "Esto", "inicio": 0.3, "fin": 0.6},
+    {"texto": "es", "inicio": 0.6, "fin": 0.75},
+    {"texto": "una", "inicio": 0.75, "fin": 0.95},
+    {"texto": "prueba", "inicio": 0.95, "fin": 1.5},
+    {"texto": "del", "inicio": 1.5, "fin": 1.7},
+    {"texto": "editor", "inicio": 1.7, "fin": 2.1},
+    {"texto": "de", "inicio": 2.1, "fin": 2.25},
+    {"texto": "anuncios.", "inicio": 2.25, "fin": 2.9}
+  ],
+  "textosGrandes": [
+    {"texto": "Editor listo", "inicio": 3.2, "fin": 4.6, "estilo": "caja"}
+  ],
+  "producto": [],
+  "cta": {"texto": "Prueba superada", "subtexto": "demo del editor", "inicio": 4.8, "duracion": 1.2},
+  "audio": {}
+}

@@ -1,0 +1,1208 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APIs — Suite</title>
+<style>
+  body { margin:0; background:#020916; color:#f3f5fa;
+         font:14px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:26px 22px 60px; }
+  h1 { font-size:22px; font-weight:800; letter-spacing:-.5px; margin:0 0 4px; }
+  .sub { color:#90a2cd; font-size:13px; margin:0 0 22px; }
+  .card { background:#061026; border:1px solid #112247; border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+  .card h2 { font-size:14px; margin:0 0 3px; font-weight:700; }
+  .card .hint { color:#7e93c5; font-size:12.5px; margin:0 0 16px; }
+  label { display:block; font-size:12px; color:#a7b6d8; margin:0 0 5px; font-weight:600; }
+  input, select, textarea {
+    width:100%; box-sizing:border-box; padding:9px 11px; border-radius:8px; border:1px solid #132751;
+    background:#09152f; color:#f3f5fa; font:13px inherit; margin-bottom:12px;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#4d8bff; }
+  .fila { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  @media (max-width:640px){ .fila{ grid-template-columns:1fr; } }
+  /* Celular: los controles de los formularios y de la lista de proveedores medían 33-35 px (y «Ver modelos
+     disponibles» 22 px), chicos para el dedo. Todo lo que se toca llega a 40 px. */
+  @media (max-width:640px){ button, select, input:not([type=hidden]), summary { min-height:40px; } }
+  @media (max-width:640px){ summary { display:flex; align-items:center; } }
+  @media (max-width:640px){ .saldo-enlace { display:inline-flex; align-items:center; min-height:40px; } }
+  button { border:0; border-radius:8px; padding:9px 15px; cursor:pointer; font:13px inherit; font-weight:650; }
+  .primario { background:var(--accion); color:var(--accion-texto); }
+  .fantasma { background:#0d1b39; color:#d3daeb; }
+  .peligro  { background:#2a1420; color:#ff8fb0; }
+  .prov { border:1px solid #112247; border-radius:11px; padding:14px 16px; margin-bottom:11px; background:#040b1b; }
+  .prov .top { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:4px; }
+  .prov .nom { font-weight:700; font-size:13.5px; }
+  .pill { font-size:10.5px; padding:2px 8px; border-radius:99px; font-weight:700; letter-spacing:.03em; }
+  .ok    { background:#0d2a22; color:#38e0a5; }
+  .falta { background:#2a1420; color:#ff8fb0; }
+  .activo{ background:#0a1836; color:#5ab8ff; }
+  .prov .meta { color:#6982bb; font-size:12px; overflow-wrap:anywhere; }
+  .acciones { display:flex; gap:8px; flex-wrap:wrap; margin-top:11px; }
+  .aviso { padding:11px 14px; border-radius:9px; font-size:12.5px; margin-bottom:16px; display:none; }
+  .aviso.malo  { background:#2a1420; color:#ff8fb0; display:block; }
+  .aviso.bueno { background:#0d2a22; color:#38e0a5; display:block; }
+  /* El aviso sigue a la vista al bajar la pagina. En el celular el formulario esta abajo y el aviso arriba:
+     quien guardaba una llave no veia ni el «Guardado» ni el error, y creia que no habia pasado nada. */
+  .aviso { position:sticky; top:8px; z-index:30; box-shadow:0 6px 20px rgba(0,0,0,.5); }
+  .nota { color:#6982bb; font-size:12px; border-left:2px solid #132751; padding-left:11px; margin-top:14px; }
+  code { background:#09152f; padding:1px 5px; border-radius:4px; font-size:12px; }
+  /* Saldos: una tarjeta por proveedor. En celular todo apila y cada control mide >=40px. */
+  .bajo { background:#2a2110; color:#ffc857; }
+  .saldo-num { font-size:26px; font-weight:800; letter-spacing:-.5px; margin:2px 0 2px; }
+  .saldo-num small { font-size:12px; font-weight:600; color:#7e93c5; letter-spacing:0; margin-left:6px; }
+  .saldo-det { color:#90a2cd; font-size:12.5px; margin:2px 0; overflow-wrap:anywhere; }
+  .saldo-ctl { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-top:12px; }
+  .saldo-ctl > div { flex:1 1 200px; min-width:0; }
+  .saldo-ctl input { margin-bottom:0; min-height:40px; }
+  .saldo-ctl button { min-height:40px; }
+  .saldo-alerta { display:none; background:#2a2110; color:#ffc857; border-radius:9px; padding:10px 13px;
+                  font-size:13px; font-weight:600; margin-bottom:14px; }
+  .saldo-enlace { display:inline-block; margin-top:10px; font-size:12.5px; color:#5ab8ff; }
+  /* Proveedores: cada fila dice para que se usa (texto, imagen, audio, video). */
+  .pill.uso { background:#14213f; color:#9fb4e8; }
+  .sec { color:#90a2cd; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin:16px 0 8px; }
+  /* APIMart: el estado de la conexion y las listas de modelos que ve la llave. */
+  .am-lin { color:#c9d4f0; font-size:13px; margin:6px 0; overflow-wrap:anywhere; }
+  .am-lin b { color:#f3f5fa; }
+  .am-lin.mal { color:#ff8fb0; }
+  details { margin-top:8px; }
+  summary { cursor:pointer; color:#9fb4e8; font-size:12.5px; font-weight:650; padding:6px 0; }
+  .lista-mod { display:flex; flex-wrap:wrap; gap:6px; max-height:230px; overflow:auto; padding:8px; min-width:0;
+               background:#040b1b; border:1px solid #112247; border-radius:9px; }
+  .lista-mod code { overflow-wrap:anywhere; }
+</style>
+<div class="wrap">
+  <h1>APIs conectadas</h1>
+  <p class="sub">Las llaves se guardan en Cloudflare, del lado del servidor. Nunca vuelven al navegador
+     ni quedan en el HTML — abajo solo ves los últimos 4 caracteres para reconocerlas.</p>
+
+  <div class="aviso" id="aviso"></div>
+
+  <div class="card" id="card-saldos">
+    <h2>Saldo de las APIs</h2>
+    <p class="hint">Together, OpenAI, Anthropic y Gemini no dejan consultar el saldo por API, así que se
+       estima: anota aquí el saldo que ves en el panel del proveedor y la suite le resta lo que gasta desde
+       ese momento (ebooks, mockups y textos). Cada vez que anotes otro número, el estimado se corrige.</p>
+    <div class="saldo-alerta" id="saldos-alerta"></div>
+    <div id="saldos"><div class="nota" style="margin:0">Cargando…</div></div>
+    <div class="nota">Solo cuenta lo que pasa por la suite. El gasto hecho directo en el panel del
+       proveedor, y las APIs de audio y video, no se descuentan: por eso conviene volver a anotar el saldo
+       de vez en cuando.</div>
+  </div>
+
+  <div class="card">
+    <h2>Proveedores</h2>
+    <p class="hint">Aquí salen todas las APIs conectadas: texto, imagen, audio y video. De texto puede haber
+       varias y el que marques como activo es el que usa el agente y el resto de la suite; de imagen, audio y
+       video hay una de cada una. Se conectan abajo, en «Conectar una API».</p>
+    <div id="lista"></div>
+  </div>
+
+  <div class="card">
+    <h2>Conectar una API</h2>
+    <p class="hint">Elige primero qué tipo de API es. Cada tipo tiene su propio formulario abajo,
+       para que nunca te quedes sin dónde meter una llave nueva sea de texto, imagen, audio o video.</p>
+    <label for="cat-selector">Tipo de API</label>
+    <select id="cat-selector" style="margin-bottom:16px">
+      <option value="apimart" selected>APIMart (texto + imagen + video con una sola llave)</option>
+      <option value="texto">Texto (redacción / IA del agente)</option>
+      <option value="imagen">Imagen</option>
+      <option value="audio">Audio / voz</option>
+      <option value="video">Video</option>
+    </select>
+  </div>
+
+  <div class="card" id="bloque-apimart">
+    <h2>APIMart — una llave para todo</h2>
+    <p class="hint">APIMart vende con una sola llave modelos de texto (GPT, Claude, Gemini, DeepSeek…), de
+       imagen y de video. Pégala aquí una vez: la suite la valida con APIMart y la deja lista para el texto y
+       las imágenes, y para el video cuando haya generador. Las listas de abajo son lo que tu llave puede
+       usar de verdad.</p>
+    <div id="apimart-estado"><div class="nota" style="margin:0">Cargando…</div></div>
+    <form id="form-apimart" autocomplete="off" style="margin-top:14px">
+      <label for="am-llave">API key de APIMart</label>
+      <input id="am-llave" type="password" placeholder="pegar aquí" autocomplete="off">
+      <div class="acciones">
+        <button type="submit" class="primario" id="am-conectar">Conectar APIMart</button>
+        <button type="button" class="fantasma" id="am-actualizar" disabled>Actualizar modelos y saldo</button>
+      </div>
+    </form>
+    <div id="apimart-detalle"></div>
+    <div class="nota">La llave de APIMart es una sola: si la cambias aquí, o en Texto o en Imagen, se actualiza
+       en las tres partes. Si en las listas falta algún modelo, revisa en
+       <a href="https://apimart.ai/keys" target="_blank" rel="noopener" style="color:#5ab8ff">apimart.ai/keys</a>
+       que la llave no tenga modelos o grupos restringidos: APIMart solo muestra lo que la llave tiene
+       permitido.</div>
+  </div>
+
+  <div class="card" id="bloque-texto" style="display:none">
+    <h2>Texto — agregar o editar</h2>
+    <p class="hint">Cualquier API compatible con OpenAI o Gemini sirve, y también una propia:
+       elige «Otra» y escribe la URL completa.</p>
+    <form id="form">
+      <input type="hidden" id="f-id">
+      <div class="fila">
+        <div>
+          <label for="f-nombre">Nombre</label>
+          <input id="f-nombre" placeholder="Gemini de producción" required>
+        </div>
+        <div>
+          <label for="f-tipo">Tipo</label>
+          <select id="f-tipo">
+            <option value="gemini">Google Gemini</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="together">Together.ai (Llama, Qwen, Mistral)</option>
+            <option value="apimart">APIMart (GPT, Claude, Gemini, DeepSeek…)</option>
+            <option value="compatible">Otra compatible con OpenAI</option>
+          </select>
+        </div>
+      </div>
+      <div class="fila">
+        <div>
+          <label for="f-modelo">Modelo</label>
+          <select id="f-modelo" style="display:none"></select>
+          <input id="f-modelo-txt" placeholder="escribe el id, o guarda la llave y pulsa «Ver modelos»">
+          <button type="button" class="fantasma" id="btn-modelos-texto"
+                  style="padding:5px 11px;font-size:11.5px;margin:-6px 0 12px">Ver modelos disponibles</button>
+        </div>
+        <div>
+          <label for="f-llave">API key</label>
+          <input id="f-llave" type="password" placeholder="pegar aquí" autocomplete="off">
+        </div>
+      </div>
+      <div id="wrap-url" style="display:none">
+        <label for="f-url">URL del endpoint</label>
+        <input id="f-url" placeholder="https://mi-proveedor.com/v1/chat/completions">
+      </div>
+      <div class="acciones">
+        <button type="submit" class="primario">Guardar</button>
+        <button type="button" class="fantasma" id="btn-limpiar">Limpiar</button>
+      </div>
+    </form>
+    <div class="nota">
+      Al editar un proveedor que ya tiene llave, el campo llega vacío: déjalo así para conservarla
+      y escribe algo solo si la vas a cambiar. Para borrar una llave, escribe <code>-</code> y guarda.
+    </div>
+    <div class="nota" id="nota-together" style="display:none;border-left-color:#e0c038">
+      Together lista modelos que <b>no siempre se pueden llamar</b>: los que no son serverless
+      dan 400 aunque figuren en el catálogo. Pulsa <b>Probar conexión</b> antes de usarlo.
+      Comprobados el 07-08-2026: sirven <code>openai/gpt-oss-20b</code>,
+      <code>openai/gpt-oss-120b</code> y <code>meta-llama/Llama-3.3-70B-Instruct-Turbo</code>.
+      Ninguno lee imágenes, así que con Together solo funciona el modo «desde un tema»,
+      no modelar anuncios.
+    </div>
+    <div class="nota" id="nota-apimart-texto" style="display:none;border-left-color:#e0c038">
+      APIMart reparte GPT, Claude, Gemini y DeepSeek con una sola llave, la misma que usa para imagen y video.
+      Si ya la conectaste en «APIMart», déjala vacía aquí y se usa esa. Con la llave guardada, pulsa
+      «Ver modelos disponibles» para elegir de la lista real, o «Otro modelo» para escribir un id
+      (por ejemplo <code>gemini-2.5-flash</code> o <code>gpt-5-mini</code>). Pulsa <b>Probar conexión</b>
+      antes de usarlo.
+    </div>
+  </div>
+  <div class="card" id="bloque-imagen" style="display:none">
+    <h2>Imagen</h2>
+    <p class="hint">Para el generador de ebooks visuales. FLUX.1-schnell es el más barato (~$0.003/imagen);
+       FLUX.2-dev da mejor calidad y cuesta un poco más.</p>
+    <form id="form-img">
+      <div class="fila">
+        <div>
+          <label for="fi-tipo">Proveedor</label>
+          <select id="fi-tipo">
+            <option value="together">Together.ai (Flux)</option>
+            <option value="replicate">Replicate (Flux)</option>
+            <option value="apimart">APIMart (Nano Banana, GPT-Image, Imagen…)</option>
+            <option value="compatible">Otra (pegar URL propia)</option>
+          </select>
+        </div>
+        <div>
+          <label for="fi-modelo">Modelo</label>
+          <select id="fi-modelo"><option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell - el más barato</option></select>
+          <input id="fi-modelo-txt" style="display:none" placeholder="escribe el id del modelo">
+        </div>
+      </div>
+      <div class="nota" id="nota-apimart" style="display:none;margin:0 0 12px">La lista es la de modelos de
+        imagen que tu llave de APIMart puede usar: primero los que tienen precio conocido (de lista al
+        14-10-2026; con el descuento de la cuenta, hasta 20&nbsp;% menos), del más barato al más caro, y
+        después el resto «sin precio»: funcionan, pero el estimador de ebooks no calcula su costo. Si falta
+        alguno, elige «Otro modelo» y escribe su id. Los más baratos: <b>z-image-turbo</b> ~$0.013 ·
+        <b>gemini-3.1-flash-lite-image-ext</b> y <b>gemini-2.5-flash-image-preview</b> ~$0.016.
+        Ojo: <b>gemini-3.1-flash-lite-image</b>, sin «-ext», cobra por tokens y sale a ~$0.034. Algunos
+        modelos no aceptan la proporción 3:4 de las páginas del ebook (imagen-4, gpt-image-1,
+        grok-imagine-1.5): si uno falla con «size», prueba otro. Midjourney no sirve aquí (usa otras
+        rutas). APIMart tarda unos segundos por imagen.</div>
+      <div class="nota" id="img-modelos-nota" style="display:none;margin:0 0 12px;border-left-color:#e0c038"></div>
+      <div id="wrap-url-img" style="display:none">
+        <label for="fi-url">URL del endpoint</label>
+        <input id="fi-url" placeholder="https://mi-proveedor.com/v1/images/generations">
+        <div class="nota" style="margin:-6px 0 12px">Sirve casi cualquier proveedor: la mayoria
+          usa el mismo formato de OpenAI para generar imagenes, asi que solo hace falta pegar
+          su URL y su llave.</div>
+      </div>
+      <!-- La portada es UNA imagen por ebook contra treinta de paginas: subirle la calidad
+           cuesta centavos y es la unica que alguien mira antes de decidir si el producto se
+           ve serio. Vacio = el mismo de las paginas, que es como funcionaba antes. -->
+      <label for="fi-modelo-portada">Modelo solo para la portada <span style="color:#6982bb;font-weight:400">— opcional</span></label>
+      <select id="fi-modelo-portada"><option value="">El mismo de las páginas</option></select>
+      <input id="fi-modelo-portada-txt" style="display:none" placeholder="escribe el id del modelo de portada">
+      <div class="nota" style="margin:-2px 0 10px">Una imagen por ebook. Aquí conviene el bueno
+        (gpt-image, FLUX.2-max, imagen-4-ultra); las páginas siguen con el barato.</div>
+
+      <!-- El mockup de una oferta lleva bastante texto (titulo, viñetas de los bonos, sellos)
+           y ahi los modelos "buenos con texto" (gpt-image, seedream, ideogram) se notan mucho
+           mas que en la portada de un ebook, que casi no lleva letras dentro de la imagen. -->
+      <label for="fi-modelo-mockup">Modelo solo para los mockups de ofertas <span
+        style="color:#6982bb;font-weight:400">— opcional</span></label>
+      <select id="fi-modelo-mockup"><option value="">El mismo de las páginas</option></select>
+      <input id="fi-modelo-mockup-txt" style="display:none" placeholder="escribe el id del modelo de mockup">
+      <div class="nota" style="margin:-2px 0 10px">El mockup lleva títulos y viñetas dentro de
+        la imagen: conviene un modelo bueno con texto. Si lo dejas vacío, se usa
+        <b>gpt-image-2</b> (el mejor de la familia GPT en Together) en vez del barato de las
+        páginas. Las instrucciones de composición se editan en Flujos ZapData → Mockup.</div>
+      <label for="fi-llave">API key</label>
+      <input id="fi-llave" type="password" placeholder="pegar aquí" autocomplete="off">
+      <div class="acciones">
+        <button type="submit" class="primario">Guardar imagen API</button>
+        <button type="button" class="fantasma" id="btn-modelos">Actualizar lista de modelos</button>
+      </div>
+    </form>
+    <div id="img-estado"></div>
+  </div>
+  <div class="card" id="bloque-audio" style="display:none">
+    <h2>Audio / voz</h2>
+    <p class="hint">Para clonar la voz y generar las notas de voz del funnel. Fish Audio cobra
+       por uso ($15 por millón de caracteres, sin mensualidad) — la llave se pide en
+       <code>fish.audio</code>, sección API/Developer, no en los planes de la app web.</p>
+    <form id="form-audio">
+      <label for="fa-tipo">Proveedor</label>
+      <select id="fa-tipo">
+        <option value="fishaudio">Fish Audio</option>
+        <option value="compatible">Otra (pegar URL propia)</option>
+      </select>
+      <div id="wrap-fa-modelo">
+        <label for="fa-modelo">Modelo</label>
+        <select id="fa-modelo">
+          <option value="s2.1-pro">s2.1-pro (calidad, de pago)</option>
+          <option value="s2.1-pro-free">s2.1-pro-free (para probar, gratis)</option>
+        </select>
+      </div>
+      <input id="fa-modelo-txt" style="display:none" placeholder="escribe el id del modelo">
+      <div id="wrap-url-audio" style="display:none">
+        <label for="fa-url">URL del endpoint</label>
+        <input id="fa-url" placeholder="https://mi-proveedor.com/v1/audio/speech">
+        <div class="nota" style="margin:-6px 0 12px">Sirve casi cualquier proveedor: la mayoria
+          usa el mismo formato de OpenAI para generar audio, asi que solo hace falta pegar
+          su URL y su llave.</div>
+      </div>
+      <label for="fa-voz">Voz por defecto (reference id / nombre de voz)</label>
+      <input id="fa-voz" placeholder="se pega el id de la voz ya creada en el proveedor" autocomplete="off">
+      <label for="fa-llave">API key</label>
+      <input id="fa-llave" type="password" placeholder="pegar aquí" autocomplete="off">
+      <div class="acciones">
+        <button type="submit" class="primario">Guardar audio API</button>
+      </div>
+    </form>
+    <div id="audio-estado"></div>
+  </div>
+
+  <div class="card" id="bloque-video" style="display:none">
+    <h2>Video</h2>
+    <p class="hint">Todavía no hay generador de video en la suite — este formulario solo guarda
+       la llave para cuando lo haya. Cualquier proveedor sirve: escribe la URL de su endpoint.</p>
+    <form id="form-video">
+      <label for="fv-nombre">Proveedor</label>
+      <input id="fv-nombre" placeholder="ej. Runway, Luma, Kling...">
+      <label for="fv-url">URL del endpoint <span style="color:#6982bb;font-weight:400">— opcional por ahora</span></label>
+      <input id="fv-url" placeholder="https://mi-proveedor-de-video.com/v1/...">
+      <label for="fv-llave">API key</label>
+      <input id="fv-llave" type="password" placeholder="pegar aquí" autocomplete="off">
+      <div class="acciones">
+        <button type="submit" class="primario">Guardar video API</button>
+      </div>
+    </form>
+    <div id="video-estado"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Solo un punto de partida. El catalogo real se pide con «Ver modelos disponibles»,
+  // que es lo unico fiable: estos ids se retiran sin avisar.
+  var MODELO_SUGERIDO = {
+    gemini: 'gemini-flash-latest', openai: 'gpt-4o-mini',
+    anthropic: 'claude-haiku-4-5-20251001',
+    together: 'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+    apimart: 'gemini-2.5-flash',
+    compatible: '',
+  };
+  // usos = lo conectado que NO es texto (imagen, audio, video): sale en la lista de Proveedores junto a los de texto.
+  var estado = { proveedores: [], activo: '', usos: {} };
+  // Lo ultimo que dijo /api/apimart. Los formularios de Texto e Imagen lo consultan para saber si la llave de
+  // APIMart ya esta guardada (y entonces no hace falta volver a pegarla).
+  var apimart = { conectada: false };
+  var OTRO = '__otro__';      // la opcion «Otro modelo (escribir el id)» de los selectores
+  var MODELO_IMG_APIMART = 'gemini-3.1-flash-lite-image-ext';
+
+  // Cada tipo de texto muestra solo su propia nota (y la URL solo "Otra"). Un solo lugar para los
+  // tres sitios que lo necesitan: cambiar de tipo, editar uno guardado y limpiar el formulario.
+  function notasTexto(t) {
+    el('wrap-url').style.display = t === 'compatible' ? '' : 'none';
+    el('nota-together').style.display = t === 'together' ? '' : 'none';
+    el('nota-apimart-texto').style.display = t === 'apimart' ? '' : 'none';
+    // Al editar uno guardado el placeholder lo pone el propio «Editar» («ya hay una guardada…»).
+    if (!el('f-id').value) {
+      el('f-llave').placeholder = (t === 'apimart' && apimart.conectada)
+        ? 'APIMart ya está conectada: déjalo vacío para usar la misma llave' : 'pegar aquí';
+    }
+  }
+
+  function el(id) { return document.getElementById(id); }
+  var avisoTimer = null;
+  function avisar(txt, bueno, ms) {
+    var a = el('aviso');
+    a.className = 'aviso ' + (bueno ? 'bueno' : 'malo');
+    a.textContent = txt;
+    clearTimeout(avisoTimer);
+    if (bueno) avisoTimer = setTimeout(function () { a.className = 'aviso'; }, ms || 4000);
+  }
+
+  var NOMBRE_IMG = { together: 'Together.ai', replicate: 'Replicate', apimart: 'APIMart', compatible: 'Otra API (URL propia)' };
+  var NOMBRE_AUDIO = { fishaudio: 'Fish Audio', compatible: 'Otra API (URL propia)' };
+
+  function pillLlave(tiene, cola) {
+    return tiene ? '<span class="pill ok">llave ····' + esc(cola) + '</span>' : '<span class="pill falta">sin llave</span>';
+  }
+  // Una fila de imagen / audio / video: lo mismo que las de texto, sin activar ni borrar, con «Editar» que
+  // lleva al formulario de ese tipo.
+  function filaUso(uso, nombre, meta, tiene, cola) {
+    return '<div class="prov"><div class="top"><span class="nom">' + esc(nombre) + '</span>' +
+      '<span class="pill uso">' + uso + '</span>' + pillLlave(tiene, cola) + '</div>' +
+      '<div class="meta">' + esc(meta) + '</div>' +
+      '<div class="acciones"><button class="fantasma" data-uso="' + uso + '">Editar</button></div></div>';
+  }
+
+  function pintar() {
+    var c = el('lista');
+    var html = '';
+    if (!estado.proveedores.length) {
+      html += '<p class="hint" style="margin:0">Todavía no hay ninguno de texto. Agrega el primero abajo.</p>';
+    }
+    html += estado.proveedores.map(function (p) {
+      var esActivo = p.id === estado.activo;
+      return '<div class="prov">' +
+        '<div class="top"><span class="nom">' + esc(p.nombre) + '</span><span class="pill uso">texto</span>' +
+        (esActivo ? '<span class="pill activo">activo</span>' : '') + pillLlave(p.tieneLlave, p.colaLlave) + '</div>' +
+        '<div class="meta">' + esc(p.tipo) + ' · ' + esc(p.modelo || '(sin modelo)') +
+        (p.url ? ' · ' + esc(p.url) : '') + '</div>' +
+        '<div class="acciones">' +
+        (esActivo ? '' : '<button class="fantasma" data-act="activar" data-id="' + p.id + '">Usar esta</button>') +
+        '<button class="fantasma" data-act="probar" data-id="' + p.id + '">Probar conexión</button>' +
+        '<button class="fantasma" data-act="editar" data-id="' + p.id + '">Editar</button>' +
+        '<button class="peligro"  data-act="borrar" data-id="' + p.id + '">Borrar</button>' +
+        '</div></div>';
+    }).join('');
+    var u = estado.usos || {};
+    var filas = '';
+    if (u.imagen) {
+      filas += filaUso('imagen', NOMBRE_IMG[u.imagen.tipo] || u.imagen.tipo,
+        (u.imagen.modelo || '(sin modelo)') + (u.imagen.portada ? ' · portada: ' + u.imagen.portada : ''),
+        u.imagen.tiene, u.imagen.cola);
+    }
+    if (u.audio) filas += filaUso('audio', NOMBRE_AUDIO[u.audio.tipo] || u.audio.tipo, u.audio.modelo || '(modelo por defecto)', u.audio.tiene, u.audio.cola);
+    if (u.video) filas += filaUso('video', u.video.nombre || 'Video', u.video.url || '(sin URL todavía)', u.video.tiene, u.video.cola);
+    if (filas) html += '<div class="sec">Imagen, audio y video</div>' + filas;
+    c.innerHTML = html;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m];
+    });
+  }
+
+  function cargar() {
+    return fetch('/api/config', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('Entra como dueño para administrar las APIs.');
+        if (r.status === 501) throw new Error('Falta el almacén KV en Cloudflare. Corre scripts\\Deploy-Suite.ps1 y vuelve a desplegar.');
+        // Un 404 sin cuerpo hacia estallar r.json() con "Unexpected end of JSON input",
+        // que no le dice nada a nadie. Se traduce antes de intentar parsear.
+        if (!r.ok) throw new Error('El servidor respondió ' + r.status + '. ¿Están desplegadas las Functions?');
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'No pude leer los ajustes');
+        var a = j.ajustes;
+        estado.proveedores = a.proveedores || [];
+        estado.activo = a.proveedorActivo || '';
+        // Lo que no es texto: una sola API por tipo, y solo sale si ya hay algo conectado.
+        var im = a.imagenApi || {}, au = a.audioApi || {}, vi = a.videoApi || {};
+        estado.usos = {
+          imagen: im.tipo ? { tipo: im.tipo, modelo: im.modelo || '', portada: im.modeloPortada || '',
+                              tiene: !!a.imagenTieneLlave, cola: a.imagenColaLlave || '' } : null,
+          audio: (a.audioTieneLlave || au.tipo) ? { tipo: au.tipo || 'fishaudio', modelo: au.modelo || '',
+                              tiene: !!a.audioTieneLlave, cola: a.audioColaLlave || '' } : null,
+          video: (a.videoTieneLlave || vi.nombre || vi.url) ? { nombre: vi.nombre || '', url: vi.url || '',
+                              tiene: !!a.videoTieneLlave, cola: a.videoColaLlave || '' } : null,
+        };
+        pintar();
+      })
+      .catch(function (e) { avisar(e.message, false); });
+  }
+
+  function guardar(extra) {
+    var cuerpo = Object.assign({
+      proveedores: estado.proveedores.map(function (p) {
+        return { id: p.id, nombre: p.nombre, tipo: p.tipo, modelo: p.modelo, url: p.url || '' };
+      }),
+      proveedorActivo: estado.activo,
+    }, extra || {});
+    return pedirJson('/api/config', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'No pude guardar');
+      estado.proveedores = j.ajustes.proveedores || [];
+      estado.activo = j.ajustes.proveedorActivo || '';
+      pintar();
+      return j;
+    });
+  }
+
+  // fetch que siempre devuelve el JSON o lanza un Error que se puede mostrar. Si el servidor contesta con
+  // una pagina de error (HTML) en vez de JSON, antes la pantalla decia «Unexpected token <»: ahora dice
+  // que respondio y con que codigo.
+  function pedirJson(url, opciones) {
+    return fetch(url, Object.assign({ credentials: 'same-origin' }, opciones || {})).then(function (r) {
+      return r.text().then(function (t) {
+        var j = null;
+        try { j = JSON.parse(t); } catch (e) { /* no era JSON */ }
+        if (!j) throw new Error('El servidor respondió ' + r.status + (r.status === 401 ? ' (entra como dueño)' : '') + ' y no pude leer la respuesta.');
+        return j;
+      });
+    });
+  }
+
+  // El modelo se escribe a mano hasta que hay llave guardada; entonces se puede pedir el
+  // catalogo real al proveedor y el campo pasa a ser un selector. Escribir el id de
+  // memoria es como se llega a un 400 que no explica nada.
+  function modeloTextoElegido() {
+    var s = el('f-modelo');
+    // Con la lista a la vista manda el selector; si no hay lista, o se eligio «Otro modelo», lo escrito.
+    return (s.style.display === 'none' || s.value === OTRO) ? el('f-modelo-txt').value.trim() : s.value;
+  }
+  function ponerModeloTexto(v) {
+    el('f-modelo-txt').value = v || '';
+    if (el('f-modelo').style.display !== 'none') {
+      var hay = [].some.call(el('f-modelo').options, function (o) { return o.value === v; });
+      if (!hay && v) {
+        el('f-modelo').insertAdjacentHTML('beforeend',
+          '<option value="' + esc(v) + '">' + esc(v) + ' — no figura en el catálogo</option>');
+      }
+      el('f-modelo').value = v || '';
+      if (el('f-modelo').selectedIndex < 0) el('f-modelo').selectedIndex = 0;
+      sincronizarOtroTexto();
+    }
+  }
+  function modoTextoManual() {
+    el('f-modelo').style.display = 'none';
+    el('f-modelo-txt').style.display = '';
+  }
+  // El campo para escribir el id solo se ve cuando se elige «Otro modelo».
+  function sincronizarOtroTexto() {
+    el('f-modelo-txt').style.display = el('f-modelo').value === OTRO ? '' : 'none';
+  }
+  el('f-modelo').addEventListener('change', function () {
+    sincronizarOtroTexto();
+    if (this.value === OTRO) el('f-modelo-txt').focus();
+  });
+
+  el('btn-modelos-texto').addEventListener('click', function () {
+    var id = el('f-id').value;
+    if (!id) { avisar('Guarda el proveedor con su llave y luego pide los modelos.', false); return; }
+    var b = this; b.disabled = true; b.textContent = 'consultando...';
+    fetch('/api/modelos-texto?refrescar=1&id=' + encodeURIComponent(id), { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) throw new Error('El servidor no respondió');
+        if (!j.ok) throw new Error(j.error);
+        if (j.manual || !j.modelos.length) {
+          modoTextoManual();
+          avisar(j.aviso ? ('No pude traer la lista: ' + j.aviso + ' Escribe el id a mano.') : 'Ese proveedor no publica catálogo; escribe el id a mano.', false);
+          return;
+        }
+        var actual = modeloTextoElegido();
+        el('f-modelo').innerHTML = j.modelos.map(function (m) {
+          return '<option value="' + esc(m.id) + '">' + esc(m.nombre) +
+                 (m.nota ? ' — ' + esc(m.nota) : '') + '</option>';
+        }).join('') + '<option value="' + OTRO + '">Otro modelo (escribir el id)…</option>';
+        el('f-modelo').style.display = '';
+        ponerModeloTexto(actual);
+        avisar(j.modelos.length + ' modelos disponibles.', true);
+      })
+      .catch(function (e) { avisar(e.message, false); })
+      .then(function () { b.disabled = false; b.textContent = 'Ver modelos disponibles'; });
+  });
+
+  el('f-tipo').addEventListener('change', function () {
+    var t = this.value;
+    notasTexto(t);
+    // Al cambiar de tipo el catalogo anterior ya no aplica: se vuelve a manual con la
+    // sugerencia del tipo nuevo.
+    modoTextoManual();
+    if (!modeloTextoElegido() || MODELO_SUGERIDO[t]) ponerModeloTexto(MODELO_SUGERIDO[t] || '');
+  });
+
+  el('btn-limpiar').addEventListener('click', function () {
+    el('form').reset(); el('f-id').value = ''; notasTexto(el('f-tipo').value);
+    modoTextoManual(); ponerModeloTexto('');
+  });
+
+  el('form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var id = el('f-id').value || ('p' + Date.now().toString(36));
+    var reg = {
+      id: id, nombre: el('f-nombre').value.trim(), tipo: el('f-tipo').value,
+      modelo: modeloTextoElegido(), url: el('f-url').value.trim(),
+    };
+    if (reg.tipo === 'compatible' && !reg.url) { avisar('Una API propia necesita su URL.', false); return; }
+    var i = estado.proveedores.findIndex(function (p) { return p.id === id; });
+    if (i >= 0) estado.proveedores[i] = Object.assign({}, estado.proveedores[i], reg);
+    else estado.proveedores.push(reg);
+    if (!estado.activo) estado.activo = id;
+
+    var llaves = {};
+    var v = el('f-llave').value.trim();
+    if (v === '-') llaves[id] = '';          // borrar
+    else if (v) llaves[id] = v;              // cambiar
+    // vacío = no tocar: no se manda la clave y el servidor conserva la que hay (y a un proveedor APIMart
+    // sin llave le pone la de APIMart si ya esta conectada)
+
+    guardar(Object.keys(llaves).length ? { llaves: llaves } : null)
+      .then(function () {
+        el('form').reset(); el('f-id').value = ''; notasTexto(el('f-tipo').value);
+        avisar('Guardado.', true);
+        // Pegar la llave de APIMart aqui tambien la deja lista en imagen y video: se refresca todo.
+        if (reg.tipo === 'apimart') { cargar(); cargarImg(); cargarApimart(false); }
+      })
+      .catch(function (e) { avisar(e.message, false); });
+  });
+
+  el('lista').addEventListener('click', function (ev) {
+    // «Editar» de imagen, audio o video: lleva al formulario de ese tipo.
+    var u = ev.target.closest('button[data-uso]');
+    if (u) { mostrarBloque(u.dataset.uso, true); return; }
+    var b = ev.target.closest('button[data-act]'); if (!b) return;
+    var id = b.dataset.id;
+    var p = estado.proveedores.find(function (x) { return x.id === id; });
+    if (!p) return;
+
+    if (b.dataset.act === 'activar') {
+      estado.activo = id;
+      guardar().then(function () { avisar('Ahora la suite usa ' + p.nombre + '.', true); })
+               .catch(function (e) { avisar(e.message, false); });
+
+    } else if (b.dataset.act === 'editar') {
+      el('f-id').value = p.id; el('f-nombre').value = p.nombre; el('f-tipo').value = p.tipo;
+      ponerModeloTexto(p.modelo || ''); el('f-url').value = p.url || '';
+      notasTexto(p.tipo);
+      el('f-llave').value = ''; el('f-llave').placeholder = p.tieneLlave ? 'ya hay una guardada — deja vacío para conservarla' : 'pegar aquí';
+      mostrarBloque('texto', true);
+      // APIMart: su lista de modelos ya esta en cache en el servidor (una consulta cada 12 h), asi que se
+      // muestra sola, sin pedir un clic mas: «tampoco me aparecen todos los modelos».
+      if (p.tipo === 'apimart' && p.tieneLlave) setTimeout(function () { el('btn-modelos-texto').click(); }, 0);
+
+    } else if (b.dataset.act === 'borrar') {
+      if (!confirm('¿Borrar "' + p.nombre + '" y su llave?')) return;
+      estado.proveedores = estado.proveedores.filter(function (x) { return x.id !== id; });
+      if (estado.activo === id) estado.activo = (estado.proveedores[0] || {}).id || '';
+      guardar().then(function () { avisar('Borrado.', true); })
+               .catch(function (e) { avisar(e.message, false); });
+
+    } else if (b.dataset.act === 'probar') {
+      b.disabled = true; var antes = b.textContent; b.textContent = 'probando...';
+      fetch('/api/probar-api', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }),
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        avisar(j.ok ? (p.nombre + ' responde: "' + j.respuesta + '"') : ('Falló: ' + j.error), !!j.ok);
+      }).catch(function (e) { avisar('Falló: ' + e.message, false); })
+        .then(function () { b.disabled = false; b.textContent = antes; });
+    }
+  });
+
+  cargar();
+
+  // --- Proveedor de imagenes ---
+  var modeloGuardado = '';
+  var portadaGuardada = '';
+  // Los mockups de ofertas llevan texto adentro de la imagen (titulo, viñetas, sellos), donde
+  // los modelos buenos con texto se notan mas que en una portada de ebook. Es un tercer
+  // selector con la misma forma que el de portada: vacio = el mismo de las paginas.
+  var mockupGuardado = '';
+  // El proveedor de imagenes que esta GUARDADO. El selector «Proveedor» puede estar mirando otro sin haber
+  // guardado, y los modelos guardados no se parecen a los del catalogo de ese otro.
+  var tipoGuardado = '';
+  var imagenTieneLlave = false;
+  // Los tres selectores de modelo (paginas, portada, mockup) y el campo de texto que cada uno tiene al lado.
+  var PARES_IMG = [['fi-modelo', 'fi-modelo-txt'], ['fi-modelo-portada', 'fi-modelo-portada-txt'],
+                   ['fi-modelo-mockup', 'fi-modelo-mockup-txt']];
+
+  // El campo de texto se ve cuando no hay lista (modo manual) o cuando se elige «Otro modelo».
+  function sincronizarOtroImg() {
+    PARES_IMG.forEach(function (p) {
+      el(p[1]).style.display = (el(p[0]).style.display === 'none' || el(p[0]).value === OTRO) ? '' : 'none';
+    });
+  }
+  // Replicate y «Otra» no tienen un listado que sirva para poblar el selector, asi que ahi se
+  // escribe a mano. Con Together y con APIMart el selector manda (APIMart: el catalogo de su llave).
+  function modoManual(si) {
+    PARES_IMG.forEach(function (p) { el(p[0]).style.display = si ? 'none' : ''; });
+    sincronizarOtroImg();
+  }
+  // Lo elegido o escrito en un par. Vacio es una eleccion valida en portada y mockup («el mismo de las paginas»).
+  function valorImg(par) {
+    var s = el(par[0]);
+    return (s.style.display === 'none' || s.value === OTRO) ? el(par[1]).value.trim() : s.value;
+  }
+  function modeloElegido() { return valorImg(PARES_IMG[0]); }
+  PARES_IMG.forEach(function (p) {
+    el(p[0]).addEventListener('change', function () {
+      sincronizarOtroImg();
+      if (this.value === OTRO) el(p[1]).focus();
+    });
+  });
+
+  // conOtro: agrega «Otro modelo (escribir el id)» al final de cada selector (APIMart: el catalogo cambia a
+  // diario y quien tiene la llave puede usar modelos que aun no estan en la lista).
+  function pintarModelos(modelos, conOtro) {
+    if (!modelos || !modelos.length) return;
+    var viendo = el('fi-tipo').value;
+    var propio = viendo === tipoGuardado;
+    var gMod = propio ? modeloGuardado : '', gPor = propio ? portadaGuardada : '', gMock = propio ? mockupGuardado : '';
+    var otro = conOtro ? '<option value="' + OTRO + '">Otro modelo (escribir el id)…</option>' : '';
+    var opciones = modelos.map(function (m) {
+      var etiqueta = m.id.split('/').pop() + (m.nota ? ' — ' + m.nota : '');
+      return '<option value="' + esc(m.id) + '">' + esc(etiqueta) + '</option>';
+    }).join('');
+    var hayEn = function (id) { return modelos.some(function (m) { return m.id === id; }); };
+    // Un modelo guardado que ya no viene en la lista (uno retirado) se agrega al final para no perderlo de vista.
+    // La portada y el mockup eligen del mismo catalogo, con "el mismo de las paginas" como primera opcion:
+    // quien no quiera pensar en esto no tiene que hacer nada.
+    var poner = function (selId, guardado, conVacio) {
+      var falta = (guardado && !hayEn(guardado))
+        ? '<option value="' + esc(guardado) + '">' + esc(guardado) + ' — ya no figura en el catálogo</option>' : '';
+      el(selId).innerHTML = (conVacio ? '<option value="">El mismo de las páginas</option>' : '') + opciones + falta + otro;
+      if (guardado) el(selId).value = guardado;
+    };
+    poner('fi-modelo', gMod, false);
+    poner('fi-modelo-portada', gPor, true);
+    poner('fi-modelo-mockup', gMock, true);
+    // Mirando APIMart sin un modelo suyo guardado: arranca en el barato de precio fijo si el catalogo lo trae.
+    if (viendo === 'apimart' && !gMod && hayEn(MODELO_IMG_APIMART)) el('fi-modelo').value = MODELO_IMG_APIMART;
+    sincronizarOtroImg();
+  }
+
+  function cargarModelos(refrescar) {
+    var b = el('btn-modelos');
+    var apm = el('fi-tipo').value === 'apimart';
+    if (refrescar) { b.disabled = true; b.textContent = 'consultando...'; }
+    var q = [];
+    if (refrescar) q.push('refrescar=1');
+    // El servidor sirve el catalogo del proveedor GUARDADO; para ver el de APIMart antes de guardar se lo pide.
+    if (apm) q.push('proveedor=apimart');
+    var nota = el('img-modelos-nota');
+    nota.style.display = 'none';
+    // Sin lista no hay selectores que valgan: el modelo se escribe a mano.
+    var aManual = function () { if (apm) modoManual(true); };
+    return fetch('/api/modelos-imagen' + (q.length ? '?' + q.join('&') : ''), { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) { aManual(); return; }
+        if (!j.ok) { if (refrescar) avisar(j.error, false); aManual(); return; }
+        if (j.manual) {
+          modoManual(true);
+          if (refrescar) avisar('Este proveedor no publica una lista de modelos: escribe el id a mano.', false);
+          return;
+        }
+        modoManual(false);
+        pintarModelos(j.modelos, !!j.apimart);
+        if (j.deRespaldo) {
+          nota.textContent = 'Esta no es la lista real de tu llave, sino los modelos que la suite ya conoce. ' + (j.aviso || '') +
+            ' Con «Otro modelo» puedes escribir cualquier otro id.';
+          nota.style.display = '';
+        }
+        if (refrescar) avisar(j.modelos.length + ' modelos disponibles' + (j.apimart && !j.deRespaldo ? ' para tu llave' : '') + '.', true);
+      })
+      .catch(function () { aManual(); })
+      .then(function () { if (refrescar) { b.disabled = false; b.textContent = 'Actualizar lista de modelos'; } });
+  }
+
+  function cargarImg() {
+    return fetch('/api/config', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        var cfg = j.ajustes.imagenApi || {};
+        if (cfg.tipo) el('fi-tipo').value = cfg.tipo;
+        tipoGuardado = cfg.tipo || '';
+        imagenTieneLlave = !!j.ajustes.imagenTieneLlave;
+        modeloGuardado = cfg.modelo || '';
+        portadaGuardada = cfg.modeloPortada || '';
+        mockupGuardado = cfg.modeloMockup || '';
+        modoManual(cfg.tipo === 'replicate' || cfg.tipo === 'compatible');
+        el('wrap-url-img').style.display = cfg.tipo === 'compatible' ? '' : 'none';
+        el('nota-apimart').style.display = cfg.tipo === 'apimart' ? '' : 'none';
+        el('fi-url').value = cfg.url || '';
+        if (modeloGuardado) {
+          el('fi-modelo-txt').value = modeloGuardado;
+          el('fi-modelo').value = modeloGuardado;
+        }
+        el('fi-modelo-portada-txt').value = portadaGuardada;
+        el('fi-modelo-mockup-txt').value = mockupGuardado;
+        el('img-estado').innerHTML = cfg.tipo
+          ? '<div class="nota" style="margin-top:10px">Activo: <b>' + esc(cfg.tipo) + '</b> · ' +
+            esc(cfg.modelo || 'sin modelo') +
+            (imagenTieneLlave ? ' · llave guardada' : ' · <b>falta la llave</b>') + '</div>'
+          : '';
+        return cargarModelos(false);
+      });
+  }
+  cargarImg();
+
+  el('fi-tipo').addEventListener('change', function () {
+    var t = this.value;
+    // De un proveedor guardado distinto no hay lista que pedir (su llave no es la que esta guardada): se
+    // escribe a mano hasta guardar. Together vuelve a su lista si es el que ya estaba guardado.
+    modoManual(t === 'replicate' || t === 'compatible' || (t === 'together' && tipoGuardado !== 'together'));
+    el('wrap-url-img').style.display = t === 'compatible' ? '' : 'none';
+    el('nota-apimart').style.display = t === 'apimart' ? '' : 'none';
+    var ids = ['fi-modelo-txt', 'fi-modelo-portada-txt', 'fi-modelo-mockup-txt'];
+    if (t === 'apimart') {
+      // Los ids de Together/Replicate llevan "org/modelo" y APIMart no los conoce: se limpian
+      // en vez de dejar que el guardado se los lleve y falle recien al generar una imagen.
+      ids.forEach(function (id) { if (el(id).value.indexOf('/') !== -1) el(id).value = ''; });
+      if (!el('fi-modelo-txt').value.trim()) el('fi-modelo-txt').value = MODELO_IMG_APIMART;
+      cargarModelos(false);
+    } else if (t === 'together') {
+      // Al reves: los ids de APIMart no llevan "/" y Together no los conoce.
+      ids.forEach(function (id) { if (el(id).value && el(id).value.indexOf('/') === -1) el(id).value = ''; });
+      if (!el('fi-modelo-txt').value.trim()) el('fi-modelo-txt').value = 'black-forest-labs/FLUX.1-schnell';
+      if (tipoGuardado === 'together') cargarModelos(false);
+    }
+  });
+  el('btn-modelos').addEventListener('click', function () { cargarModelos(true); });
+
+  el('form-img').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var modelo = modeloElegido();
+    if (!modelo) { avisar('Elige o escribe un modelo de imagen.', false); return; }
+    // Vacio es una eleccion valida: "usa el mismo de las paginas". Viaja como cadena vacia
+    // para poder DESHACER una portada cara sin tener que adivinar que valor la apaga.
+    var portada = valorImg(PARES_IMG[1]);
+    var mockup = valorImg(PARES_IMG[2]);
+    var tipo = el('fi-tipo').value;
+    var cuerpo = { imagenApi: { tipo: tipo, modelo: modelo, modeloPortada: portada, modeloMockup: mockup } };
+    // La URL solo aplica a "Otra": antes el campo se mostraba pero nunca viajaba, y el
+    // proveedor quedaba guardado sin endpoint ("Falta la URL del endpoint de imágenes").
+    if (tipo === 'compatible') {
+      var urlImg = el('fi-url').value.trim();
+      if (!/^https:\/\//i.test(urlImg)) { avisar('Pega la URL completa del endpoint (empieza por https://).', false); return; }
+      cuerpo.imagenApi.url = urlImg;
+    }
+    var v = el('fi-llave').value.trim();
+    if (v) cuerpo.llaves = { imagen: v };
+    else if (tipoGuardado && tipo !== tipoGuardado && !(tipo === 'apimart' && apimart.conectada)) {
+      // Una llave de un proveedor no sirve en otro: al cambiar hay que pegar la del nuevo. Con APIMart ya
+      // conectada no hace falta, el servidor le pone la suya.
+      avisar(tipo === 'apimart'
+        ? 'Pega la API key de APIMart aquí, o conéctala arriba en «APIMart».'
+        : 'Cambiaste de proveedor: pega también su API key (la que hay guardada es de ' + (NOMBRE_IMG[tipoGuardado] || tipoGuardado) + ').', false);
+      return;
+    }
+    pedirJson('/api/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'Error');
+        avisar('Proveedor de imágenes guardado.', true);
+        el('fi-llave').value = '';
+        cargarImg(); cargar(); cargarApimart(false);
+      }).catch(function (e) { avisar(e.message, false); });
+  });
+
+  function modoAudioManual(si) {
+    el('wrap-fa-modelo').style.display = si ? 'none' : '';
+    el('fa-modelo-txt').style.display = si ? '' : 'none';
+    el('wrap-url-audio').style.display = si ? '' : 'none';
+  }
+  function modeloAudioElegido() {
+    return el('fa-modelo-txt').style.display === 'none'
+      ? el('fa-modelo').value
+      : el('fa-modelo-txt').value.trim();
+  }
+  el('fa-tipo').addEventListener('change', function () { modoAudioManual(this.value === 'compatible'); });
+
+  // Guarda el audioApi que vino del servidor. El formulario de abajo solo toca
+  // proveedor/modelo/voz por defecto, pero un PUT reemplaza el objeto audioApi entero:
+  // sin esto, guardar el proveedor borraria en silencio las voces guardadas en Voces.
+  var AUDIO_CFG_ACTUAL = {};
+  // Hasta que la config llega, AUDIO_CFG_ACTUAL está vacío: guardar entonces mandaría
+  // voces: [] y pisaría las voces guardadas.
+  var AUDIO_CFG_CARGADO = false;
+
+  function cargarAudio() {
+    fetch('/api/config', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        var cfg = j.ajustes.audioApi || {};
+        AUDIO_CFG_ACTUAL = cfg;
+        AUDIO_CFG_CARGADO = true;
+        var tipo = cfg.tipo || 'fishaudio';
+        el('fa-tipo').value = tipo;
+        modoAudioManual(tipo === 'compatible');
+        if (tipo === 'compatible') { el('fa-modelo-txt').value = cfg.modelo || ''; }
+        else { el('fa-modelo').value = cfg.modelo || 's2.1-pro'; }
+        el('fa-url').value = cfg.url || '';
+        el('fa-voz').value = cfg.vozId || '';
+        el('audio-estado').innerHTML = j.ajustes.audioTieneLlave
+          ? '<div class="nota" style="margin-top:10px">Llave guardada (termina en ' +
+            esc(j.ajustes.audioColaLlave) + ').</div>'
+          : '<div class="nota" style="margin-top:10px">Sin llave guardada.</div>';
+      });
+  }
+  cargarAudio();
+
+  el('form-audio').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var tipo = el('fa-tipo').value;
+    if (tipo === 'compatible' && !el('fa-url').value.trim()) {
+      avisar('Una API de audio propia necesita su URL.', false); return;
+    }
+    if (!AUDIO_CFG_CARGADO) {
+      avisar('Todavía se están leyendo los ajustes de audio. Prueba de nuevo en un momento.', false); return;
+    }
+    // Se preservan las voces guardadas en la pestaña Voces: este formulario solo toca
+    // proveedor/modelo/voz por defecto, y un PUT reemplaza el objeto audioApi entero.
+    var cuerpo = { audioApi: {
+      tipo: tipo, modelo: modeloAudioElegido(), vozId: el('fa-voz').value.trim(),
+      url: el('fa-url').value.trim(), voces: AUDIO_CFG_ACTUAL.voces || [],
+    } };
+    var v = el('fa-llave').value.trim();
+    if (v) cuerpo.llaves = { audio: v };
+    pedirJson('/api/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'Error');
+        avisar('Proveedor de audio guardado.', true);
+        el('fa-llave').value = '';
+        cargarAudio(); cargar();
+      }).catch(function (e) { avisar(e.message, false); });
+  });
+
+  function cargarVideo() {
+    fetch('/api/config', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        var cfg = j.ajustes.videoApi || {};
+        el('fv-nombre').value = cfg.nombre || '';
+        el('fv-url').value = cfg.url || '';
+        el('video-estado').innerHTML = j.ajustes.videoTieneLlave
+          ? '<div class="nota" style="margin-top:10px">Llave guardada (termina en ' +
+            esc(j.ajustes.videoColaLlave) + ').</div>'
+          : '<div class="nota" style="margin-top:10px">Sin llave guardada.</div>';
+      });
+  }
+  cargarVideo();
+
+  el('form-video').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cuerpo = { videoApi: { tipo: 'compatible', nombre: el('fv-nombre').value.trim(), url: el('fv-url').value.trim() } };
+    var v = el('fv-llave').value.trim();
+    if (v) cuerpo.llaves = { video: v };
+    pedirJson('/api/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'Error');
+        avisar('Video API guardada.', true);
+        el('fv-llave').value = '';
+        cargarVideo(); cargar(); cargarApimart(false);
+      }).catch(function (e) { avisar(e.message, false); });
+  });
+
+  // --- Saldo de las APIs: se estima, porque ningun proveedor deja leerlo con la llave ---
+  function dinero(v) { return '$' + (Math.abs(v) < 1 ? v.toFixed(3) : v.toFixed(2)); }
+  function fechaCorta(iso) {
+    return new Date(iso).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  }
+  function nodo(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  var ESTADO_TXT = { ok: ['Saldo OK', 'ok'], bajo: ['Recarga pronto', 'bajo'], agotado: ['Sin saldo', 'falta'],
+                     sinanotar: ['Falta anotar el saldo', 'activo'] };
+
+  function enviarSaldo(accion, tipo, valor) {
+    return fetch('/api/saldos', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: accion, tipo: tipo, usd: Number(String(valor).replace(',', '.')) }),
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'No se pudo guardar');
+    });
+  }
+
+  function control(etq, valorIni, boton, alClic) {
+    var caja = nodo('div'), l = nodo('label', null, etq), i = nodo('input');
+    i.type = 'number'; i.step = '0.01'; i.min = '0'; i.inputMode = 'decimal';
+    if (valorIni != null) i.value = valorIni;
+    var b = nodo('button', 'fantasma', boton);
+    b.type = 'button';
+    b.addEventListener('click', function () {
+      if (i.value === '') { avisar('Escribe el monto primero.', false); return; }
+      b.disabled = true;
+      alClic(i.value).then(function () { cargarSaldos(); })
+        .catch(function (e) { b.disabled = false; avisar(e.message, false); });
+    });
+    caja.appendChild(l); caja.appendChild(i);
+    var fila = nodo('div'); fila.style.display = 'contents';
+    fila.appendChild(caja); fila.appendChild(b);
+    return fila;
+  }
+
+  function pintarSaldos(lista) {
+    var cont = el('saldos'); cont.textContent = '';
+    var bajos = [];
+    lista.forEach(function (p) {
+      var e = ESTADO_TXT[p.estado] || ESTADO_TXT.sinanotar;
+      var caja = nodo('div', 'prov');
+      var top = nodo('div', 'top');
+      top.appendChild(nodo('span', 'nom', p.nombre));
+      top.appendChild(nodo('span', 'pill ' + e[1], e[0]));
+      caja.appendChild(top);
+      var num = nodo('div', 'saldo-num', p.saldo != null ? '≈ ' + dinero(p.saldo) : '—');
+      num.appendChild(nodo('small', null, p.saldo != null ? 'saldo estimado (USD)' : 'sin saldo anotado'));
+      caja.appendChild(num);
+      if (p.ancla) {
+        caja.appendChild(nodo('div', 'saldo-det', 'Anotaste ' + dinero(p.ancla.usd) + ' el ' + fechaCorta(p.ancla.t) +
+          ' · desde entonces la suite gastó ' + dinero(p.gastadoDesdeAncla)));
+      }
+      caja.appendChild(nodo('div', 'saldo-det', 'Gasto de la suite: hoy ' + dinero(p.hoy) + ' · 7 días ' + dinero(p.d7) +
+        ' · 30 días ' + dinero(p.d30)));
+      if (p.diasRestantes != null) {
+        caja.appendChild(nodo('div', 'saldo-det', 'Al ritmo de la última semana (' + dinero(p.ritmoDiario) +
+          ' por día) alcanza para ~' + p.diasRestantes + ' día' + (p.diasRestantes === 1 ? '' : 's') + '.'));
+      }
+      var ctl = nodo('div', 'saldo-ctl');
+      ctl.appendChild(control('Saldo que ves en su panel (USD)', null, 'Anotar saldo',
+        function (v) { return enviarSaldo('saldo', p.tipo, v).then(function () { avisar('Saldo de ' + p.nombre + ' anotado.', true); }); }));
+      ctl.appendChild(control('Avisar cuando baje de (USD)', p.umbral, 'Guardar aviso',
+        function (v) { return enviarSaldo('umbral', p.tipo, v).then(function () { avisar('Aviso guardado.', true); }); }));
+      caja.appendChild(ctl);
+      if (p.panel) {
+        var a = nodo('a', 'saldo-enlace', 'Abrir el panel de ' + p.nombre + ' ↗');
+        a.href = p.panel; a.target = '_blank'; a.rel = 'noopener';
+        caja.appendChild(a);
+      }
+      cont.appendChild(caja);
+      if (p.estado === 'bajo' || p.estado === 'agotado') {
+        bajos.push(p.nombre + (p.saldo != null ? ' (≈ ' + dinero(p.saldo) +
+          (p.diasRestantes != null ? ', ~' + p.diasRestantes + ' d' : '') + ')' : ''));
+      }
+    });
+    var al = el('saldos-alerta');
+    al.style.display = bajos.length ? 'block' : 'none';
+    al.textContent = bajos.length ? 'Hay que recargar: ' + bajos.join(' · ') : '';
+  }
+
+  function cargarSaldos() {
+    fetch('/api/saldos', { credentials: 'same-origin' }).then(function (r) {
+      if (r.status === 401) { el('card-saldos').style.display = 'none'; return null; }
+      return r.json();
+    }).then(function (j) {
+      if (!j) return;
+      if (!j.ok) { el('saldos').textContent = j.error || 'No pude leer los saldos.'; return; }
+      if (!j.proveedores.length) { el('saldos').textContent = 'Todavía no hay proveedores conectados.'; return; }
+      pintarSaldos(j.proveedores);
+    }).catch(function () { el('saldos').textContent = 'No pude leer los saldos.'; });
+  }
+  cargarSaldos();
+
+  // --- APIMart: una llave para texto, imagen y video ---
+  // Todo lo que viene del servidor se pinta con textContent: los ids de modelo son de un tercero.
+  function pintarApimart(j) {
+    var est = el('apimart-estado'), det = el('apimart-detalle');
+    est.textContent = ''; det.textContent = '';
+    apimart = { conectada: !!(j && j.ok && j.conectada) };
+    el('am-actualizar').disabled = !apimart.conectada;
+    el('am-conectar').textContent = apimart.conectada ? 'Cambiar la llave' : 'Conectar APIMart';
+    // El formulario de texto avisa que no hace falta pegar la llave si APIMart ya esta conectada.
+    notasTexto(el('f-tipo').value);
+    if (!j || !j.ok) {
+      est.appendChild(nodo('div', 'nota', (j && j.error) || 'No pude leer el estado de APIMart.'));
+      return;
+    }
+
+    var caja = nodo('div', 'prov'), top = nodo('div', 'top');
+    top.appendChild(nodo('span', 'nom', 'APIMart'));
+    if (!j.conectada) {
+      top.appendChild(nodo('span', 'pill falta', 'sin conectar'));
+      caja.appendChild(top);
+      caja.appendChild(nodo('div', 'am-lin', 'Pega tu llave abajo y pulsa «Conectar APIMart». Se valida en el momento ' +
+        'con APIMart: si no sirve, no se guarda nada.'));
+      est.appendChild(caja);
+      return;
+    }
+    var u = j.usos || {};
+    top.appendChild(nodo('span', 'pill ok', 'llave ····' + j.cola));
+    if ((u.texto || []).some(function (p) { return p.tieneLlave; })) top.appendChild(nodo('span', 'pill uso', 'texto ✓'));
+    if (u.imagen && u.imagen.esApimart && u.imagen.tieneLlave) top.appendChild(nodo('span', 'pill uso', 'imagen ✓'));
+    if (u.video && u.video.esApimart && u.video.tieneLlave) top.appendChild(nodo('span', 'pill uso', 'video ✓'));
+    caja.appendChild(top);
+
+    var c = j.catalogo;
+    if (c) {
+      var ln = nodo('div', 'am-lin');
+      ln.appendChild(document.createTextNode('Tu llave ve '));
+      [[c.conteo.texto, 'de texto'], [c.conteo.imagen, 'de imagen'], [c.conteo.video, 'de video'], [c.conteo.audio, 'de audio']]
+        .forEach(function (x, i) {
+          if (i) ln.appendChild(document.createTextNode(' · '));
+          ln.appendChild(nodo('b', null, String(x[0])));
+          ln.appendChild(document.createTextNode(' ' + x[1]));
+        });
+      if (c.traidoEn) ln.appendChild(document.createTextNode(' (lista traída el ' + fechaCorta(c.traidoEn) + ')'));
+      caja.appendChild(ln);
+    } else {
+      caja.appendChild(nodo('div', 'am-lin mal', j.llaveRechazada
+        ? (j.errorCatalogo || 'APIMart rechazó la llave.') + ' Pega una llave nueva abajo.'
+        : 'No pude traer la lista de modelos' + (j.errorCatalogo ? ': ' + j.errorCatalogo : '.') + ' Pulsa «Actualizar» en un rato.'));
+    }
+
+    if (j.saldo) {
+      var s = nodo('div', 'am-lin');
+      s.appendChild(document.createTextNode('Saldo en APIMart: '));
+      s.appendChild(nodo('b', null, dinero(j.saldo.usd)));
+      s.appendChild(document.createTextNode(' (' + j.saldo.creditos + ' créditos, 10 créditos = 1 dólar)'));
+      caja.appendChild(s);
+      // El saldo de arriba («Saldo de las APIs») es una estimación que parte de un número anotado a mano:
+      // este botón lo anota por ti con lo que APIMart acaba de decir.
+      var ac = nodo('div', 'acciones'), bs = nodo('button', 'fantasma', 'Usarlo como saldo de partida');
+      bs.type = 'button';
+      bs.addEventListener('click', function () {
+        bs.disabled = true;
+        enviarSaldo('saldo', 'apimart', j.saldo.usd)
+          .then(function () { avisar('Saldo de APIMart anotado: ' + dinero(j.saldo.usd) + '. Desde ahora la suite le resta lo que gasta.', true); cargarSaldos(); })
+          .catch(function (e) { avisar(e.message, false); })
+          .then(function () { bs.disabled = false; });
+      });
+      ac.style.marginTop = '4px'; ac.appendChild(bs); caja.appendChild(ac);
+    }
+
+    var tx = u.texto || [];
+    if (tx.length) {
+      tx.forEach(function (p) {
+        caja.appendChild(nodo('div', 'am-lin', 'Texto: «' + p.nombre + '» con el modelo ' + (p.modelo || '(sin modelo)') +
+          (p.activo ? ' — es el proveedor activo.' : ' — no es el activo (en la lista de arriba, «Usar esta»).') +
+          (p.tieneLlave ? '' : ' Falta su llave.')));
+      });
+    } else {
+      caja.appendChild(nodo('div', 'am-lin', 'Texto: todavía no hay un proveedor APIMart.'));
+    }
+    var im = u.imagen || {};
+    caja.appendChild(nodo('div', 'am-lin', im.esApimart
+      ? 'Imagen: APIMart con el modelo ' + (im.modelo || '(sin modelo)') + (im.tieneLlave ? '.' : ' — falta su llave.')
+      : im.otro
+        ? 'Imagen: sigue con ' + (NOMBRE_IMG[im.otro] || im.otro) + '. Para pasar a APIMart elígelo en «Imagen»: la llave ya está guardada y se usa sola.'
+        : 'Imagen: sin configurar.'));
+    var vi = u.video || {};
+    caja.appendChild(nodo('div', 'am-lin', vi.esApimart
+      ? 'Video: la llave queda guardada; la suite todavía no genera video.'
+      : vi.otro ? 'Video: hay otro proveedor guardado (' + vi.otro + ').' : 'Video: sin configurar.'));
+
+    // La llave ya esta guardada pero falta dejarla en algo (p. ej. se pego solo en Imagen): con un clic se
+    // reparte, sin pegarla otra vez.
+    if (j.faltaCompletar) {
+      var ac2 = nodo('div', 'acciones'), bc = nodo('button', 'primario', 'Dejarla lista en texto, imagen y video');
+      bc.type = 'button';
+      bc.addEventListener('click', function () { completarApimart(bc); });
+      ac2.appendChild(bc);
+      caja.appendChild(ac2);
+    }
+
+    est.appendChild(caja);
+
+    // Lo que la llave puede usar, por tipo. Texto e imagen se eligen en sus formularios; video y audio solo se ven.
+    if (c) {
+      [['Texto', c.modelos.texto, ''],
+       ['Imagen', c.modelos.imagen, 'Con precio conocido se muestra al lado; los demás funcionan pero el estimador de ebooks no calcula su costo.'],
+       ['Video', c.modelos.video, 'La suite todavía no genera video con estos: se ven aquí para que sepas qué ofrece tu llave.'],
+       ['Audio', c.modelos.audio, 'La voz de la suite sale de Fish Audio; estos se ven aquí para que sepas qué ofrece tu llave.']]
+        .forEach(function (x) {
+          var d = nodo('details'), sm = nodo('summary', null, x[0] + ' (' + x[1].length + ')');
+          d.appendChild(sm);
+          if (x[2]) d.appendChild(nodo('div', 'am-lin', x[2]));
+          var lista = nodo('div', 'lista-mod');
+          if (!x[1].length) lista.appendChild(nodo('span', 'hint', 'Tu llave no ve ninguno de este tipo.'));
+          x[1].forEach(function (m) {
+            var id = typeof m === 'string' ? m : m.id;
+            var pr = (typeof m === 'object' && m.precio != null) ? ' · ~' + dinero(m.precio) : '';
+            lista.appendChild(nodo('code', null, id + pr));
+          });
+          d.appendChild(lista);
+          det.appendChild(d);
+        });
+    }
+  }
+
+  function completarApimart(b) {
+    var antes = b.textContent;
+    b.disabled = true; b.textContent = 'completando…';
+    pedirJson('/api/apimart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usarGuardada: true }) })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'No se pudo completar.');
+        pintarApimart(j);
+        avisar(j.mensaje || 'APIMart lista.', true, 9000);
+        cargar(); cargarImg(); cargarVideo(); cargarSaldos();
+      })
+      .catch(function (e) { avisar(e.message, false); b.disabled = false; b.textContent = antes; });
+  }
+
+  function cargarApimart(refrescar) {
+    return pedirJson('/api/apimart' + (refrescar ? '?refrescar=1' : ''))
+      .then(function (j) { pintarApimart(j); return j; })
+      .catch(function (e) { pintarApimart({ ok: false, error: e.message }); return null; });
+  }
+  cargarApimart(false);
+
+  el('form-apimart').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var k = el('am-llave').value.trim();
+    if (!k) { avisar('Pega la llave de APIMart primero.', false); return; }
+    var b = el('am-conectar');
+    b.disabled = true; b.textContent = 'conectando…';
+    pedirJson('/api/apimart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ llave: k }) })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'No se pudo conectar APIMart.');
+        el('am-llave').value = '';
+        pintarApimart(j);
+        avisar(j.mensaje || 'APIMart conectada.', true, 9000);
+        // Texto, imagen y video quedaron listos: se vuelve a leer todo lo que los muestra.
+        cargar(); cargarImg(); cargarVideo(); cargarSaldos();
+      })
+      .catch(function (e) { avisar(e.message, false); })
+      .then(function () { b.disabled = false; b.textContent = apimart.conectada ? 'Cambiar la llave' : 'Conectar APIMart'; });
+  });
+
+  el('am-actualizar').addEventListener('click', function () {
+    var b = this; b.disabled = true; b.textContent = 'consultando…';
+    cargarApimart(true).then(function (j) {
+      if (j && j.ok && j.conectada && j.catalogo) { avisar('Lista de modelos y saldo al día.', true); cargarImg(); }
+    }).then(function () { b.textContent = 'Actualizar modelos y saldo'; b.disabled = !apimart.conectada; });
+  });
+
+  // --- Selector de categoria: un solo lugar para elegir que tipo de API se va a conectar ---
+  var BLOQUES = { apimart: 'bloque-apimart', texto: 'bloque-texto', imagen: 'bloque-imagen', audio: 'bloque-audio', video: 'bloque-video' };
+  function mostrarBloque(k, desplazar) {
+    Object.keys(BLOQUES).forEach(function (x) { el(BLOQUES[x]).style.display = x === k ? '' : 'none'; });
+    el('cat-selector').value = k;
+    if (desplazar) el(BLOQUES[k]).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  el('cat-selector').addEventListener('change', function () { mostrarBloque(this.value, false); });
+})();
+</script>

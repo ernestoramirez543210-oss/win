@@ -1,0 +1,306 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor de anuncios — Suite Mi Negocio</title>
+<style>
+  body { margin:0; background:var(--page); color:var(--text-primary);
+         font:14px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:980px; margin:0 auto; padding:26px 22px 60px; }
+  h1 { font-size:22px; font-weight:800; letter-spacing:-.5px; margin:0 0 4px; }
+  .sub { color:var(--text-muted); font-size:13px; margin:0 0 22px; max-width:72ch; }
+  .card { background:var(--surface-1); border:1px solid var(--line); border-radius:var(--radio-card);
+          padding:18px 20px; margin-bottom:16px; min-width:0; }
+  .card h2 { font-size:14px; margin:0 0 3px; font-weight:700; }
+  .card .hint { color:var(--text-muted); font-size:12.5px; margin:0 0 14px; }
+  .hero { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:18px; align-items:center;
+          background:linear-gradient(135deg,#0b1f52 0%,#061026 62%); border-color:#1a3a80; }
+  .hero h2 { font-size:16px; }
+  .hero .meta { color:var(--text-secondary); font-size:12.5px; margin:2px 0 0; }
+  /* border-box a proposito: la suite no lleva doctype (modo quirks) y con content-box el width:100% del movil + el relleno se sale de la tarjeta. */
+  .btn { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:0 22px;
+         border:0; border-radius:var(--radio); background:var(--accion); color:var(--accion-texto);
+         font:700 14px inherit; text-decoration:none; cursor:pointer; text-align:center; }
+  .btn:hover { background:var(--accion-hover); }
+  .btn[aria-busy="true"] { opacity:.7; cursor:progress; }
+  .btn.suave { background:var(--surface-2); color:var(--text-secondary); min-height:40px; padding:0 14px; font-size:12.5px; font-weight:650; }
+  .btn.suave:hover { background:#13244a; color:var(--text-primary); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .chip { background:var(--surface-2); border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+          font-size:12px; color:var(--text-secondary); }
+  .aviso { display:none; padding:11px 14px; border-radius:9px; font-size:12.5px; margin:0 0 14px; }
+  .aviso.malo { display:block; background:var(--critical-wash); color:var(--critical); }
+  ol.pasos { margin:0; padding:0; list-style:none; counter-reset:paso; }
+  ol.pasos li { counter-increment:paso; position:relative; padding:0 0 14px 44px; min-width:0; }
+  ol.pasos li:last-child { padding-bottom:0; }
+  ol.pasos li::before { content:counter(paso); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%;
+                        background:var(--surface-2); border:1px solid var(--line); display:grid; place-items:center;
+                        font-weight:700; font-size:13px; color:var(--marca-a); }
+  ol.pasos b { color:var(--text-primary); }
+  code { background:var(--surface-2); padding:1px 6px; border-radius:4px; font-size:12px; overflow-wrap:anywhere;
+         font-family:ui-monospace,"Cascadia Mono",Consolas,monospace; }
+  .tabla-scroll { overflow-x:auto; min-width:0; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { text-align:left; padding:10px 10px; border-bottom:1px solid var(--hairline); vertical-align:top; font-size:13px; }
+  td:first-child { font-weight:650; }
+  th { color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+  td .dice { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  td .dice span { min-width:0; flex:1 1 220px; }
+  details { border-top:1px solid var(--hairline); }
+  details:first-of-type { border-top:0; }
+  summary { cursor:pointer; font-weight:650; min-height:44px; display:flex; align-items:center; gap:8px; }
+  details p { margin:0 0 12px; color:var(--text-secondary); }
+  .nota { border-left:2px solid var(--line); padding-left:12px; color:var(--text-muted); font-size:12.5px; margin:0; }
+  .pie { color:var(--text-muted); font-size:12px; margin-top:8px; }
+  .card[hidden], .botones[hidden] { display:none; }
+  .botones { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; min-width:0; }
+  .botones .btn.suave { min-height:46px; font-size:13.5px; }
+  #conexion ol.pasos { margin-bottom:2px; }
+  @media (max-width:720px) {
+    .wrap { padding:14px 12px 40px; }
+    .card { padding:14px 14px; }
+    .hero { grid-template-columns:minmax(0,1fr); }
+    .btn { width:100%; }
+    .btn.suave { width:auto; }
+    .botones .btn, .botones .btn.suave { width:100%; }
+    /* La tabla de uso se apila: cada fila pasa a ser una tarjeta con sus tres rotulos (data-label), sin scroll horizontal. */
+    table, tbody, tr, td { display:block; }
+    thead { display:none; }
+    tr { padding:10px 0; border-bottom:1px solid var(--hairline); }
+    td { border:0; padding:3px 0; }
+    td::before { content:attr(data-label); display:block; color:var(--text-muted); font-size:11px;
+                 text-transform:uppercase; letter-spacing:.08em; font-weight:700; margin-bottom:1px; }
+  }
+</style>
+<div class="wrap">
+  <h1>Editor de anuncios</h1>
+  <p class="sub">Anuncios verticales 9:16 hechos con Claude: voz en off con videos de stock (estilo TikTok) o anuncio completo con IA
+     a partir de un guion y la foto de un avatar. Se instala en un PC con Windows y se maneja desde la app de Claude.</p>
+
+  <div class="aviso" id="aviso" role="alert"></div>
+
+  <div class="card hero" id="descarga" data-zip="__EDITOR_ZIP__">
+    <div>
+      <h2>Instalador para Windows</h2>
+      <p class="meta" id="meta-zip">Versión __EDITOR_VERSION__ · __EDITOR_KB__ KB · armado __EDITOR_FECHA__. Solo código y guías: no lleva claves, videos ni música.</p>
+      <div class="chips">
+        <span class="chip">Windows 10 u 11</span>
+        <span class="chip">16 GB de RAM y 15 GB libres</span>
+        <span class="chip">App de Claude con cuenta Pro o Max</span>
+        <span class="chip">Internet (baja ~2,5 GB al instalar)</span>
+      </div>
+    </div>
+    <a class="btn" id="descargar" href="/editor-anuncios.zip" download="editor-anuncios.zip">Descargar instalador (.zip)</a>
+  </div>
+
+  <!-- Solo la ven el dueño y el editor de video: /api/editor-conexion?estado=1 dice si se muestra. Trae la llave del editor: nada de esto se escribe en la página. -->
+  <div class="card" id="conexion" hidden>
+    <h2>Conectar este editor (una vez)</h2>
+    <p class="hint">El editor ya no lleva la clave de APIMart: pide las imágenes, los clips y los textos al dash, que guarda la clave, frena el gasto (US$ 0,50 por anuncio y US$ 5 por día) y lo anota en Costo por proyecto.
+       Para eso cada PC necesita dos líneas: la dirección del dash y la llave del editor.</p>
+    <ol class="pasos">
+      <li><b>Antes de instalar:</b> descarga la conexión y déjala en <b>Descargas</b>. El instalador la encuentra sola, la copia al editor y borra el archivo.</li>
+      <li><b>Si el editor ya está instalado:</b> descarga la conexión y el instalador nuevo, y corre <code>Instalar-Editor.cmd</code>: actualiza el editor y toma la conexión de tus descargas. Después, si algún día cambia la conexión, basta con <code>Conectar-Editor.cmd</code> en la carpeta del editor.</li>
+    </ol>
+    <div class="botones" id="conexion-botones">
+      <button type="button" class="btn" id="bajar-conexion">Descargar conexión</button>
+      <button type="button" class="btn suave" id="copiar-conexion">Copiar las dos líneas</button>
+    </div>
+    <p class="pie" id="conexion-portapapeles">Si las copias, Windows las guarda en el historial del portapapeles (<b>Win+V</b>): después de pegarlas, abre Win+V y bórralas de ahí.</p>
+    <p class="pie" id="conexion-nota">El archivo trae la llave del editor: úsalo solo en el PC del editor y no lo mandes por chat ni por correo.</p>
+  </div>
+
+  <div class="card">
+    <h2>Instalar en el PC del editor</h2>
+    <p class="hint">Una sola vez. Si algo se corta, vuelve a correr el instalador: retoma lo que falte.</p>
+    <ol class="pasos">
+      <li><b>Descomprime</b> el .zip en cualquier carpeta (por ejemplo en Descargas).</li>
+      <li>Haz doble clic en <code>Instalar-Editor.cmd</code>. Si Windows dice «protegió su PC»: <i>Más información</i> y luego <i>Ejecutar de todas formas</i>.
+          Contesta <b>S</b> a las preguntas; si faltan Node.js, Python 3.12 o ffmpeg, los instala solo (Windows puede pedir permiso). Tarda de 10 a 20 minutos.</li>
+      <li>Cuando diga <b>LISTO</b>, abre la app de Claude, entra a la pestaña <b>Code</b> y abre la carpeta de instalación
+          (<code>D:\editor-anuncios</code> o <code>C:\editor-anuncios</code>) <b>como proyecto</b>. Abre la carpeta del proyecto, no una subcarpeta.</li>
+      <li>Música de fondo: dile a Claude <i>«crea música de fondo»</i> (usa <code>scripts\crear_musica.py</code>: pistas propias, sin licencia de terceros) o copia mp3 libres de derechos en <code>public\musica\biblioteca\</code>.</li>
+      <li>Conexión con el dash (para anuncios con IA): <b>ya no hace falta escribir la clave de APIMart</b>. Si dejaste <code>conexion-editor.txt</code> en Descargas, el instalador ya la puso.
+          Si no, pídele al dueño o al editor de video que entre al dash <b>en ese mismo PC</b> y descargue ahí la conexión (nunca que te la mande por chat ni por correo); después haz doble clic en <code>Conectar-Editor.cmd</code>. <b>Nunca pegues claves en el chat.</b></li>
+      <li>Haz doble clic en <code>Probar-Editor.cmd</code>: arma un anuncio de mentira de punta a punta, sin gastar nada, y al final dice <b>PRUEBA OK</b>.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Usarlo cada día</h2>
+    <p class="hint">Lo que subes va dentro de <code>public\</code>; lo que Claude produce queda en <code>anuncios\</code> (el video terminado, en la carpeta <code>final</code> de cada anuncio).</p>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Quieres</th><th>Subes</th><th>Le dices a Claude</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Quieres">Los anuncios que pidió la Fábrica de ofertas</td><td data-label="Subes">Nada (el video del anuncio que se modela, si no llegó solo, en <code>referencia</code> del producto).</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Revisa los pedidos de la Fábrica.</span><button type="button" class="btn suave" data-copiar="Revisa los pedidos de la Fábrica.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Un anuncio estilo TikTok</td><td data-label="Subes">La voz en <code>voces\</code> (AD3.mp3). Los videos ya están en <code>broll-tiktok\</code>. Se arma solo, sin gastar tokens; después miras una imagen (<code>evidencia.png</code>) para descartar niños y logos.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Haz el AD3 de [producto], estilo TikTok.</span><button type="button" class="btn suave" data-copiar="Haz el AD3 de [producto], estilo TikTok.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Un anuncio completo con IA</td><td data-label="Subes">El guion en <code>guiones\</code> (AD4.txt).</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Haz el AD4 de [producto] con IA, avatar [nombre].</span><button type="button" class="btn suave" data-copiar="Haz el AD4 de [producto] con IA, avatar [nombre].">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Sumar videos de TikTok</td><td data-label="Subes">Los videos nuevos en <code>broll-tiktok\</code>.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Agregué videos en broll-tiktok de [producto], añádelos al índice.</span><button type="button" class="btn suave" data-copiar="Agregué videos en broll-tiktok de [producto], añádelos al índice.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Un producto nuevo</td><td data-label="Subes">Su carpeta en <code>public\productos\</code> con ebook.pdf, fotos del avatar y videos de TikTok.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Hay un producto nuevo en public/productos/[producto], arma su ficha.</span><button type="button" class="btn suave" data-copiar="Hay un producto nuevo en public/productos/[producto], arma su ficha.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Corregir algo</td><td data-label="Subes">Nada.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>En el AD3 cambia [lo que sea] y anótalo en mis preferencias.</span><button type="button" class="btn suave" data-copiar="En el AD3 cambia [lo que sea] y anótalo en mis preferencias.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Cambiar una regla para siempre</td><td data-label="Subes">Nada.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>De ahora en adelante [regla nueva]. Actualiza la skill y CLAUDE.md.</span><button type="button" class="btn suave" data-copiar="De ahora en adelante [regla nueva]. Actualiza la skill y CLAUDE.md.">Copiar</button></div></td></tr>
+          <tr><td data-label="Quieres">Repetir un clip de IA</td><td data-label="Subes">Nada.</td>
+              <td data-label="Le dices a Claude"><div class="dice"><span>Repite solo el clip [número] del AD4 con este cambio: [cambio].</span><button type="button" class="btn suave" data-copiar="Repite solo el clip [número] del AD4 con este cambio: [cambio].">Copiar</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="pie">Corrige siempre y explica el porqué («subtítulos más grandes porque mi público es mayor de 40»): Claude anota cada corrección y después de 10 o 15 ya edita con tu estilo.</p>
+  </div>
+
+  <div class="card">
+    <h2>Actualizar a una versión nueva</h2>
+    <p class="hint" style="margin:0">Baja el .zip otra vez, descomprímelo y haz doble clic en su <code>Instalar-Editor.cmd</code>. Actualiza el código y
+       <b>no toca</b> tus productos, videos, música, <code>.env</code> ni preferencias. Si habías editado algún archivo del código, conserva el tuyo y deja el nuevo al lado con la terminación <code>.nuevo</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Si algo falla</h2>
+    <details><summary>«No se reconoce python, node o ffmpeg»</summary>
+      <p>Cierra y abre la app de Claude (o reinicia el PC) y vuelve a correr <code>Instalar-Editor.cmd</code>.</p></details>
+    <details><summary>El render se queda sin memoria</summary>
+      <p>Cierra otros programas y pídele a Claude: «renderiza con menos concurrencia».</p></details>
+    <details><summary>Claude no sigue tus reglas</summary>
+      <p>Comprueba que abriste la carpeta del proyecto y no una subcarpeta. Luego dile: «lee CLAUDE.md y la skill editor-video antes de seguir».</p></details>
+    <details><summary>El avatar cambia de cara o de ropa, o la IA dibuja mal el producto</summary>
+      <p>Pídele: «regenera los cuadros usando el ancla y la foto del avatar como referencia». Si el ebook no trae buenas fotos del producto, sube 3 o 4 fotos reales a la carpeta del producto.</p></details>
+    <details><summary>El editor dice que no está conectado, que actualices o que llegó al tope</summary>
+      <p>«No está conectado» o «llave incorrecta»: descarga la conexión otra vez y haz doble clic en <code>Conectar-Editor.cmd</code>. «Actualiza el editor»: baja el instalador nuevo y córrelo.
+         «Tope del anuncio» o «tope del día»: tapa ese tramo con videos de stock o una imagen con movimiento, o avísale al dueño. Si APIMart se queda sin saldo, avísale al dueño: él recarga.</p></details>
+    <details><summary>Cualquier otra cosa</summary>
+      <p>Manda al dueño el archivo <code>instalacion.log</code> que queda en la carpeta de instalación. Para ver qué falta: <code>Instalar-Editor.cmd -SoloVerificar</code>.</p></details>
+  </div>
+
+  <div class="card">
+    <p class="nota">Usa solo videos y música que tengas derecho a usar en anuncios pagos, y fotos de avatar de personas que autorizaron su cara y su voz.
+       Antes de generar con IA, Claude te dice el costo aproximado y espera tu OK; las imágenes y los clips de IA descuentan saldo de APIMart (pasan por el dash, que lleva la cuenta) y la voz del anuncio automático, saldo de Fish Audio (la misma voz de tus flujos).
+       Remotion, el motor de video, es gratis para equipos de hasta 3 personas.</p>
+  </div>
+</div>
+<script>
+(function () {
+  var aviso = document.getElementById('aviso');
+  function mostrarAviso(t) { aviso.textContent = t; aviso.className = 'aviso malo'; }
+
+  // Si el build no pudo armar el paquete, se dice en vez de dejar un boton que da 404.
+  var tarjeta = document.getElementById('descarga');
+  var btn = document.getElementById('descargar');
+  if (tarjeta && tarjeta.getAttribute('data-zip') !== 'si') {
+    btn.style.display = 'none';
+    document.getElementById('meta-zip').textContent = 'El paquete no se pudo armar en el último refresco.';
+    mostrarAviso('El instalador no está disponible ahora mismo. Pídele el .zip al dueño; en el próximo refresco debería volver.');
+  }
+
+  // La descarga se hace con fetch y no con el enlace: el service worker de la suite trata cualquier navegacion como pagina
+  // y guardaria el .zip en su cache, asi que una version nueva podria bajar la vieja una vez. Un fetch no pasa por esa ruta.
+  // Sin fetch o sin Blob, el enlace normal sigue funcionando.
+  if (btn) btn.addEventListener('click', function (e) {
+    if (!window.fetch || !window.URL || !URL.createObjectURL) return;
+    e.preventDefault();
+    var texto = btn.textContent;
+    btn.textContent = 'Descargando…';
+    btn.setAttribute('aria-busy', 'true');
+    fetch('/editor-anuncios.zip', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+      .then(function (b) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = 'editor-anuncios.zip';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      })
+      .catch(function (err) { mostrarAviso('No se pudo bajar el instalador (' + err.message + '). Si la sesión caducó, entra de nuevo.'); })
+      .then(function () { btn.textContent = texto; btn.removeAttribute('aria-busy'); });
+  });
+
+  // Devuelve una promesa de true/false: el boton dice la verdad ("Copiado" o "No se pudo copiar"), no finge. Si el portapapeles moderno
+  // falla (permiso, pestana sin foco), se prueba el metodo viejo; si tambien falla, el texto sigue visible al lado para copiarlo a mano.
+  function copiar(t) {
+    function planB() {
+      var a = document.createElement('textarea');
+      a.value = t; a.style.position = 'fixed'; a.style.opacity = '0';
+      document.body.appendChild(a); a.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      a.remove();
+      return ok;
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(t).then(function () { return true; }, function () { return planB(); });
+    }
+    return Promise.resolve(planB());
+  }
+  // «Conectar este editor»: solo el dueño y el editor de video (el servidor lo decide: /api/editor-conexion?estado=1). Las dos lineas traen la llave del editor: se piden al
+  // pulsar, van directo al archivo o al portapapeles y NUNCA se escriben en la pagina. Lo que dice el servidor entra por textContent.
+  var tarjetaCx = document.getElementById('conexion');
+  var notaCx = document.getElementById('conexion-nota');
+  var bajarCx = document.getElementById('bajar-conexion');
+  var copiarCx = document.getElementById('copiar-conexion');
+  function pedirLineas() {
+    return fetch('/api/editor-conexion', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'HTTP ' + r.status }; }); })
+      .then(function (j) {
+        if (!j || !j.ok || typeof j.lineas !== 'string') throw new Error((j && j.error) || 'el dash no dio la conexión');
+        return j.lineas;
+      });
+  }
+  function avisarCx(t, malo) { notaCx.textContent = t; notaCx.style.color = malo ? 'var(--critical)' : ''; }
+  if (tarjetaCx && window.fetch) {
+    fetch('/api/editor-conexion?estado=1', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok || j.puede !== true) return;
+        tarjetaCx.hidden = false;
+        if (!j.configurada) {
+          document.getElementById('conexion-botones').hidden = true;
+          document.getElementById('conexion-portapapeles').hidden = true;
+          avisarCx('La llave del editor todavía no está creada en el dash. El dueño la crea una sola vez con scripts\\Setup-ClaveEditor.ps1 y después esta tarjeta deja descargar la conexión.', true);
+        }
+      })
+      .catch(function () { /* sin la tarjeta: la pagina sigue igual */ });
+  }
+  if (bajarCx) bajarCx.addEventListener('click', function () {
+    var antes = bajarCx.textContent;
+    bajarCx.textContent = 'Descargando…';
+    bajarCx.setAttribute('aria-busy', 'true');
+    pedirLineas()
+      .then(function (lineas) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([lineas], { type: 'text/plain' }));
+        a.download = 'conexion-editor.txt';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+        avisarCx('Listo: quedó «conexion-editor.txt» en tus descargas. Ahora corre el instalador nuevo (Instalar-Editor.cmd) en ese PC.', false);
+      })
+      .catch(function (err) { avisarCx('No se pudo bajar la conexión (' + err.message + '). Si la sesión caducó, entra de nuevo.', true); })
+      .then(function () { bajarCx.textContent = antes; bajarCx.removeAttribute('aria-busy'); });
+  });
+  if (copiarCx) copiarCx.addEventListener('click', function () {
+    var antes = copiarCx.textContent;
+    pedirLineas()
+      .then(function (lineas) { return copiar(lineas); })
+      .then(function (ok) {
+        copiarCx.textContent = ok ? 'Copiado' : 'No se pudo copiar';
+        avisarCx(ok ? 'Copiadas. Pégalas en el archivo .env del editor (reemplaza las líneas DASH_URL y DASH_CLAVE_EDITOR que haya) y guarda. Después bórralas del historial del portapapeles (Win+V).' : 'El navegador no dejó copiar: usa «Descargar conexión».', !ok);
+        setTimeout(function () { copiarCx.textContent = antes; }, 1500);
+      }, function (err) { avisarCx('No se pudo traer la conexión (' + err.message + '). Si la sesión caducó, entra de nuevo.', true); });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copiar]'), function (b) {
+    b.addEventListener('click', function () {
+      var antes = b.textContent;
+      copiar(b.getAttribute('data-copiar')).then(function (ok) {
+        b.textContent = ok ? 'Copiado' : 'No se pudo copiar';
+        setTimeout(function () { b.textContent = antes; }, 1500);
+      });
+    });
+  });
+})();
+</script>

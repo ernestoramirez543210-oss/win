@@ -1,0 +1,1395 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flujos ZapData — Suite Mi Negocio</title>
+<style>
+  body { margin:0; background:#020916; color:#f3f5fa;
+         font:14px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:1180px; margin:0 auto; padding:26px 22px 60px; }
+  h1 { font-size:22px; font-weight:800; letter-spacing:-.5px; margin:0 0 4px; }
+  .sub { color:#90a2cd; font-size:13px; margin:0 0 22px; }
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px); gap:16px; align-items:start; }
+  @media (max-width:900px){ .cols{ grid-template-columns:1fr; } }
+  .card { background:#061026; border:1px solid #112247; border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+  .card h2 { font-size:14px; margin:0 0 3px; font-weight:700; }
+  .hint { color:#7e93c5; font-size:12.5px; margin:0 0 14px; }
+  .nota { color:#6f6f8a; font-size:11.5px; line-height:1.5; margin-top:7px; }
+  label { display:block; font-size:12px; color:#a7b6d8; margin:0 0 5px; font-weight:600; }
+  input, select, textarea {
+    width:100%; box-sizing:border-box; padding:9px 11px; border-radius:8px; border:1px solid #132751;
+    background:#09152f; color:#f3f5fa; font:13px/1.5 inherit; margin-bottom:12px;
+  }
+  textarea { resize:vertical; min-height:70px; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#4d8bff; }
+  input[type=checkbox] { width:auto; margin:0; }
+  input[type=file] { padding:7px 9px; }
+  /* Antes esto era un <input type=file> a secas: gris, chiquito, igual a cualquier campo del
+     formulario, y nadie asociaba "esa rayita" con "acá se sube el archivo". Ahora es una caja
+     grande con ícono y texto, que además acepta arrastrar y soltar. */
+  .dropzone { display:flex; align-items:center; justify-content:center; gap:9px;
+              border:1.5px dashed #1d3361; border-radius:10px; padding:16px 12px; margin-bottom:8px;
+              cursor:pointer; text-align:center; color:#90a2cd; font-size:12.5px;
+              transition:border-color .15s, background .15s, color .15s; }
+  .dropzone:hover, .dropzone.arrastrando { border-color:#4d8bff; background:#081229; color:#cdd5e8; }
+  .dropzone .ic { font-size:20px; line-height:1; flex:0 0 auto; }
+  .dropzone b { color:#f3f5fa; font-weight:650; }
+  .dropzone input[type=file] { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+  .arch .tipo { font-size:14px; flex:0 0 auto; }
+  button { border:0; border-radius:8px; padding:10px 16px; cursor:pointer; font:13px inherit; font-weight:650; }
+  .primario { background:var(--accion); color:var(--accion-texto); width:100%; }
+  .primario:disabled { opacity:.5; cursor:default; }
+  .fila { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 10px; }
+  .op { display:flex; align-items:center; gap:8px; padding:4px 0; cursor:pointer; font-size:13px; }
+  .op .g { color:#6f6f8a; font-size:11.5px; }
+  .paso { display:flex; align-items:baseline; gap:7px; margin:0 0 6px; }
+  .paso b { color:#4d8bff; font-size:11px; }
+  .paso span { font-size:12px; color:#a7b6d8; font-weight:600; }
+  /* Los archivos adjuntos, en el orden en que se van a enviar. */
+  .arch { display:flex; align-items:center; gap:9px; padding:6px 9px; margin-bottom:5px;
+          background:#09152f; border:1px solid #132751; border-radius:8px; font-size:12.5px; }
+  .arch .num { color:#4d8bff; font-size:11px; font-weight:700; flex:0 0 auto; }
+  /* El nombre se puede corregir aqui mismo: un archivo llamado
+     BONO3ESTRATEGIASDEPRODUCTIVIDADSINESTRES.pdf no tiene por donde partirse, y ese nombre
+     es el que va a leer la clienta en el mensaje del precio. */
+  .arch .nom { flex:1; min-width:0; margin:0; padding:3px 6px; background:transparent;
+               border:1px solid transparent; border-radius:5px; font-size:12.5px; }
+  .arch .nom:hover { border-color:#132751; }
+  .arch .nom:focus { background:#040b1b; border-color:#4d8bff; }
+  .arch .peso { color:#6f6f8a; font-size:11px; }
+  .arch .x { background:none; padding:0 3px; color:#6f6f8a; font-size:15px; line-height:1; }
+  .arch .x:hover { color:#ff8fb0; }
+  /* Reordenar. Flechas y no arrastrar: arrastrar falla justo cuando hay prisa, y aqui el
+     orden de los archivos es el orden en que le llegan los mensajes a la clienta. */
+  .arch .mv { background:none; padding:0 2px; color:#4e6aab; font-size:11px; line-height:1; }
+  .arch .mv:hover:not(:disabled) { color:#4d8bff; }
+  .arch .mv:disabled { opacity:.25; cursor:default; }
+  .vacio { color:#6f6f8a; font-size:12px; font-style:italic; padding:3px 0 8px; }
+  /* La vista previa imita WhatsApp a proposito: leer el copy en burbujas verdes es lo que
+     hace evidente si suena natural o si son tres parrafos que nadie va a leer. */
+  .chat { background:#0b141a; border-radius:12px; padding:12px; max-height:70vh; overflow:auto; }
+  .burb { background:#005c4b; color:#e9edef; padding:8px 11px; border-radius:10px 10px 10px 3px;
+          margin:0 0 9px; font-size:12.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+  .burb.arc { background:#1f2c33; color:#8696a0; font-style:italic; }
+  .burb .marca { display:block; margin-top:6px; color:#ffd479; font-size:11px; font-style:italic; }
+  .tabs { display:flex; flex-wrap:wrap; gap:0; margin:0 0 18px; border-bottom:1px solid #112247; }
+  .tabs button { background:none; color:#4e6aab; border-radius:0; padding:9px 16px 11px;
+                 border-bottom:2px solid transparent; }
+  .tabs button.activo { color:#f3f5fa; border-bottom-color:#4d8bff; }
+  .pais { border:1px solid #112247; border-radius:10px; margin-bottom:9px; overflow:hidden; }
+  .pais > summary { list-style:none; cursor:pointer; padding:10px 13px; display:flex;
+                    align-items:center; gap:9px; font-size:13px; font-weight:600; }
+  .pais > summary::-webkit-details-marker { display:none; }
+  .pais[open] > summary { border-bottom:1px solid #112247; background:#08132b; }
+  .pais .cuerpo { padding:13px; }
+  .marca-ok { margin-left:auto; font-size:11px; font-weight:700; }
+  .avisos { font-size:12.5px; line-height:1.6; }
+  .avisos b { color:#f3f5fa; }
+  .ok { color:#38e0a5; } .mal { color:#ff8fb0; }
+  /* En que va el pedido.
+     El tablero crea los flujos en ZapData el mismo, uno por uno, y eso tarda. La barra no
+     es decorativa: se mueve con el estado real del pedido, que se le pregunta al servidor
+     cada pocos segundos. Antes no habia nada de esto, el boton contestaba "listo" sin
+     haber creado nada del otro lado, y no habia forma de saber si el pedido existia. */
+  .barra { height:7px; border-radius:99px; background:#112247; overflow:hidden; margin:11px 0 9px; }
+  .barra > i { display:block; height:100%; width:0; border-radius:99px;
+               background:linear-gradient(90deg,#4d8bff,#38e0a5); transition:width .6s ease; }
+  .barra.late > i { animation:late 1.5s ease-in-out infinite; }
+  @keyframes late { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .pasos { list-style:none; margin:0; padding:0; font-size:12.5px; }
+  .pasos li { position:relative; padding:3px 0 3px 21px; color:#6f6f8a; }
+  .pasos li::before { content:'○'; position:absolute; left:2px; }
+  .pasos li.listo { color:#cdd5e8; } .pasos li.listo::before { content:'●'; color:#38e0a5; }
+  .pasos li.curso { color:#f3f5fa; } .pasos li.curso::before { content:'◐'; color:#4d8bff; }
+  .pasos li.freno { color:#ff8fb0; } .pasos li.freno::before { content:'●'; color:#ff8fb0; }
+  .eti { font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:99px;
+         background:#112247; color:#a7b6d8; white-space:nowrap; }
+  .eti.pendiente { background:#2a2416; color:#ffd479; }
+  .eti.creando { background:#10313a; color:#4d8bff; }
+  .eti.hecho { background:#0f2f24; color:#38e0a5; }
+  .eti.trabado { background:#33121f; color:#ff8fb0; }
+  .cola > div { display:flex; gap:9px; align-items:baseline; padding:7px 0;
+                border-top:1px solid #112247; font-size:12.5px; }
+  .cola > div:first-child { border-top:0; }
+  .cola .nom { flex:1; min-width:0; color:#cdd5e8; font-weight:600; }
+  .cola .cuando { color:#6f6f8a; font-size:11px; }
+  /* Celular: los campos del formulario van de a tres por fila en escritorio (pais, precio,
+     moneda) y en un telefono de 360px cada uno queda de ~95px con la etiqueta encima. Se
+     apilan de a uno, que es como se llenan de verdad en el telefono: con una mano. */
+  @media (max-width: 560px) {
+    .wrap { padding: 14px 12px 40px; }
+    h1 { font-size: 19px; }
+    .fila { grid-template-columns: 1fr; gap: 0; }
+    button, input, select, textarea { min-height: 40px; }
+    .op { padding: 8px 0; }
+  }
+</style>
+
+<div class="wrap">
+  <h1>Flujos ZapData</h1>
+  <p class="sub">Arma los flujos de WhatsApp de una oferta con el guion que ya vende. Aquí no se
+     escribe el copy: se rellenan los datos que cambian de una oferta a otra.</p>
+
+  <div class="tabs" id="tabs">
+    <button class="activo" data-tab="t-oferta">Nueva oferta</button>
+    <button data-tab="t-plantilla" id="tab-plantilla" hidden>Plantilla</button>
+    <button data-tab="t-mockup" id="tab-mockup" hidden>Mockup</button>
+    <button data-tab="t-paises" id="tab-paises" hidden>Países</button>
+    <button data-tab="t-conexion" id="tab-conexion" hidden>Conexión</button>
+  </div>
+
+  <!-- ================= PLANTILLA ================= -->
+  <!-- El copy del guion. Se corrige aqui una vez y sale corregido en todas las ofertas que
+       se creen despues, en vez de ir mensaje por mensaje dentro de ZapData cada vez. -->
+  <div id="t-plantilla" style="display:none">
+    <div class="card">
+      <h2>El guion, mensaje por mensaje</h2>
+      <p class="hint">Esto es lo que recibe la clienta, en orden. Edita aquí y toda oferta que
+         crees después nace con tu versión. Lo que está entre llaves se rellena solo con los
+         datos de esa oferta y de ese país: <b>{persona}</b>, <b>{oferta}</b>, <b>{promesa}</b>,
+         <b>{anclaTxt}</b>, <b>{aporte1Txt}</b>, <b>{aporte2Txt}</b>, <b>{vinetas}</b>,
+         <b>{bonos}</b>, <b>{bancos}</b>.</p>
+      <p class="hint"><b>No cambia los flujos que ya existen</b> en ZapData: esos ya están
+         escritos. Esto es el molde de los que vienen.</p>
+      <div id="lista-copys"><p class="hint" style="margin:0">Cargando…</p></div>
+    </div>
+  </div>
+
+  <!-- ================= MOCKUP ================= -->
+  <!-- La composicion del mockup que "Nueva oferta" genera con IA. Se edita aqui una vez y
+       vale para todos los mockups que se generen despues, igual que la pestaña Plantilla. -->
+  <div id="t-mockup" style="display:none">
+    <div class="card">
+      <h2>Instrucciones del mockup</h2>
+      <p class="hint">Esto es lo que la IA de texto usa para escribir el prompt de la imagen
+         de cada oferta nueva: la composición (producto al centro, bonos alrededor, título y
+         viñetas en español), no dice nada del producto en sí. Eso lo agrega automáticamente
+         cada oferta con su nombre, promesa y bonos.</p>
+      <p class="hint">La imagen se genera con <b>gpt-image-2</b> por defecto (el mejor modelo
+         de la familia GPT disponible, pensado para que el texto dentro de la imagen salga
+         nítido), salvo que elijas otro modelo en APIs → Proveedor de imágenes.</p>
+      <textarea id="f-mockup-instrucciones" style="min-height:260px;font-size:12.5px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <button class="sec" id="btn-mockup-plantilla-guardar">Guardar</button>
+        <button class="sec" id="btn-mockup-plantilla-restaurar">Restaurar el original</button>
+        <span class="marca-ok" id="mockup-plantilla-marca">original</span>
+        <span class="g" id="mockup-plantilla-eco"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONEXION ================= -->
+  <!-- La credencial con la que el tablero le habla a ZapData. Solo la ve el dueno: abre la
+       cuenta entera, y quien crea ofertas no la necesita para su trabajo. -->
+  <div id="t-conexion" style="display:none">
+    <div class="card">
+      <h2>Conexión con ZapData</h2>
+      <p class="hint">Sin esto el tablero arma los flujos pero no los monta: quedan en la cola
+         esperando a que alguien los suba a mano. Con esto los crea solo.</p>
+      <div id="estado-mcp" class="avisos">Cargando…</div>
+    </div>
+
+    <div class="card">
+      <h2>Conectar</h2>
+      <p class="hint">ZapData solo deja volver la autorización a <b>localhost</b> o a
+         <b>claude.ai</b>, así que el tablero no puede pedirla solo. Se pide desde el
+         computador, corriendo esto una vez:</p>
+      <pre style="background:#09152f; border:1px solid #132751; border-radius:8px; padding:10px 12px;
+                  font-size:12px; overflow-x:auto; margin:0 0 12px">powershell -ExecutionPolicy Bypass -File "scripts\Conectar-ZapData.ps1"</pre>
+      <p class="hint">Abre el navegador, autorizás, y te deja un texto copiado. Pegalo aquí:</p>
+      <label>Lo que imprimió el script</label>
+      <textarea id="f-pegado" style="min-height:70px; font-family:ui-monospace,monospace; font-size:11.5px"
+                placeholder="eyJ0aXBvIjoib2F1dGgiLCJ0b2tlbiI6…"></textarea>
+      <button class="primario" id="btn-pegado">Guardar el permiso</button>
+      <p class="nota">Se pega una sola vez. De ahí en adelante el tablero lo renueva solo y
+         crea los flujos sin que nadie intervenga. Si algún día caduca del todo, esta pestaña
+         lo va a decir y se vuelve a correr el script.</p>
+    </div>
+
+    <details class="card">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px">Pedirlo desde aquí</summary>
+      <p class="hint" style="margin-top:12px">Es como debería funcionar, y va a funcionar el día
+         que ZapData permita que la autorización vuelva a este sitio. Hoy contesta que la
+         dirección no está permitida. El botón queda para volver a probar cuando lo habiliten.</p>
+      <button id="btn-conectar">Conectar con ZapData</button>
+    </details>
+
+    <details class="card">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px">Pegar un token a mano</summary>
+      <p class="hint" style="margin-top:12px">Otra vía, para el día que ZapData habilite el
+         permiso de crear flujos en sus tokens estáticos. Hoy ese permiso está en
+         «Próximamente» en su panel, así que un token pegado normalmente solo va a poder leer.</p>
+      <label>Credencial</label>
+      <input id="f-token" type="password" placeholder="zdm_live_…" autocomplete="off">
+      <label>Nombre, para acordarte de cuál es</label>
+      <input id="f-token-nombre" placeholder="Tablero Mi Negocio">
+      <button id="btn-token">Guardar y probar</button>
+      <p class="nota">Se prueba contra ZapData antes de guardarla. Si no sirve, no se guarda.
+         Una vez guardada no vuelve a salir de aquí: solo se ve el principio y el final.</p>
+    </details>
+  </div>
+
+  <!-- ================= PAISES ================= -->
+  <div id="t-paises" style="display:none">
+    <div class="card">
+      <h2>Dónde se vende</h2>
+      <p class="hint">Cada país trae lo suyo: sus precios, su Pixel y sus datos de pago. El guion
+         es el mismo en todos, así que llenar esto una vez deja el país listo para cualquier
+         oferta futura. Un país incompleto no se puede elegir al crear.</p>
+      <div id="lista-paises"><p class="hint" style="margin:0">Cargando…</p></div>
+    </div>
+  </div>
+
+  <!-- ================= NUEVA OFERTA ================= -->
+  <div id="t-oferta">
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div class="paso"><b>1</b><span>De qué es la oferta</span></div>
+        <label>Nombre</label>
+        <input id="f-oferta" placeholder="Ley de Murphy">
+        <div class="nota" style="margin:-6px 0 12px">Va en las etiquetas, y de ahí salen la pestaña
+          del libro de ventas y el ROAS. Escríbelo igual que la campaña.</div>
+
+        <label>Palabras que la disparan</label>
+        <input id="f-claves" placeholder="ley, murphy, murpy">
+        <div class="nota" style="margin:-6px 0 12px">Se proponen solas. Agrega los errores de
+          tecleo típicos: Murphy dispara también con «murpy», y de ahí llega gente.</div>
+
+        <label>Quién atiende</label>
+        <input id="f-persona" list="personas" value="Laura" placeholder="Laura">
+        <datalist id="personas"><option>Laura</option><option>Camila</option><option>Lucía</option></datalist>
+
+        <label>La promesa, en una frase</label>
+        <textarea id="f-promesa" placeholder="Aprenderás a liderar encuentros femeninos más ligeros, divertidos y edificantes desde cero, fortaleciendo la unidad de tu congregación."></textarea>
+        <div class="nota" style="margin:-6px 0 0">Es la frase que hace que siga leyendo. Va justo
+          debajo del precio.</div>
+      </div>
+
+      <div class="card">
+        <div class="paso"><b>2</b><span>Los archivos</span></div>
+        <p class="hint">Adjunta los PDF y ya está: la cantidad dice cuántos se entregan, y el
+           nombre de cada archivo es el que sale en los mensajes. Entre uno y otro va siempre
+           una pausa de duración variable, para no parecer spam.</p>
+
+        <label>El mockup que va al inicio</label>
+        <div id="l-portada"></div>
+        <div class="nota" style="margin:-4px 0 10px">Se genera solo: la IA escribe el prompt
+          con la misma composición de los mockups que ya venden (producto al centro, bonos
+          alrededor, título y viñetas en español) y el proveedor de imágenes lo dibuja.</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <button type="button" id="btn-mockup" style="flex:1">Generar mockup con IA</button>
+          <span id="mockup-estado" style="color:#90a2cd;font-size:12px"></span>
+        </div>
+        <div id="mockup-preview"></div>
+        <details style="margin:0 0 12px">
+          <summary style="cursor:pointer;color:#90a2cd;font-size:12px">Ver o editar el prompt de la imagen</summary>
+          <textarea id="f-mockup-prompt" rows="5" style="margin-top:6px"></textarea>
+          <button type="button" id="btn-mockup-regenerar" style="width:100%;margin-top:6px">Regenerar con este prompt</button>
+        </details>
+        <div class="nota" style="margin:0 0 6px">¿Prefieres subir el tuyo? Sigue funcionando:</div>
+        <label class="dropzone" for="f-portada">
+          <span class="ic">🖼️</span>
+          <span><b>Arrastra la imagen</b> o haz clic para elegirla</span>
+          <input type="file" id="f-portada" accept=".png,.jpg,.jpeg,.webp">
+        </label>
+        <div class="nota" style="margin:-4px 0 12px">La imagen de los libros. Va después del
+          primer audio y antes del mensaje del precio, que es donde está en los flujos que
+          venden. Sin ella el precio llega sin nada que mirar.</div>
+
+        <label>Los audios de la presentadora (Laura)</label>
+        <div id="l-audios"></div>
+        <div class="nota" style="margin:-4px 0 10px">Se generan solos: la IA escribe el guion con
+          el mismo patrón de los audios que ya venden, y Fish Audio lo convierte a voz. El primero
+          va despues del saludo y el segundo justo antes de pedir el si.</div>
+        <label for="f-audio-voz">Voz</label>
+        <select id="f-audio-voz"></select>
+        <button type="button" id="btn-guiones" style="width:100%;margin-bottom:12px">Generar guiones con IA</button>
+        <div id="bloque-audio1" style="display:none;margin-bottom:14px">
+          <label for="f-audio1-guion">Guion audio 1 — presentación</label>
+          <textarea id="f-audio1-guion" rows="6"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 8px">
+            <button type="button" data-generar-audio="1">Generar audio 1</button>
+            <span id="audio1-estado" style="color:#90a2cd;font-size:12px"></span>
+          </div>
+          <div id="audio1-preview"></div>
+        </div>
+        <div id="bloque-audio2" style="display:none;margin-bottom:10px">
+          <label for="f-audio2-guion">Guion audio 2 — cierre de confianza</label>
+          <textarea id="f-audio2-guion" rows="6"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 8px">
+            <button type="button" data-generar-audio="2">Generar audio 2</button>
+            <span id="audio2-estado" style="color:#90a2cd;font-size:12px"></span>
+          </div>
+          <div id="audio2-preview"></div>
+        </div>
+        <div class="nota" style="margin:0 0 6px">¿Prefieres grabarlos tú? Sigue funcionando:</div>
+        <label class="dropzone" for="f-audios">
+          <span class="ic">🎵</span>
+          <span><b>Arrastra los audios</b> o haz clic para elegirlos</span>
+          <input type="file" id="f-audios" multiple accept=".mp3,.ogg,.m4a">
+        </label>
+        <div class="nota" style="margin:-4px 0 12px">Si subes archivos aquí se usan en vez de los
+          generados. Si no generas ni subes nada, el bloque queda marcado para grabarlo en ZapData.</div>
+
+        <label>Se entrega ANTES del pago</label>
+        <div id="l-material"></div>
+        <label class="dropzone" for="f-material">
+          <span class="ic">📎</span>
+          <span><b>Arrastra los PDF</b> o haz clic para elegirlos</span>
+          <input type="file" id="f-material" multiple accept=".pdf,.png,.jpg,.jpeg,.mp3,.ogg,.mp4">
+        </label>
+
+        <label style="margin-top:10px">O se entrega por enlace (título | enlace, uno por línea)</label>
+        <textarea id="f-enlaces" style="min-height:58px" placeholder="SOLO MOLDES DE LETRAS en diferentes tamaños | https://drive.google.com/…"></textarea>
+        <div class="nota" style="margin:-6px 0 12px">Para ofertas que no se mandan en PDF sino como
+          carpeta de Drive. Cada enlace sale en su propio mensaje, con su título encima: tres
+          enlaces en un mismo globo se leen como un muro y no se toca ninguno.</div>
+
+        <label style="margin-top:10px">Se entrega CON el pago</label>
+        <div id="l-bonos"></div>
+        <label class="dropzone" for="f-bonos">
+          <span class="ic">🎁</span>
+          <span><b>Arrastra los bonos</b> o haz clic para elegirlos</span>
+          <input type="file" id="f-bonos" multiple accept=".pdf,.png,.jpg,.jpeg,.mp3,.ogg,.mp4">
+        </label>
+        <div class="nota" style="margin-top:-4px">Estos son los que el mensaje del precio promete
+          como regalo. Cambian en cada oferta, así que salen de lo que adjuntes aquí y no de una
+          lista fija. El audio de presentación no va aquí: se graba en ZapData.</div>
+
+        <label style="margin-top:10px">O se entrega por enlace (título | enlace, uno por línea)</label>
+        <textarea id="f-bonos-enlaces" style="min-height:58px" placeholder="BONO 2: 3D | https://drive.google.com/…"></textarea>
+        <div class="nota" style="margin:-6px 0 0">Mismo caso que arriba pero para un bono que es
+          carpeta de Drive en vez de archivo. Llega junto con el resto de los regalos, después del pago.</div>
+      </div>
+
+      <div class="card">
+        <div class="paso"><b>3</b><span>Qué recibe</span></div>
+        <p class="hint">Una por línea, salen con ✅. Se proponen desde los nombres de los archivos;
+           reescríbelas para que vendan.</p>
+        <textarea id="f-vinetas" style="min-height:100px" placeholder="40 Dinámicas Bíblicas transformadoras.
+60 Dinámicas creativas para mujeres.
+Libro digital: Florecer donde Dios te plantó."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="paso"><b>4</b><span>Dónde se vende</span></div>
+        <p class="hint">El guion es el mismo en todos los países. Lo único que cambia son los datos
+           bancarios, el Pixel y los montos, y todo eso ya viene puesto.</p>
+        <div id="f-paises"><p class="hint" style="margin:0">Cargando…</p></div>
+        <label style="margin-top:6px"><input type="checkbox" id="f-verprecios"> Ver los precios</label>
+      </div>
+
+      <button class="primario" id="btn-crear">Crear los flujos</button>
+
+      <!-- Lo que pasa despues del boton, dicho donde se ve. Crear los flujos en ZapData
+           tarda, y antes el boton contestaba sin haber creado nada: se hacia clic, no
+           aparecia nada del otro lado, y no habia forma de saber si el pedido existia. -->
+      <div class="card" style="margin-top:16px">
+        <div class="barra" id="barra" hidden><i></i></div>
+        <div class="avisos" id="resultado">
+          Al darle crear, los flujos se arman aquí y se montan en ZapData uno por uno. Tarda
+          un poco y abajo se ve en qué va. Nacen apagados y sin número: no le llegan a nadie
+          hasta que los revises y los actives.
+        </div>
+      </div>
+
+      <div class="card" id="card-cola" hidden>
+        <h2>Pedidos</h2>
+        <p class="hint">Se actualiza solo, también al abrir la página.</p>
+        <div class="cola" id="cola"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="position:sticky; top:16px">
+        <h2>Cómo lo va a recibir</h2>
+        <p class="hint">El guion real, con tus datos puestos. Se actualiza mientras escribes.</p>
+        <div class="chat" id="previo"><p class="hint" style="margin:0">Pon el nombre, la promesa y
+          al menos un archivo, y aquí se ve la conversación completa.</p></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var el = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function post(ruta, cuerpo) {
+    return fetch(ruta, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'respuesta inesperada');
+      return j;
+    });
+  }
+  function kb(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; }
+
+  // El nombre del archivo ES el nombre que sale en el copy. La misma limpieza que hace el
+  // servidor, repetida aqui solo para que la vista previa y las viñetas propuestas digan
+  // lo mismo antes de mandar nada.
+  function bonito(archivo) {
+    var s = String(archivo || '').replace(/\.[a-z0-9]{1,5}$/i, '')
+      .replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/^bono\s*n?\s*\d+\s*[:.·-]?\s*/i, '').replace(/^\d+\s*[:.·-]\s*/, '');
+    if (s === s.toUpperCase() && /[A-Z]/.test(s)) s = s.toLowerCase();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  var material = [], bonos = [], portada = [], audios = [], paises = [], PAISES = [];
+
+  var clavesTocadas = false, vinetasTocadas = false;
+  el('f-claves').addEventListener('input', function () { clavesTocadas = true; });
+  el('f-vinetas').addEventListener('input', function () { vinetasTocadas = true; });
+  el('f-enlaces').addEventListener('input', function () { proponerVinetas(); previo(); });
+
+  function proponerClaves() {
+    if (clavesTocadas) return;
+    var n = el('f-oferta').value.toLowerCase().normalize('NFD').replace(/[^a-z0-9 ]/g, ' ');
+    var relleno = ['de', 'del', 'la', 'el', 'los', 'las', 'para', 'con', 'sin', 'una', 'uno'];
+    el('f-claves').value = n.split(/\s+/)
+      .filter(function (w) { return w.length >= 3 && relleno.indexOf(w) < 0; }).join(', ');
+  }
+  // El separador "|" es lo ideal, pero quien pega un enlace a las apuradas casi nunca lo
+  // escribe: pega "Titulo https://..." con un espacio, o el enlace solo. Exigir el "|" hacia
+  // que esas lineas se leyeran como vacias y tumbaba la oferta entera. Esto busca la URL
+  // donde este en la linea y toma todo lo demas como titulo, con o sin "|".
+  function parseEnlaces(texto) {
+    return texto.split(/\r?\n/).map(function (l) {
+      l = l.trim();
+      if (!l) return null;
+      var m = l.match(/https?:\/\/\S+/);
+      if (!m) return null;
+      var titulo = (l.slice(0, m.index) + l.slice(m.index + m[0].length))
+        .replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+      return { titulo: titulo, url: m[0] };
+    }).filter(Boolean);
+  }
+  // Las viñetas se proponen desde los nombres de los archivos, y de los títulos de los
+  // enlaces cuando la oferta se entrega por Drive en vez de PDF: ya se escribio ahi lo que
+  // trae la oferta, y volver a teclearlo es el tipo de trabajo que sobra. En cuanto
+  // alguien las toca, dejan de reescribirse.
+  function proponerVinetas() {
+    if (vinetasTocadas) return;
+    var deEnlaces = parseEnlaces(el('f-enlaces').value).map(function (e) { return e.titulo || e.url; });
+    el('f-vinetas').value = material.map(function (a) { return a.nombre; }).concat(deEnlaces).join('\n');
+  }
+
+  function pintarPaises() {
+    var ver = el('f-verprecios') && el('f-verprecios').checked;
+    el('f-paises').innerHTML = PAISES.map(function (p) {
+      var on = paises.indexOf(p.nombre) >= 0;
+      return '<label class="op"><input type="checkbox" data-pais="' + esc(p.nombre) + '"' +
+          (on ? ' checked' : '') + (p.listo ? '' : ' disabled') + '><span' +
+          (p.listo ? '' : ' style="color:#4e6aab"') + '>' + esc(p.nombre) + '</span>' +
+          (p.listo
+            ? '<span class="g">' + esc(p.moneda) + ' · ' + esc(p.pixel) + '</span>'
+            : '<span class="g mal">falta configurarlo en Países</span>') + '</label>' +
+        '<div data-caja="' + esc(p.nombre) + '" style="' + (on && ver ? '' : 'display:none;') +
+          'margin:4px 0 10px 24px"><div class="fila">' +
+            '<div><label>Ancla</label><input data-pr="ancla" data-p="' + esc(p.nombre) + '" value="' + esc(p.ancla) + '"></div>' +
+            '<div><label>Gesto de Apoyo</label><input data-pr="aporte1" data-p="' + esc(p.nombre) + '" value="' + esc(p.aporte1) + '"></div>' +
+            '<div><label>Apoyo Valioso</label><input data-pr="aporte2" data-p="' + esc(p.nombre) + '" value="' + esc(p.aporte2) + '"></div>' +
+          '</div></div>';
+    }).join('');
+  }
+
+  // Un ícono por tipo, para reconocer de un vistazo qué es cada fila sin leer el nombre
+  // entero (los nombres de archivo real casi nunca son cortos).
+  function iconoArchivo(nombre) {
+    var ext = String(nombre || '').split('.').pop().toLowerCase();
+    if (['mp3', 'ogg', 'm4a', 'wav'].indexOf(ext) !== -1) return '🎵';
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif'].indexOf(ext) !== -1) return '🖼️';
+    if (['mp4', 'mov'].indexOf(ext) !== -1) return '🎬';
+    return '📄';
+  }
+
+  function pintarArchivos() {
+    [['l-material', material], ['l-bonos', bonos], ['l-portada', portada], ['l-audios', audios]].forEach(function (par) {
+      var cont = el(par[0]), arr = par[1];
+      cont.innerHTML = arr.length ? arr.map(function (a, i) {
+        // El orden importa: es el orden en que le van a llegar los mensajes a la clienta.
+        // El selector de archivos los entrega como quiere el sistema, casi nunca como uno
+        // los pensó, y con varios adjuntos eso se nota. Las flechas lo arreglan sin tener
+        // que quitar y volver a subir.
+        return '<div class="arch"><span class="num">' + (i + 1) + 'º</span>' +
+          '<span class="tipo">' + iconoArchivo(a.nombre) + '</span>' +
+          '<input class="nom" data-nom="' + par[0] + '" data-i="' + i + '" value="' + esc(a.nombre) + '">' +
+          '<span class="peso">' + esc(a.peso || '') + '</span>' +
+          '<button class="mv" data-mover="' + par[0] + '" data-i="' + i + '" data-d="-1"' +
+            (i === 0 ? ' disabled' : '') + ' title="Subir">▲</button>' +
+          '<button class="mv" data-mover="' + par[0] + '" data-i="' + i + '" data-d="1"' +
+            (i === arr.length - 1 ? ' disabled' : '') + ' title="Bajar">▼</button>' +
+          '<button class="x" data-quitar="' + par[0] + '" data-i="' + i + '" title="Quitar">×</button></div>';
+      }).join('') : '<div class="vacio">Sin archivos todavía.</div>';
+    });
+  }
+
+  var LISTAS = { 'l-bonos': bonos, 'l-portada': portada, 'l-audios': audios };
+  var listaDe = function (id) { return LISTAS[id] || material; };
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-quitar]'); if (!b) return;
+    listaDe(b.dataset.quitar).splice(parseInt(b.dataset.i, 10), 1);
+    pintarArchivos(); proponerVinetas(); previo();
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-mover]'); if (!b) return;
+    var arr = listaDe(b.dataset.mover);
+    var i = parseInt(b.dataset.i, 10), j = i + parseInt(b.dataset.d, 10);
+    if (j < 0 || j >= arr.length) return;
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    // La vista previa se rehace porque el orden de los archivos ES el orden de los
+    // mensajes: moverlos aquí cambia la conversación que va a ver la clienta.
+    pintarArchivos(); proponerVinetas(); previo();
+  });
+
+  document.addEventListener('change', function (e) {
+    var c = e.target;
+    if (c.id === 'f-verprecios') { pintarPaises(); return; }
+    if (!c.dataset.pais) return;
+    var i = paises.indexOf(c.dataset.pais);
+    if (c.checked && i < 0) paises.push(c.dataset.pais);
+    if (!c.checked && i >= 0) paises.splice(i, 1);
+    var caja = document.querySelector('[data-caja="' + c.dataset.pais + '"]');
+    if (caja) caja.style.display = (c.checked && el('f-verprecios').checked) ? '' : 'none';
+    previo();
+  });
+
+  function subir(input, destino) {
+    var pend = [].slice.call(input.files || []), i = 0;
+    if (!pend.length) return;
+    (function uno() {
+      if (i >= pend.length) { input.value = ''; proponerVinetas(); previo(); return; }
+      var f = pend[i];
+      el('resultado').innerHTML = 'Subiendo ' + esc(f.name) + '…';
+      fetch('/api/zaparchivo?nombre=' + encodeURIComponent(f.name),
+        { method: 'POST', credentials: 'same-origin', body: f })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j.ok) throw new Error(j.error || 'no se pudo subir');
+          destino.push({ nombre: bonito(f.name), url: j.archivo.url, peso: kb(f.size) });
+          pintarArchivos();
+          el('resultado').innerHTML = '<span class="ok">' + esc(f.name) + ' quedó listo.</span>';
+        })
+        .catch(function (e) { el('resultado').innerHTML = '<span class="mal">' + esc(f.name) + ': ' + esc(e.message) + '</span>'; })
+        .then(function () { i++; uno(); });
+    })();
+  }
+  el('f-material').addEventListener('change', function () { subir(this, material); });
+  el('f-bonos').addEventListener('change', function () { subir(this, bonos); });
+  // Si se elige un archivo a mano, reemplaza lo que hubiera (generado o manual): no tiene
+  // sentido mezclar un mockup generado con uno subido en el mismo lugar.
+  el('f-portada').addEventListener('change', function () { portada.length = 0; el('mockup-preview').innerHTML = ''; subir(this, portada); });
+
+  // Arrastrar y soltar sobre cualquier dropzone: solo reasigna los archivos al <input> y
+  // dispara el 'change' que ya existe, para no duplicar la lógica de subida.
+  document.querySelectorAll('.dropzone').forEach(function (dz) {
+    var input = dz.querySelector('input[type=file]');
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('arrastrando'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('arrastrando'); });
+    });
+    dz.addEventListener('drop', function (e) {
+      if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+      input.files = e.dataTransfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+
+  // ---------- mockup generado: prompt con IA + imagen con el proveedor conectado ----------
+  //
+  // Antes esto tocaba diseñarlo aparte y subirlo a mano. Un solo clic escribe el prompt
+  // (con la composicion fija que ya funciona en los mockups que venden) y genera la
+  // imagen, sin pasos manuales entre medio. El prompt queda visible y editable por si hay
+  // que corregir algo y regenerar sin escribirlo de cero.
+  function b64aBlob(b64) {
+    var bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: 'image/png' });
+  }
+
+  function subirMockup(blob) {
+    var nombreArchivo = 'mockup-' + (el('f-oferta').value.trim() || 'oferta').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+    return fetch('/api/zaparchivo?nombre=' + encodeURIComponent(nombreArchivo),
+      { method: 'POST', credentials: 'same-origin', body: blob })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || 'no se pudo subir');
+        portada.length = 0;
+        portada[0] = { nombre: 'Mockup', url: j.archivo.url, peso: kb(blob.size) };
+        pintarArchivos(); previo();
+        var url = URL.createObjectURL(blob);
+        el('mockup-preview').innerHTML = '<img src="' + url + '" style="max-width:220px;border-radius:8px;display:block">';
+      });
+  }
+
+  function generarMockup(promptListo) {
+    var d = datos();
+    if (!d.oferta || !d.promesa) { avisar('Falta el nombre de la oferta y la promesa arriba.'); return; }
+    // Se limpia el preview ANTES de pedir la imagen: si la generacion falla o tarda, lo
+    // que se ve es el estado real (generando / error), no el mockup viejo que parecia
+    // que no se regeneraba.
+    el('mockup-preview').innerHTML = '';
+    el('mockup-estado').textContent = promptListo ? 'generando la imagen...' : 'escribiendo el prompt y generando...';
+    el('btn-mockup').disabled = true; el('btn-mockup-regenerar').disabled = true;
+    post('/api/mockup-oferta', { oferta: d.oferta, promesa: d.promesa, bonos: bonos.map(function (x) { return x.nombre; }), prompt: promptListo || '' })
+      .then(function (j) {
+        el('f-mockup-prompt').value = j.prompt;
+        return subirMockup(b64aBlob(j.base64));
+      })
+      .then(function () { el('mockup-estado').textContent = 'Mockup listo y agregado a la oferta.'; })
+      .catch(function (e) {
+        el('mockup-estado').textContent = '';
+        el('mockup-preview').innerHTML = '<div class="nota" style="color:#ff8fb0">No se pudo generar el mockup: ' +
+          esc(e.message) + '. Probá de nuevo; si sigue fallando, revisá el proveedor de imágenes en APIs.</div>';
+      })
+      .then(function () { el('btn-mockup').disabled = false; el('btn-mockup-regenerar').disabled = false; });
+  }
+  el('btn-mockup').addEventListener('click', function () { generarMockup(); });
+  el('btn-mockup-regenerar').addEventListener('click', function () {
+    var p = el('f-mockup-prompt').value.trim();
+    if (!p) { el('mockup-estado').textContent = 'Escribe o genera el prompt primero.'; return; }
+    generarMockup(p);
+  });
+
+  // Si se elige un archivo a mano, reemplaza lo que hubiera (generado o manual): no tiene
+  // sentido mezclar un audio grabado con uno generado en el mismo lugar.
+  el('f-audios').addEventListener('change', function () { audios.length = 0; subir(this, audios); });
+
+  // ---------- audios generados: guion con IA + voz con Fish Audio ----------
+  //
+  // Antes esto se dejaba en blanco esperando que alguien lo grabara en ZapData. Ahora se
+  // arma solo: la IA escribe el guion siguiendo el patron de los audios que ya venden, y
+  // aqui mismo se convierte a voz y se sube, para que "Crear los flujos" llegue con el
+  // audio real y no con un aviso de "grabar aqui".
+  function avisar(msg) { el('resultado').innerHTML = '<span class="mal">' + esc(msg) + '</span>'; }
+
+  function cargarVocesGuardadas() {
+    fetch('/api/config', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        var sel = el('f-audio-voz');
+        var cfg = (j && j.ok && j.ajustes.audioApi) || {};
+        var voces = Array.isArray(cfg.voces) ? cfg.voces.slice() : [];
+        // La voz por defecto de APIs siempre se puede elegir, aunque no esté en la lista.
+        if (cfg.vozId && !voces.some(function (v) { return v.id === cfg.vozId; })) {
+          voces.unshift({ nombre: 'Voz por defecto', id: cfg.vozId });
+        }
+        // Sin lista (no se pudo leer la config) el valor vacío deja que el servidor use su voz
+        // por defecto: nunca se manda a Fish sin voz, que elegiría una al azar.
+        sel.innerHTML = voces.length
+          ? voces.map(function (v) { return '<option value="' + esc(v.id) + '">' + esc(v.nombre) + '</option>'; }).join('')
+          : '<option value="">Voz por defecto (la de APIs)</option>';
+        if (cfg.vozId) sel.value = cfg.vozId;
+      })
+      .catch(function () {
+        el('f-audio-voz').innerHTML = '<option value="">Voz por defecto (la de APIs)</option>';
+      });
+  }
+  cargarVocesGuardadas();
+
+  function bloqueAudio(n) { return { div: el('bloque-audio' + n), guion: el('f-audio' + n + '-guion'), estado: el('audio' + n + '-estado'), preview: el('audio' + n + '-preview') }; }
+
+  el('btn-guiones').addEventListener('click', function () {
+    var d = datos();
+    if (!d.oferta || !d.promesa) { avisar('Falta el nombre de la oferta y la promesa arriba.'); return; }
+    var b = this;
+    b.disabled = true;
+    el('resultado').innerHTML = 'Escribiendo los guiones...';
+    post('/api/audio-oferta', { oferta: d.oferta, promesa: d.promesa, vinetas: d.vinetas, bonos: bonos.map(function (x) { return x.nombre; }) })
+      .then(function (j) {
+        el('f-audio1-guion').value = j.audio1;
+        el('f-audio2-guion').value = j.audio2;
+        el('bloque-audio1').style.display = '';
+        el('bloque-audio2').style.display = '';
+        el('resultado').innerHTML = '<span class="ok">Guiones listos. Revísalos y genera el audio.</span>';
+      })
+      .catch(function (e) { el('resultado').innerHTML = '<span class="mal">' + esc(e.message) + '</span>'; })
+      .then(function () { b.disabled = false; });
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-generar-audio]'); if (!b) return;
+    var n = b.dataset.generarAudio;
+    var q = bloqueAudio(n);
+    var texto = q.guion.value.trim();
+    if (!texto) { q.estado.textContent = 'Escribe o genera el guion primero.'; return; }
+    var vozId = el('f-audio-voz').value;
+    b.disabled = true;
+    q.estado.textContent = 'generando el audio...';
+    q.preview.innerHTML = '';
+    fetch('/api/audio', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto: texto, vozId: vozId }),
+    }).then(function (r) {
+      var tipo = r.headers.get('Content-Type') || '';
+      if (tipo.indexOf('audio/') === 0) return r.blob().then(function (blob) { return { blob: blob, ext: tipo.indexOf('ogg') !== -1 ? 'ogg' : 'mp3' }; });
+      return r.json().then(function (j) { return { error: j.error || 'No se pudo generar el audio.' }; });
+    }).then(function (res) {
+      if (res.error) throw new Error(res.error);
+      var nombreArchivo = 'audio' + n + '-' + (el('f-oferta').value.trim() || 'oferta').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.' + res.ext;
+      q.estado.textContent = 'subiendo...';
+      return fetch('/api/zaparchivo?nombre=' + encodeURIComponent(nombreArchivo),
+        { method: 'POST', credentials: 'same-origin', body: res.blob })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j.ok) throw new Error(j.error || 'no se pudo subir');
+          // Si se genera el audio 2 sin haber generado antes el 1, se rellena el hueco:
+          // la lista de archivos no admite posiciones vacías.
+          for (var i = 0; i < n - 1; i++) if (!audios[i]) audios[i] = { nombre: 'Audio ' + (i + 1), url: '', peso: '' };
+          audios[n - 1] = { nombre: 'Audio ' + n, url: j.archivo.url, peso: kb(res.blob.size) };
+          pintarArchivos(); previo();
+          var url = URL.createObjectURL(res.blob);
+          q.preview.innerHTML = '<audio controls style="width:100%" src="' + url + '"></audio>';
+          q.estado.textContent = 'Audio ' + n + ' listo y agregado a la oferta.';
+        });
+    }).catch(function (e) { q.estado.textContent = e.message; })
+      .then(function () { b.disabled = false; });
+  });
+
+  function datos() {
+    var precios = {};
+    document.querySelectorAll('[data-pr]').forEach(function (i) {
+      precios[i.dataset.p] = precios[i.dataset.p] || {};
+      precios[i.dataset.p][i.dataset.pr] = i.value.trim();
+    });
+    return {
+      oferta: el('f-oferta').value.trim(),
+      claves: el('f-claves').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean),
+      persona: el('f-persona').value,
+      promesa: el('f-promesa').value.trim(),
+      vinetas: el('f-vinetas').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean),
+      paises: paises, precios: precios,
+      archivos: material.map(function (a) { return { nombre: a.nombre, url: a.url }; }),
+      bonos: bonos.map(function (a) { return { nombre: a.nombre, url: a.url }; }),
+      portada: portada.length ? portada[0].url : '',
+      audio1: audios[0] ? audios[0].url : '', audio2: audios[1] ? audios[1].url : '',
+      enlaces: parseEnlaces(el('f-enlaces').value),
+      bonosEnlaces: parseEnlaces(el('f-bonos-enlaces').value),
+    };
+  }
+
+  // La vista previa se pide al servidor y no se arma aqui: el guion vive en un solo sitio,
+  // y una copia en el navegador acabaria diciendo algo distinto de lo que se crea.
+  var pendiente = null;
+  function previo() {
+    clearTimeout(pendiente);
+    pendiente = setTimeout(function () {
+      var d = datos();
+      if (!d.oferta || !d.promesa || !d.vinetas.length || (!d.archivos.length && !d.enlaces.length)) return;
+      if (!d.paises.length && PAISES.length) d.paises = [PAISES[0].nombre];
+      d.accion = 'previo';
+      post('/api/zapflow', d).then(function (j) {
+        el('previo').innerHTML = j.previo.map(function (m) {
+          var cuerpo = m.tipo === 'text' ? esc(m.texto)
+            : (m.tipo === 'audio' ? '🎤 ' : '📄 ') + esc(m.texto);
+          return '<div class="burb' + (m.tipo === 'text' ? '' : ' arc') + '">' + cuerpo +
+            (m.nota ? '<span class="marca">⚠ ' + esc(m.nota) + '</span>' : '') + '</div>';
+        }).join('') + '<p class="hint" style="margin:6px 0 0">' + j.bloques + ' bloques en total.</p>';
+      }).catch(function () { /* el formulario aun esta a medias: no se grita */ });
+    }, 400);
+  }
+  ['f-oferta', 'f-claves', 'f-promesa', 'f-vinetas', 'f-persona'].forEach(function (id) {
+    el(id).addEventListener('input', function () {
+      if (id === 'f-oferta') proponerClaves();
+      previo();
+    });
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.dataset.pr) { previo(); return; }
+    if (e.target.dataset.nom) {
+      var arr = e.target.dataset.nom === 'l-bonos' ? bonos : material;
+      var a = arr[parseInt(e.target.dataset.i, 10)];
+      if (a) { a.nombre = e.target.value; proponerVinetas(); previo(); }
+    }
+  });
+
+  // ---------- terminar la oferta en ZapData ----------
+  //
+  // Antes esto era un marcador (bookmarklet) que el dueño arrastraba a la barra y tocaba a
+  // mano en cada flujo. Se quitó: no siempre se guardaba bien y era un paso manual de más.
+  // Ahora lo hace Claude, abriendo cada enlace de abajo con su propio navegador y corriendo
+  // ahí la misma lógica (arreglar el inicio a start-1, colgar la rama de pagos). La técnica
+  // completa -por si hay que repetirla o alguien más la necesita- vive documentada en la
+  // skill mi-dashboard, no aquí: aquí solo quedan los enlaces.
+
+  // El enlace que abre ZapData con la oferta ya dicha, para que el marcador sepa que hacer.
+  // Los flujos creados vienen en el mismo orden en que se armaron: venta y entrega de cada
+  // pais, uno detras de otro.
+  // Un enlace POR FLUJO, no uno solo para los tres.
+  //
+  // Cada enlace abre ese flujo desde cero y lleva escrito en la dirección qué tiene que
+  // hacer el marcador ahí. Es lo que hace que el cambio se guarde: ZapData solo guarda
+  // cuando la página se abrió para ese flujo, y saltar entre flujos por dentro perdía el
+  // trabajo sin decirlo.
+  function conHash(id, obj) {
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return 'https://zapdata.co/inbox/flows/' + id + '#gf=' + b64;
+  }
+  function enlacesTerminar(p) {
+    var out = [];
+    (p.paises || []).forEach(function (pais, k) {
+      var v = (p.creados || [])[2 * k], e = (p.creados || [])[2 * k + 1], g = (p.pagos || [])[k] || {};
+      if (!v || !e) return;
+      out.push({ t: 'Venta ' + pais + ': arreglar el inicio', u: conHash(v.id, { a: 'inicio' }) });
+      out.push({ t: 'Entrega ' + pais + ': arreglar el inicio', u: conHash(e.id, { a: 'inicio' }) });
+      if (g.id) {
+        out.push({ t: 'Pagos ' + pais + ': colgar la rama de la oferta',
+          u: conHash(g.id, { a: 'rama', o: p.oferta, e: e.id, en: e.nombre }) });
+      } else {
+        out.push({ t: 'Pagos ' + pais + ': falta el flujo de pagos de este país en la pestaña Países', u: '' });
+      }
+    });
+    return out;
+  }
+
+  // ---------- el botón, y en qué va el pedido ----------
+  //
+  // Crear aqui NO crea el flujo en ZapData. Deja el pedido guardado y alguien con la
+  // conexion lo monta. Mientras eso no se dijera mirando, el boton parecia crear el flujo:
+  // se hacia clic, no aparecia nada del otro lado, y el pedido quedaba en la cola sin que
+  // nadie supiera que estaba ahi. De ahi la barra y la lista de pedidos: son el estado
+  // real, preguntado al servidor, no una animacion de cortesia.
+  var ESTADOS = {
+    pendiente: { eti: 'En cola', pct: 45, late: true, dice: 'guardado; todavía no existe en ZapData' },
+    creando: { eti: 'Creándose', pct: 75, late: true, dice: 'montándose en ZapData ahora mismo' },
+    hecho: { eti: 'Listo en ZapData', pct: 100, late: false, dice: 'los flujos ya existen' },
+    trabado: { eti: 'Trabado', pct: 45, late: false, dice: 'se intentó y no se pudo' },
+  };
+  var ultimo = null;   // lo que contestó el servidor al crear: flujos, bloques, pasos
+  var reloj = null;
+  var PEDIDOS = {};    // los de la lista, para poder abrir cualquiera y no solo el del día
+
+  function hace(s) {
+    var m = Math.round((Date.now() - new Date(s).getTime()) / 60000);
+    if (!isFinite(m) || m < 0) return '';
+    if (m < 1) return 'hace un momento';
+    if (m < 60) return 'hace ' + m + ' min';
+    if (m < 1440) return 'hace ' + Math.round(m / 60) + ' h';
+    return 'hace ' + Math.round(m / 1440) + ' d';
+  }
+
+  function pintar(p) {
+    var e = ESTADOS[p.estado] || ESTADOS.pendiente;
+    var b = el('barra');
+    b.hidden = false;
+    b.className = 'barra' + (e.late ? ' late' : '');
+    b.firstElementChild.style.width = e.pct + '%';
+    var tercero = p.estado === 'hecho' ? 'listo'
+      : p.estado === 'creando' ? 'curso' : p.estado === 'trabado' ? 'freno' : '';
+    var h = '<b>' + esc(p.oferta) + '</b> · pedido <b>' + esc(p.id) + '</b> ' +
+      '<span class="eti ' + esc(p.estado) + '">' + esc(e.eti) + '</span> ' +
+      '<span class="cuando">' + esc(hace(p.tocadoEn || p.creadoEn)) + '</span>' +
+      '<ul class="pasos">' +
+      '<li class="listo">Pedido armado' +
+        (ultimo ? ' — ' + ultimo.flujos.length + ' flujos, ' + ultimo.bloques + ' bloques' : '') + '</li>' +
+      '<li class="listo">Archivos guardados</li>' +
+      '<li class="' + tercero + '">Montado en ZapData — ' + esc(e.dice) + '</li>' +
+      '<li class="' + (p.estado === 'hecho' ? 'curso' : '') +
+        '">Probado con un mensaje real desde otro número</li>' +
+      '</ul>';
+    if (p.nota) h += '<span class="' + (p.estado === 'trabado' ? 'mal' : '') + '">' + esc(p.nota) + '</span><br>';
+    // Un pedido se traba por cosas que se arreglan afuera y en un minuto. Reintentar sigue
+    // desde donde quedo, sin rehacer el formulario ni repetir los flujos que ya existen.
+    if (p.estado === 'trabado') {
+      h += '<br><button data-reintentar="' + esc(p.id) + '">Reintentar</button><br>';
+    }
+    // El siguiente paso, arriba de todo y bien visible: sin esto el flujo existe pero no
+    // arranca, y la oferta no tiene por donde cobrar.
+    if (p.estado === 'hecho') {
+      var pasos = enlacesTerminar(p);
+      if (pasos.length) {
+        h += '<br><b>Falta terminar en ZapData</b> <span class="cuando">pídele a Claude que ' +
+          'corrija el inicio y cuelgue la rama de pagos con estos enlaces</span><br>' +
+          pasos.map(function (x, i) {
+            if (!x.u) return '· <span class="mal">' + esc(x.t) + '</span>';
+            return '· <a href="' + esc(x.u) + '" target="_blank" rel="noopener">' + (i + 1) + '. ' + esc(x.t) + '</a>';
+          }).join('<br>') + '<br>';
+      }
+    }
+    // Ya creados: con su enlace, que es a donde hay que ir a revisar y a activarlos.
+    if (p.creados && p.creados.length) {
+      h += '<br><b>Ya están en ZapData:</b><br>' + p.creados.map(function (c) {
+        return '· <a href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.nombre) +
+          '</a> <span class="cuando">' + (c.bloques || 0) + ' bloques</span>';
+      }).join('<br>') + '<br>';
+    }
+
+    // Llevar la misma oferta a otro país. No se rehace nada: mismo copy, mismos archivos y
+    // mismos audios; lo que cambia es el país, y de ahí salen los precios, el Pixel, los
+    // datos de pago y las etiquetas.
+    var otros = (PAISES || []).filter(function (x) {
+      return x.listo && (p.paises || []).indexOf(x.nombre) < 0;
+    });
+    if (otros.length) {
+      h += '<br><b>Duplicar a otro país:</b> <select data-dup-pais="' + esc(p.id) + '">' +
+        otros.map(function (x) { return '<option>' + esc(x.nombre) + '</option>'; }).join('') +
+        '</select> <input data-dup-nombre="' + esc(p.id) + '" placeholder="otro nombre (opcional)" ' +
+        'style="width:180px;display:inline-block;margin:0 6px"> ' +
+        '<button data-duplicar="' + esc(p.id) + '">Duplicar</button>' +
+        '<br><span class="cuando">crea los dos flujos de ese país con este mismo guion; ' +
+        'con otro nombre, las etiquetas y las palabras clave salen del nombre nuevo</span><br>';
+    }
+    if (ultimo) {
+      if (!(p.creados && p.creados.length)) {
+        h += '<br><b>Flujos de este pedido:</b><br>' +
+          ultimo.flujos.map(function (f) { return '· ' + esc(f); }).join('<br>');
+      }
+      if (ultimo.faltan && ultimo.faltan.length) {
+        h += '<br><span class="mal">Sin archivo adjunto: ' + ultimo.faltan.map(esc).join(', ') +
+          '. Esos mensajes salen marcados.</span>';
+      }
+      // La lista sale entera del servidor. Antes el primer punto estaba escrito aquí
+      // además, y decía que había que grabar el audio: el audio ya viene adjunto desde el
+      // formulario, así que ese paso pedía trabajo que ya estaba hecho.
+      h += '<br><br><b>Lo que falta, en este orden:</b><br>';
+      var n = 1;
+      (ultimo.pasos || []).forEach(function (s) { h += (n++) + '. ' + esc(s) + '<br>'; });
+      // La rama del flujo de pagos ya no va como paso a mano: la agrega el marcador. Solo se
+      // avisa si el país no tiene flujo de pagos identificado, porque ahí no hay dónde colgarla.
+      (ultimo.pagos || []).forEach(function (g) {
+        if (!g.id) {
+          h += '<span class="mal">' + esc(g.flujo || 'Este país') + ' no tiene el ID del flujo de pagos en la ' +
+            'pestaña Países: la rama de pagos hay que agregarla a mano.</span><br>';
+        }
+      });
+      if (ultimo.sinDatosPago && ultimo.sinDatosPago.length) {
+        h += '<br><span class="mal">Sin datos bancarios: ' + ultimo.sinDatosPago.map(esc).join(', ') +
+          '. El mensaje del pago sale marcado.</span><br>';
+      }
+      h += '<br>Se dispara con: <b>' + ultimo.claves.map(esc).join(', ') + '</b>.';
+    }
+    el('resultado').innerHTML = h;
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-duplicar]'); if (!b) return;
+    var sel = document.querySelector('[data-dup-pais="' + b.dataset.duplicar + '"]');
+    var nom = document.querySelector('[data-dup-nombre="' + b.dataset.duplicar + '"]');
+    var pais = sel ? sel.value : '';
+    if (!pais) return;
+    b.disabled = true; b.textContent = 'Duplicando…';
+    post('/api/zapflow', { accion: 'duplicar', id: b.dataset.duplicar, pais: pais,
+      nombre: nom ? nom.value.trim() : '' })
+      .then(function (j) {
+        el('resultado').innerHTML = '<span class="ok">Duplicada a ' + esc(pais) +
+          '. Los flujos nuevos aparecen abajo en la cola.</span>';
+        if (j && j.pedido) { pintar(j.pedido); vigilar(j.pedido.id); }
+        cola();
+      })
+      .catch(function (err) {
+        b.disabled = false; b.textContent = 'Duplicar';
+        el('resultado').innerHTML = '<span class="mal">' + esc(err.message) + '</span>';
+      });
+  });
+
+  // Abrir un pedido de la lista: lo mismo que ves al crearlo, incluido el duplicar.
+  document.addEventListener('click', function (e) {
+    var d = e.target.closest('[data-abrir]'); if (!d) return;
+    var p = PEDIDOS[d.dataset.abrir]; if (!p) return;
+    ultimo = null;   // los flujos y bloques son los de la creación, no los de este pedido
+    pintar(p);
+    var caja = el('barra');
+    if (caja && caja.scrollIntoView) caja.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-reintentar]'); if (!b) return;
+    b.disabled = true; b.textContent = 'Reintentando…';
+    post('/api/zapflow', { accion: 'reintentar', id: b.dataset.reintentar })
+      .then(function () { vigilar(b.dataset.reintentar); })
+      .catch(function (err) {
+        el('resultado').innerHTML = '<span class="mal">' + esc(err.message) + '</span>';
+      });
+  });
+
+  // Se le pregunta al servidor por el pedido cada pocos segundos hasta que esté montado.
+  function vigilar(id) {
+    clearInterval(reloj);
+    var tic = function () {
+      fetch('/api/zapflow?id=' + encodeURIComponent(id), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j.ok) return;
+          pintar(j.pedido);
+          if (j.pedido.estado === 'hecho' || j.pedido.estado === 'trabado') clearInterval(reloj);
+        }).catch(function () { /* sin red se deja lo ultimo que se supo */ });
+      cola();
+    };
+    reloj = setInterval(tic, 8000);
+    tic();
+  }
+
+  // La cola completa. Se dibuja tambien al abrir la pagina, que es lo que contesta la
+  // pregunta de "le di crear ayer, ¿quedó?".
+  function cola() {
+    return fetch('/api/zapflow?cola=1', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok || !j.pedidos || !j.pedidos.length) return;
+        el('card-cola').hidden = false;
+        // Cada pedido de la lista se abre con un clic.
+        //
+        // Sin esto, el detalle -los enlaces para terminar en ZapData y el duplicar a otro
+        // pais- solo existia para el pedido que acababas de crear en esta misma pestaña. Al
+        // dia siguiente la oferta estaba en la lista y no habia forma de llegar a duplicarla:
+        // la funcion existia y no se podia alcanzar.
+        PEDIDOS = {};
+        el('cola').innerHTML = j.pedidos.map(function (p) {
+          PEDIDOS[p.id] = p;
+          var e = ESTADOS[p.estado] || ESTADOS.pendiente;
+          return '<div data-abrir="' + esc(p.id) + '" style="cursor:pointer">' +
+            '<span class="nom">' + esc(p.oferta) + '</span>' +
+            '<span class="cuando">' + esc((p.paises || []).join(', ')) + ' · ' +
+            esc(hace(p.creadoEn)) + '</span>' +
+            '<span class="eti ' + esc(p.estado) + '">' + esc(e.eti) + '</span></div>';
+        }).join('');
+      }).catch(function () { /* la cola es informativa: si falla, no se grita */ });
+  }
+  cola();
+
+  el('btn-crear').addEventListener('click', function () {
+    // Aviso antes de crear: si falta el mockup o los audios, el flujo nace sin ellos y
+    // despues hay que rehacerlo. Se pregunta una sola vez, listando lo que falta, y el
+    // OK crea igual (a veces se quiere probar el flujo sin el audio, o el mockup se
+    // sube despues a mano).
+    var faltan = [];
+    if (!portada.length) faltan.push('el mockup (la imagen de portada)');
+    if (!audios[0]) faltan.push('el audio 1 (presentación)');
+    if (!audios[1]) faltan.push('el audio 2 (cierre)');
+    if (faltan.length) {
+      var msg = 'Falta ' + faltan.join(', ') + '.\n\n' +
+        'El flujo se crea igual, pero nace sin eso. ¿Crear los flujos de todas formas?';
+      if (!confirm(msg)) return;
+    }
+    var b = this;
+    b.disabled = true; b.textContent = 'Armando…';
+    var barra = el('barra');
+    barra.hidden = false;
+    barra.className = 'barra late';
+    barra.firstElementChild.style.width = '18%';
+    el('resultado').innerHTML = 'Armando los mensajes y guardando el pedido…';
+    post('/api/zapflow', datos()).then(function (j) {
+      ultimo = j.pedido;
+      pintar({
+        id: j.pedido.id, oferta: j.pedido.oferta || el('f-oferta').value.trim(),
+        estado: 'pendiente', creadoEn: new Date().toISOString(),
+      });
+      vigilar(j.pedido.id);
+    }).catch(function (e) {
+      barra.hidden = true;
+      // El error se dice completo y con el titulo puesto: el mas comun es un pais sin
+      // configurar, y antes se leia como un mensaje suelto que no explicaba que no se
+      // habia creado nada.
+      el('resultado').innerHTML = '<span class="mal"><b>No se creó el pedido.</b><br>' +
+        esc(e.message) + '</span>';
+    }).then(function () { b.disabled = false; b.textContent = 'Crear los flujos'; });
+  });
+
+  // ---------- pestañas ----------
+  el('tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    [].forEach.call(el('tabs').children, function (x) { x.classList.toggle('activo', x === b); });
+    ['t-oferta', 't-plantilla', 't-mockup', 't-paises', 't-conexion'].forEach(function (id) {
+      el(id).style.display = b.dataset.tab === id ? '' : 'none';
+    });
+  });
+
+  // ---------- pestaña Plantilla: el copy del guion ----------
+  //
+  // Cada mensaje se guarda solo: no hay un boton "guardar todo" que deje a medias lo que no
+  // se toco. Restaurar borra lo guardado en vez de escribir el texto base, para que ese
+  // mensaje vuelva a seguir al guion base si el guion base mejora.
+  function pintarCopys(lista) {
+    el('lista-copys').innerHTML = lista.map(function (c) {
+      return '<details class="pais" data-clave="' + esc(c.clave) + '"><summary>' + esc(c.titulo) +
+        (c.editado ? '<span class="marca-ok ok">editado</span>' : '<span class="marca-ok">original</span>') +
+        '</summary><div class="cuerpo">' +
+        (c.ayuda ? '<div class="nota" style="margin:0 0 8px">' + esc(c.ayuda) + '</div>' : '') +
+        '<textarea data-txt style="min-height:120px">' + esc(c.texto) + '</textarea>' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:8px">' +
+        '<button class="sec" data-copy-guardar>Guardar</button>' +
+        '<button class="sec" data-copy-restaurar>Restaurar el original</button>' +
+        '<span class="g" data-eco></span></div>' +
+        '</div></details>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-copy-guardar], [data-copy-restaurar]'); if (!b) return;
+    var caja = b.closest('[data-clave]');
+    var restaurar = b.hasAttribute('data-copy-restaurar');
+    var eco = caja.querySelector('[data-eco]');
+    eco.textContent = 'Guardando…'; eco.className = 'g';
+    post('/api/plantilla', {
+      clave: caja.dataset.clave,
+      accion: restaurar ? 'restaurar' : 'guardar',
+      texto: caja.querySelector('[data-txt]').value,
+    }).then(function (j) {
+      caja.querySelector('[data-txt]').value = j.texto;
+      caja.querySelector('.marca-ok').className = 'marca-ok' + (j.editado ? ' ok' : '');
+      caja.querySelector('.marca-ok').textContent = j.editado ? 'editado' : 'original';
+      eco.textContent = j.editado ? 'Guardado. Las ofertas nuevas salen con este texto.' : 'Volvió al texto original.';
+      eco.className = 'g ok';
+    }).catch(function (err) { eco.textContent = err.message; eco.className = 'g mal'; });
+  });
+
+  fetch('/api/plantilla', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) return;
+      el('tab-plantilla').hidden = false;
+      pintarCopys(j.copys);
+    })
+    .catch(function () { /* sin permiso: la pestaña no se dibuja */ });
+
+  // ---------- pestaña Mockup: las instrucciones de composición de la imagen ----------
+  function marcarMockup(editado) {
+    var m = el('mockup-plantilla-marca');
+    m.className = 'marca-ok' + (editado ? ' ok' : '');
+    m.textContent = editado ? 'editado' : 'original';
+  }
+  fetch('/api/mockup-plantilla', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) return;
+      el('tab-mockup').hidden = false;
+      el('f-mockup-instrucciones').value = j.texto;
+      marcarMockup(j.editado);
+    })
+    .catch(function () { /* sin permiso: la pestaña no se dibuja */ });
+
+  el('btn-mockup-plantilla-guardar').addEventListener('click', function () {
+    var eco = el('mockup-plantilla-eco');
+    eco.textContent = 'Guardando...'; eco.className = 'g';
+    post('/api/mockup-plantilla', { accion: 'guardar', texto: el('f-mockup-instrucciones').value })
+      .then(function (j) {
+        el('f-mockup-instrucciones').value = j.texto;
+        marcarMockup(j.editado);
+        eco.textContent = 'Guardado. Los mockups nuevos salen con este texto.'; eco.className = 'g ok';
+      }).catch(function (err) { eco.textContent = err.message; eco.className = 'g mal'; });
+  });
+  el('btn-mockup-plantilla-restaurar').addEventListener('click', function () {
+    var eco = el('mockup-plantilla-eco');
+    eco.textContent = 'Restaurando...'; eco.className = 'g';
+    post('/api/mockup-plantilla', { accion: 'restaurar' })
+      .then(function (j) {
+        el('f-mockup-instrucciones').value = j.texto;
+        marcarMockup(j.editado);
+        eco.textContent = 'Volvió al texto original.'; eco.className = 'g ok';
+      }).catch(function (err) { eco.textContent = err.message; eco.className = 'g mal'; });
+  });
+
+  // ---------- conexión con ZapData ----------
+  //
+  // La pestaña solo aparece para el dueño: /api/zapmcp contesta 403 a los demas roles. Si
+  // no contesta, no se dibuja, y quien crea ofertas ni se entera de que existe.
+  var mensajeVuelta = '';
+  function pintarMcp(j) {
+    var h = mensajeVuelta ? mensajeVuelta + '<br><br>' : '';
+    if (j.credencial) {
+      h += '<b class="ok">Conectado</b> ' +
+        (j.credencial.tipo === 'oauth' ? 'con permiso autorizado' : 'con token pegado') +
+        ' <b>' + esc(j.credencial.pista) + '</b>' +
+        (j.credencial.nombre ? ' (' + esc(j.credencial.nombre) + ')' : '') + '.<br>';
+      h += j.credencial.puedeCrear
+        ? '<span class="ok">Puede crear flujos.</span> Las ofertas nuevas se montan solas en ZapData.<br>'
+        : '<span class="mal">Esta conexión no trae el permiso de crear flujos.</span> ' +
+          (j.credencial.tipo === 'oauth'
+            ? 'Vuelve a conectar y autoriza el permiso de crear borradores de flujo.<br>'
+            : 'En ZapData ese permiso se llama «Crear borrador de flujo» y en los tokens ' +
+              'estáticos sigue en «Próximamente». Usa el botón de conectar de arriba.<br>');
+      if (j.credencial.herramientas && j.credencial.herramientas.length) {
+        h += '<span class="cuando">Permite: ' + j.credencial.herramientas.map(esc).join(', ') + '</span><br>';
+      }
+      h += '<br><button id="btn-probar">Probar de nuevo</button> ' +
+        '<button id="btn-quitar">Quitar</button>';
+    } else if (j.enVariable) {
+      h += '<b class="ok">Conectado</b> por la variable ZAPDATA_TOKEN de Cloudflare. ' +
+        'Si conectas aquí, manda lo de aquí.';
+    } else {
+      h += '<b class="mal">Sin conectar.</b> Los pedidos se guardan y se quedan en la cola ' +
+        'hasta que alguien los suba a ZapData a mano.';
+    }
+    h += '<br><span class="cuando">Servidor: ' + esc(j.servidor) + '</span>';
+    el('estado-mcp').innerHTML = h;
+    if (el('btn-probar')) el('btn-probar').addEventListener('click', function () {
+      this.disabled = true; this.textContent = 'Probando…';
+      post('/api/zapmcp', { accion: 'probar' }).then(respuestaMcp).catch(falloMcp);
+    });
+    if (el('btn-quitar')) el('btn-quitar').addEventListener('click', function () {
+      post('/api/zapmcp', { accion: 'borrar' }).then(cargarMcp).catch(falloMcp);
+    });
+  }
+
+  function falloMcp(e) {
+    el('estado-mcp').innerHTML = '<span class="mal">' + esc(e.message) + '</span>';
+  }
+  function respuestaMcp(j) {
+    if (j.fallo) { falloMcp(new Error(j.fallo)); return; }
+    cargarMcp();
+  }
+  function cargarMcp() {
+    return fetch('/api/zapmcp', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        el('tab-conexion').hidden = false;
+        pintarMcp(j);
+      }).catch(function () { /* sin permiso la pestaña no existe */ });
+  }
+  // Al volver de ZapData la direccion trae el resultado. Se dice arriba de todo y se
+  // limpia de la barra, para que recargar no repita el mensaje.
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var c = p.get('conexion');
+    if (!c) return;
+    mensajeVuelta = c === 'si' ? '<b class="ok">Listo: el tablero ya puede crear flujos en ZapData.</b>'
+      : c === 'parcial' ? '<span class="mal">Quedó conectado pero sin el permiso de crear flujos.</span>'
+      : '<span class="mal">No se conectó. ' + esc(p.get('motivo') || '') + '</span>';
+    el('estado-mcp').innerHTML = mensajeVuelta;
+    history.replaceState(null, '', location.pathname + '#conexion');
+    el('tab-conexion').hidden = false;
+    var b = el('tabs').querySelector('[data-tab="t-conexion"]');
+    if (b) b.click();
+  }());
+  if (location.hash === '#conexion') {
+    el('tab-conexion').hidden = false;
+    var bc = el('tabs').querySelector('[data-tab="t-conexion"]');
+    if (bc) bc.click();
+  }
+
+  cargarMcp();
+
+  el('btn-conectar').addEventListener('click', function () {
+    var b = this;
+    b.disabled = true; b.textContent = 'Pidiendo permiso…';
+    post('/api/zapmcp', { accion: 'conectar' }).then(function (j) {
+      if (j.fallo) { falloMcp(new Error(j.fallo)); return; }
+      // Misma pestaña a proposito: una ventana emergente se la come el navegador la mitad
+      // de las veces, y al volver hay que aterrizar en esta pagina de todos modos.
+      location.href = j.ir;
+    }).catch(falloMcp).then(function () {
+      b.disabled = false; b.textContent = 'Conectar con ZapData';
+    });
+  });
+
+  el('btn-pegado').addEventListener('click', function () {
+    var b = this, t = el('f-pegado').value.trim();
+    if (!t) { falloMcp(new Error('Pega primero lo que imprimió el script.')); return; }
+    b.disabled = true; b.textContent = 'Comprobando…';
+    post('/api/zapmcp', { pegado: t }).then(function (j) {
+      if (!j.fallo) el('f-pegado').value = '';
+      respuestaMcp(j);
+    }).catch(falloMcp).then(function () {
+      b.disabled = false; b.textContent = 'Guardar el permiso';
+    });
+  });
+
+  el('btn-token').addEventListener('click', function () {
+    var b = this, t = el('f-token').value.trim();
+    if (!t) { falloMcp(new Error('Pega la credencial primero.')); return; }
+    b.disabled = true; b.textContent = 'Probando…';
+    post('/api/zapmcp', { token: t, nombre: el('f-token-nombre').value.trim() })
+      .then(function (j) {
+        if (!j.fallo) el('f-token').value = '';
+        respuestaMcp(j);
+      })
+      .catch(falloMcp)
+      .then(function () { b.disabled = false; b.textContent = 'Guardar y probar'; });
+  });
+
+  // ---------- países ----------
+  //
+  // La pestaña solo aparece para el dueño: /api/paises entrega numeros de cuenta y
+  // contesta 403 a los demas roles. Si no contesta, la pestaña no se dibuja y quien crea
+  // ofertas ni se entera de que existe.
+  var CAMPOS = [
+    ['flujoPagos', 'Flujo de pagos en ZapData', 'Pagos Col'],
+    // El ID es lo que usa el marcador para abrir el flujo de pagos y colgarle la rama. Sale
+    // de la direccion del flujo en ZapData: lo que va despues de /flows/.
+    ['flujoPagosId', 'ID del flujo de pagos', '00000000-0000-4000-8000-000000000000'],
+    ['pixel', 'ID del Pixel', '9999000000860003'],
+    ['pixelNombre', 'Nombre del Pixel', 'Pixel - Dinamicas 2'],
+    ['ancla', 'Ancla', '15.000'],
+    ['aporte1', 'Gesto de Apoyo', '15.000'],
+    ['aporte2', 'Apoyo Valioso', '30.000'],
+    ['formato', 'Cómo se escribe el precio', '${v} PESOS'],
+  ];
+  function pintarConfig(lista) {
+    el('lista-paises').innerHTML = lista.map(function (p) {
+      return '<details class="pais" data-id="' + esc(p.id) + '"><summary>' + esc(p.nombre) +
+        '<span class="g">' + esc(p.moneda) + '</span>' +
+        '<span class="marca-ok ' + (p.completo ? 'ok">listo' : 'mal">falta') + '</span></summary>' +
+        '<div class="cuerpo"><div class="fila">' +
+        CAMPOS.slice(0, 3).map(function (c) {
+          return '<div><label>' + esc(c[1]) + '</label><input data-c="' + c[0] + '" value="' +
+            esc(p[c[0]] || '') + '" placeholder="' + esc(c[2]) + '"></div>';
+        }).join('') + '</div><div class="fila">' +
+        CAMPOS.slice(3).map(function (c) {
+          return '<div><label>' + esc(c[1]) + '</label><input data-c="' + c[0] + '" value="' +
+            esc(p[c[0]] || '') + '" placeholder="' + esc(c[2]) + '"></div>';
+        }).join('') + '</div>' +
+        '<div class="nota" style="margin:-6px 0 10px">El formato lleva <b>{v}</b> donde va el número: ' +
+        '«${v} PESOS» da «$15.000 PESOS», «{v} Pesos Mx» da «90 Pesos Mx».</div>' +
+        '<label>Datos de pago, tal como los va a leer la clienta</label>' +
+        '<textarea data-c="bancos" style="min-height:90px" placeholder="Nequi: 300 000 0000">' +
+        esc(p.bancos || '') + '</textarea>' +
+        '<button class="fantasma" data-guardar="' + esc(p.id) + '">Guardar ' + esc(p.nombre) + '</button>' +
+        '<span class="g" data-eco="' + esc(p.id) + '" style="margin-left:9px"></span>' +
+        '</div></details>';
+    }).join('');
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-guardar]'); if (!b) return;
+    var caja = b.closest('.pais'), cuerpo = { id: b.dataset.guardar };
+    caja.querySelectorAll('[data-c]').forEach(function (i) { cuerpo[i.dataset.c] = i.value; });
+    var eco = caja.querySelector('[data-eco]');
+    eco.textContent = 'Guardando…'; eco.className = 'g';
+    post('/api/paises', cuerpo).then(function (j) {
+      eco.textContent = j.pais.completo ? 'Guardado y listo para usar.' : 'Guardado, todavía le falta algo.';
+      eco.className = 'g ' + (j.pais.completo ? 'ok' : 'mal');
+      caja.querySelector('.marca-ok').className = 'marca-ok ' + (j.pais.completo ? 'ok' : 'mal');
+      caja.querySelector('.marca-ok').textContent = j.pais.completo ? 'listo' : 'falta';
+      // El formulario de la otra pestaña tiene que enterarse: un pais que acaba de quedar
+      // completo se puede elegir sin recargar.
+      cargarCatalogo();
+    }).catch(function (err) { eco.textContent = err.message; eco.className = 'g mal'; });
+  });
+
+  fetch('/api/paises', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) return;
+      el('tab-paises').hidden = false;
+      pintarConfig(j.paises);
+    })
+    .catch(function () { /* sin permiso: la pestaña no existe y ya */ });
+
+  function cargarCatalogo() {
+    return fetch('/api/zapflow?catalogo=1', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'no llegó la configuración');
+      PAISES = j.paises;
+      pintarPaises();
+    })
+    .catch(function (e) {
+      el('f-paises').innerHTML = '<p class="hint" style="margin:0">No pude cargar los países: ' + esc(e.message) + '</p>';
+    });
+  }
+  cargarCatalogo();
+  pintarArchivos();
+})();
+</script>

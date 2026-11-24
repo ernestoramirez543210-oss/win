@@ -1,0 +1,16 @@
+{
+  "_nota": "Configuracion de la puerta de Drive del equipo de video (scripts/puerta_editor.py). Vive en el repo (editor-anuncios/vps/editor-puerta.json) y se sube con desplegar-corredor.sh: no se edita en el servidor. Sumar a una persona = agregar su usuario a 'personas' aqui, desplegar y correr instalar-editor-vps.sh --aplicar --persona <usuario> --clave-publica <archivo> en el servidor.",
+  "raiz": "/srv/editor",
+  "personas": ["beto"],
+  "carpeta_ofertas": "https://drive.google.com/drive/folders/ID_DE_TU_CARPETA_OFERTAS_LATAM",
+  "carpeta_respaldos": "EDITOR",
+  "credenciales": "/opt/broll-tiktok/secretos/google.json",
+  "limites": {
+    "video_mb": 1500,
+    "respaldo_mb": 500,
+    "duracion_max_s": 600,
+    "pedidos_por_hora": 30,
+    "disco_libre_min_gb": 10,
+    "dias_guardar": 14
+  }
+}

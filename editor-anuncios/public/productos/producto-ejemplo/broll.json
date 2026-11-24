@@ -1,0 +1,12 @@
+{
+  "_nota": "OPCIONAL. Lo de siempre de esta oferta para: python scripts/broll_tiktok.py traer <producto>. 'drive' = la RUTA en este PC de la carpeta de Drive de la oferta (ahi se crea B-rolls), por ejemplo G:\\Mi unidad\\MI NEGOCIO\\OFERTAS LATAM\\DINAMICAS. 'consultas' = busquedas por palabra (GRATIS: la lista publica de TikTok; solo contesta para frases de busqueda comunes), 'relacionadas' = cuantas palabras relacionadas de TikTok seguir por consulta, 'proveedor' = descubrir (gratis, lo normal) o scrapecreators (de pago, con llave en .env), 'hashtags' sin #, 'cuentas' = usuarios de TikTok. Lo que pases en la linea de comandos manda sobre esto.",
+  "drive": "",
+  "consultas": [],
+  "hashtags": [],
+  "cuentas": [],
+  "max": 20,
+  "min_seg": 4,
+  "max_seg": 120,
+  "region": "",
+  "paginas": 2
+}

@@ -1,0 +1,48 @@
+{
+  "_nota": "Configuracion del corredor de anuncios del VPS (scripts/corredor_vps.py). Este archivo vive en el repo (editor-anuncios/vps/corredor.json) y se sube con desplegar-corredor.sh: no se edita en el servidor (el siguiente despliegue lo pisaria). El dinero lo manda aprobacion.topeUsd de la receta de cada pedido (el interruptor del dueno en /fabrica); estos topes son el techo duro, por encima de todo. Una receta SIN tope no gasta (receta_sin_tope = no-gasta); si quieres que use el techo de aqui, pon usa-el-techo y despliega.",
+  "carpeta_ofertas": "https://drive.google.com/drive/folders/ID_DE_TU_CARPETA_OFERTAS_LATAM",
+  "tipos_permitidos": ["tiktok", "ia"],
+  "ventana_silencio": {"desde": "01:30", "hasta": "03:00"},
+  "exigir_arranque": true,
+  "ofertas_permitidas": "todas",
+  "pedidos_por_corrida": 2,
+  "topes": {
+    "usd_por_anuncio": 0.30,
+    "usd_por_dia": 1.00,
+    "receta_sin_tope": "no-gasta"
+  },
+  "recursos": {
+    "ram_disponible_min_gb": 4.5,
+    "carga_5min_max": 1.5,
+    "disco_libre_min_gb": 10
+  },
+  "tiempos_max_min": {
+    "espejo": 20,
+    "traer": 8,
+    "material": 60,
+    "guion": 12,
+    "voz": 15,
+    "gancho": 20,
+    "montaje": 90,
+    "entrega": 20,
+    "avatar_plan": 15,
+    "avatar_generar": 120,
+    "avatar_montaje": 60
+  },
+  "variaciones": {
+    "_nota": "Variaciones hechas por el servidor desde /tablero › Variaciones («Hacerla en el servidor»; scripts/variaciones_vps.py). APAGADAS hasta el si del dueño: activo, tope_usd (por variacion), modo (fish = nuestra voz + imagenes; original = la voz del original + imagenes nuevas; clip = la persona del original dice el gancho en un clip de IA, SOLO para las ofertas de clip_ofertas: TODOS los originales de esa oferta deben mostrar avatares de IA o personas que autorizaron su cara y su voz, porque se autoriza la oferta, no cada video) y revision_beto (true = Beto la mira y la marca Lista).",
+    "activo": false,
+    "tope_usd": 0.0,
+    "modo": "fish",
+    "voz": "",
+    "imagenes": 2,
+    "revision_beto": true,
+    "carpeta": "VARIACIONES DEL SERVIDOR",
+    "indice_horas": 12,
+    "corte_min_seg": 4.0,
+    "corte_max_seg": 10.0,
+    "clip_ofertas": []
+  },
+  "gancho_ia": "segun-receta",
+  "dias_guardar_trabajo": 14
+}

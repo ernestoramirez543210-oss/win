@@ -1,0 +1,11 @@
+[Unit]
+Description=B-roll de TikTok cada semana (domingo 5:15 a. m. hora de Bogota; el radar de ofertas corre a las 03, 07, 11, 15, 19 y 23)
+
+[Timer]
+OnCalendar=Sun *-*-* 05:15:00 America/Bogota
+# Si el servidor estaba apagado a esa hora, corre al volver a encender
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

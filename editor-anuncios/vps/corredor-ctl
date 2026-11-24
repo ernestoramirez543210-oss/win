@@ -1,0 +1,100 @@
+#!/bin/bash
+# Control del corredor de anuncios del VPS. Lo corre ROOT en el servidor:  /opt/anuncios/corredor-ctl <orden>   (desde el PC: scripts\Corredor-Vps.ps1)
+#
+#   estado                 que hace ahora el corredor, si esta pausado, cuando es la proxima pasada, lo ultimo que paso y lo gastado hoy (no imprime llaves)
+#   pausar [--ya]          pone la PAUSA y apaga el reloj: no empieza nada nuevo. La etapa en curso termina y el corredor se detiene ahi (se retoma al reanudar).
+#                          Con --ya ademas corta lo que este haciendo ahora mismo (la etapa se repite al reanudar)
+#   reanudar               quita la PAUSA y vuelve a poner el reloj SI estaba encendido antes. No enciende un reloj que nunca se encendio
+#   encender               enciende el reloj (cada hora a los :40): lo decide el dueno
+#   apagar                 apaga el reloj (y no toca la PAUSA)
+#   correr [opciones]      hace una pasada ahora (la misma unidad, con los mismos limites). Opciones: --simular  --solo-cola  --max-pedidos N  --tope-usd X
+#                          --pedido <proyecto> <anuncio>   (solo ese pedido)  --rehacer (con --pedido: lo vuelve a hacer entero)
+#   probar-apimart | saldo le pregunta al dash, con la llave del editor del servidor, cuanto queda del tope del dia (no gasta nada; no imprime la llave). APIMart ya no tiene
+#                          llave en el servidor: todo lo que cuesta pasa por el dash
+#   ejecutar -- <comando>  corre un comando como broll dentro de los MISMOS limites y el mismo aislamiento de la unidad (sirve para medir y probar; sin llaves)
+#   logs [N]               las ultimas N lineas (por defecto 60) del registro de hoy
+#   reintentar <proyecto> <anuncio>   deja volver a intentar un pedido que quedo en error (solo si el dash lo tiene en «pedido» otra vez)
+set -u
+BASE=/opt/anuncios
+UNIDAD=anuncios-corredor
+[ "$(id -u)" -eq 0 ] || { echo "Corre esto como root." >&2; exit 1; }
+cd "$BASE" || { echo "No existe $BASE: el corredor no esta instalado." >&2; exit 1; }
+orden="${1:-estado}"; shift || true
+
+estado() {
+  echo "=== Corredor de anuncios ($(cat VERSION 2>/dev/null || echo '?')) ==="
+  if [ -e estado/PAUSA ]; then echo "PAUSA:    PUESTA desde $(stat -c %y estado/PAUSA | cut -c1-16)  (corredor-ctl reanudar la quita)"; else echo "PAUSA:    no"; fi
+  habilitado="$(systemctl is-enabled $UNIDAD.timer 2>/dev/null || true)"; activo="$(systemctl is-active $UNIDAD.timer 2>/dev/null || true)"
+  echo "reloj:    ${habilitado:-no instalado} / ${activo:-?}   proxima: $(systemctl show $UNIDAD.timer -p NextElapseUSecRealtime --value 2>/dev/null | cut -c1-40)"
+  servicio="$(systemctl is-active $UNIDAD.service 2>/dev/null || true)"
+  if ( exec 9<>estado/.candado-corredor; flock -n 9 ) 2>/dev/null; then candado="candado libre"; else candado="candado TOMADO: hay una pasada en curso"; fi
+  echo "ahora:    ${servicio:-?} ($candado)"
+  echo "llave del dash: $( [ -s /opt/broll-tiktok/secretos/dash.env ] && echo puesta || echo FALTA)    permiso de Drive: $( [ -s /opt/broll-tiktok/secretos/google.json ] && echo puesto || echo FALTA)    llave APIMart: ya no se usa (todo pasa por el dash)$( [ -e secretos/apimart.key ] && echo ' -> sobra secretos/apimart.key: la borra el dueno')"
+  if [ -f estado/ultima_corrida.json ]; then echo "--- ultima pasada"; head -c 1500 estado/ultima_corrida.json; echo; fi
+  if ls estado/pedidos/*.json >/dev/null 2>&1; then
+    echo "--- pedidos conocidos (estado/pedidos/)"
+    for f in estado/pedidos/*.json; do python3 - "$f" <<'PY' 2>/dev/null || true
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+print("  %-30s %-12s etapa=%-10s intentos=%s  gasto=US$ %s  %s" % (d.get("proyecto", "?") + " " + d.get("anuncio", "?"), d.get("estado", "?"), d.get("etapa", "-"), d.get("intentos", 0), d.get("gasto_usd", 0), (d.get("nota") or "")[:70]))
+PY
+    done
+  fi
+  echo "--- registro de hoy (ultimas 8 lineas)"
+  tail -n 8 "logs/corredor_$(TZ=America/Bogota date +%Y%m%d).log" 2>/dev/null || echo "(sin registro de hoy)"
+}
+
+case "$orden" in
+  estado) estado ;;
+  pausar)
+    ya=0; [ "${1:-}" = "--ya" ] && ya=1
+    if systemctl is-enabled --quiet $UNIDAD.timer 2>/dev/null; then : > estado/.reloj-estaba-encendido; else rm -f estado/.reloj-estaba-encendido; fi
+    touch estado/PAUSA; chown broll:broll estado/PAUSA; chmod 0644 estado/PAUSA
+    systemctl stop $UNIDAD.timer 2>/dev/null || true
+    if [ "$ya" -eq 1 ]; then systemctl stop $UNIDAD.service 2>/dev/null || true; echo "PAUSADO y cortado lo que estaba haciendo (se retoma al reanudar)."
+    else echo "PAUSADO: no empieza nada nuevo. Si hay una pasada en curso, termina la etapa en la que va y se detiene."; fi
+    ;;
+  reanudar)
+    rm -f estado/PAUSA
+    if [ -e estado/.reloj-estaba-encendido ]; then systemctl start $UNIDAD.timer; rm -f estado/.reloj-estaba-encendido; echo "REANUDADO: la pausa se quito y el reloj volvio a correr."
+    else echo "REANUDADO: la pausa se quito. El reloj no estaba encendido antes de pausar, asi que sigue apagado (corredor-ctl encender lo enciende; lo decide el dueno)."; fi
+    ;;
+  encender) systemctl enable --now $UNIDAD.timer && systemctl list-timers $UNIDAD.timer --no-pager | head -3 ;;
+  apagar) systemctl disable --now $UNIDAD.timer && echo "Reloj apagado." ;;
+  correr)
+    [ ! -e estado/PAUSA ] || { echo "Esta en PAUSA (corredor-ctl reanudar la quita): no corro." >&2; exit 1; }
+    if [ $# -gt 0 ]; then printf '%s\n' "$*" > estado/proxima-corrida.args; chown broll:broll estado/proxima-corrida.args; chmod 0600 estado/proxima-corrida.args; fi
+    # ya no hace falta la llave de APIMart: lo que cuesta pasa por el dash (la unidad lee la llave del editor de /opt/broll-tiktok/secretos/dash.env)
+    systemctl start --no-block $UNIDAD.service && echo "Pasada lanzada. Para verla: corredor-ctl logs   |   corredor-ctl estado"
+    ;;
+  probar-apimart|saldo)
+    # Le pregunta al dash cuanto queda del tope del dia del editor (no gasta nada), como el usuario broll y con la llave del editor del servidor. La llave solo pasa por el
+    # entorno de ese proceso: no aparece en ninguna linea de comandos ni en pantalla. (El nombre «probar-apimart» se queda: lo usa Setup-ApimartVps.ps1 del PC.)
+    dashenv=/opt/broll-tiktok/secretos/dash.env
+    [ -s "$dashenv" ] || { echo "Falta la llave del dash ($dashenv): la pone el dueno con Setup-ClaveEditorVps.ps1." >&2; exit 1; }
+    ( DASH_URL="$(sed -n 's/^[[:space:]]*DASH_URL[[:space:]]*=[[:space:]]*//p' "$dashenv" | head -n 1 | tr -d "\r\n\"' ")"
+      DASH_CLAVE_EDITOR="$(sed -n 's/^[[:space:]]*DASH_CLAVE_EDITOR[[:space:]]*=[[:space:]]*//p' "$dashenv" | head -n 1 | tr -d "\r\n\"' ")"
+      export DASH_URL DASH_CLAVE_EDITOR
+      cd "$BASE" && exec runuser -u broll -- /opt/broll-tiktok/venv/bin/python scripts/apimart.py saldo )
+    ;;
+  ejecutar)
+    # Corre un comando como el usuario broll DENTRO de los mismos limites y el mismo aislamiento de la unidad del corredor (sin llaves): sirve para medir y probar.
+    [ "${1:-}" = "--" ] && shift
+    [ $# -gt 0 ] || { echo "Uso: corredor-ctl ejecutar -- <comando> [argumentos]" >&2; exit 2; }
+    [ -f "/etc/systemd/system/$UNIDAD.service" ] || { echo "No esta instalada la unidad $UNIDAD.service" >&2; exit 1; }
+    props=()
+    while IFS= read -r linea; do props+=("-p" "$linea"); done < <(awk '/^\[Service\]/{s=1; next} /^\[/{s=0} s && /^[A-Za-z]+=/ {print}' "/etc/systemd/system/$UNIDAD.service" \
+                                                              | grep -vE '^(Type|ExecStart|SuccessExitStatus|LoadCredential|TimeoutStartSec)=')
+    systemd-run --wait --pipe --collect --unit="$UNIDAD-prueba" "${props[@]}" -- "$@"
+    ;;
+  logs) tail -n "${1:-60}" "logs/corredor_$(TZ=America/Bogota date +%Y%m%d).log" 2>/dev/null || echo "(sin registro de hoy)" ;;
+  reintentar)
+    p="${1:-}"; a="${2:-}"
+    [[ "$p" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$ ]] && [[ "$a" =~ ^(AD([1-9]|1[0-2])|1(0[1-9]|[12][0-9]|30))$ ]] || { echo "Uso: corredor-ctl reintentar <proyecto> <anuncio>" >&2; exit 2; }
+    f="estado/pedidos/${p}_${a}.json"
+    [ -f "$f" ] || { echo "No conozco ese pedido ($f)." >&2; exit 1; }
+    rm -f "$f.nuevo"; mv "$f" "$f.antes-reintento-$(date +%Y%m%d-%H%M)"
+    echo "Listo: el siguiente paso del corredor lo trata como nuevo (solo si el dash lo tiene en «pedido»; si quedo en «error», una persona lo pasa a «pedido» o usa: corredor-ctl correr --pedido $p $a --rehacer)."
+    ;;
+  *) sed -n '2,/^set -u/p' "$0" | sed '$d'; exit 2 ;;
+esac

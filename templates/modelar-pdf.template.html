@@ -1,0 +1,1058 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Modelar PDF — Suite</title>
+<style>
+  body { margin:0; background:#020916; color:#f3f5fa;
+         font:13.5px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:24px 20px 80px; }
+  h1 { font-size:21px; font-weight:800; letter-spacing:-.4px; margin:0 0 3px; }
+  .sub { color:#90a2cd; font-size:12.5px; margin:0 0 18px; max-width:760px; }
+  button { border:0; border-radius:8px; padding:9px 15px; cursor:pointer; font:inherit; font-size:13px; font-weight:650; min-height:40px; }
+  .primario { background:var(--accion, #2f6bff); color:var(--accion-texto, #fff); }
+  .fantasma { background:#0d1b39; color:#d3daeb; }
+  .fantasma:hover { background:#0e1d3e; }
+  .peligro { background:#2a1420; color:#ff8fb0; }
+  button:disabled { opacity:.45; cursor:default; }
+  label { display:block; font-size:11.5px; color:#a7b6d8; margin:11px 0 4px; font-weight:600; }
+  input, select, textarea { width:100%; box-sizing:border-box; padding:9px 11px; border-radius:8px; min-height:40px;
+    border:1px solid #132751; background:#09152f; color:#f3f5fa; font:inherit; font-size:13px; }
+  textarea { resize:vertical; min-height:60px; }
+  input[type=checkbox] { width:auto; min-height:0; margin:0 8px 0 0; accent-color:#4d8bff; transform:scale(1.25); }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#4d8bff; }
+  .card { background:#061026; border:1px solid #112247; border-radius:13px; padding:16px 18px; margin-bottom:14px; min-width:0; }
+  .card h2 { font-size:14.5px; margin:0 0 3px; font-weight:750; display:flex; align-items:center; gap:9px; }
+  .card h2 .n { width:22px; height:22px; border-radius:50%; background:#0d1b39; color:#8fb0ff; display:inline-grid; place-items:center; font-size:11px; flex:0 0 auto; }
+  .card.listo h2 .n { background:#0d2a22; color:#38e0a5; }
+  .card.cerrado { opacity:.5; }
+  .card.cerrado .cuerpo { display:none; }
+  .hint { color:#7e93c5; font-size:12px; margin:0 0 12px; }
+  .aviso { padding:10px 13px; border-radius:9px; font-size:12.5px; margin:10px 0; }
+  .aviso.malo { background:#2a1420; color:#ff8fb0; }
+  .aviso.ojo { background:#2a2410; color:#ffd479; }
+  .aviso.bueno { background:#0d2a22; color:#38e0a5; }
+  .aviso b { color:inherit; }
+  .fila { display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:0 12px; }
+  .fila > * { min-width:0; }
+  .botones { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center; }
+  .costo { color:#ffd479; font-size:12.5px; }
+  .soltar { border:1.5px dashed #1b3266; border-radius:11px; padding:26px 16px; text-align:center; color:#9fb3df; font-size:13px; cursor:pointer; }
+  .soltar:hover, .soltar.encima { border-color:#4d8bff; color:#f3f5fa; background:rgba(47,107,255,.10); }
+  .soltar b { color:#f3f5fa; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px; }
+  .chip { background:#0b1a38; border:1px solid #16306a; color:#cfdaf3; border-radius:999px; padding:4px 10px; font-size:12px; }
+  .chip.ojo { border-color:#6b5a1d; color:#ffd479; }
+  .minis { display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; margin-top:12px; }
+  .mini { background:#fff; border-radius:6px; overflow:hidden; position:relative; aspect-ratio:3/4; }
+  .mini img { width:100%; height:100%; object-fit:contain; display:block; }
+  .mini span { position:absolute; left:4px; top:4px; background:rgba(2,9,22,.82); color:#fff; font-size:10.5px; padding:1px 6px; border-radius:6px; }
+  .mini em { position:absolute; left:0; right:0; bottom:0; background:rgba(107,90,29,.92); color:#fff; font-style:normal; font-size:10px; padding:2px 4px; text-align:center; }
+  .analisis dl { margin:0; display:grid; grid-template-columns:120px 1fr; gap:6px 12px; font-size:12.5px; }
+  .analisis dt { color:#7e93c5; }
+  .analisis dd { margin:0; color:#e3e9f7; min-width:0; overflow-wrap:anywhere; }
+  @media (max-width:560px){ .analisis dl { grid-template-columns:1fr; } .analisis dd { margin-bottom:6px; } }
+  .estructura { margin:10px 0 0; padding-left:18px; color:#c3cfe9; font-size:12.5px; overflow-wrap:anywhere; }
+  .artes { display:grid; gap:10px; margin-top:12px; }
+  .arte { display:grid; grid-template-columns:150px 1fr; gap:12px; background:#071430; border:1px solid #122756; border-radius:11px; padding:10px; }
+  .arte > * { min-width:0; }
+  @media (max-width:560px){ .arte { grid-template-columns:1fr; } .arte .foto { max-width:220px; } }
+  .foto { background:#fff; border-radius:8px; aspect-ratio:1/1; display:grid; place-items:center; overflow:hidden; color:#8a94a8; font-size:11.5px; text-align:center; padding:0; position:relative; }
+  /* Absoluta: dentro de una celda de grid, height:100% no se resolvia y una ilustracion vertical se veia cortada por abajo. */
+  .foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; }
+  .foto.cargando { background:repeating-linear-gradient(45deg,#eef2fa,#eef2fa 10px,#f7f9fd 10px,#f7f9fd 20px); }
+  .arte .num { font-size:11.5px; color:#8fb0ff; font-weight:700; }
+  .arte details { margin-top:6px; }
+  .arte summary, .analisis summary { cursor:pointer; color:#9fb3df; font-size:12px; min-height:40px; display:flex; align-items:center; }
+  .arte .acciones { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .arte .ref { color:#90a2cd; font-size:12px; margin-top:6px; overflow-wrap:anywhere; }
+  .arte .aviso { margin:6px 0 0; }
+  .arte .acciones button { padding:7px 12px; font-size:12.5px; }
+  .opciones { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:6px; }
+  .opciones label { display:flex; align-items:center; color:#d3daeb; font-size:13px; margin:6px 0; min-height:36px; cursor:pointer; }
+  .hojas { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; margin-top:12px; }
+  .hojas figure { margin:0; }
+  .hojas img { width:100%; display:block; border-radius:4px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.4); }
+  .hojas figcaption { font-size:11px; color:#90a2cd; margin-top:4px; text-align:center; }
+  .progreso { height:6px; background:#0d1b39; border-radius:99px; overflow:hidden; margin-top:10px; }
+  .progreso div { height:100%; background:#4d8bff; width:0; transition:width .3s; }
+  .descarga { display:inline-flex; align-items:center; min-height:40px; padding:0 16px; border-radius:8px; background:#0d2a22; color:#38e0a5; font-weight:700; text-decoration:none; }
+  .pie { color:#6982bb; font-size:11.5px; margin-top:14px; border-left:2px solid #132751; padding-left:10px; }
+  [hidden] { display:none !important; }
+</style>
+
+<div class="wrap">
+  <h1>Modelar PDF</h1>
+  <p class="sub">Sube el PDF de un entregable (aunque esté en portugués) y sale una colección en español con ilustraciones <b>nuevas</b> y sus frases traducidas, lista para vender. Leer el PDF es gratis, el análisis cuesta uno o dos centavos y solo se pagan las ilustraciones, con el modelo más barato.</p>
+
+  <div class="card" id="retomar" hidden>
+    <h2>Hay una colección a medio hacer</h2>
+    <p class="hint" id="retomar-txt"></p>
+    <div class="botones">
+      <button class="primario" id="btn-retomar">Seguir con ella</button>
+      <button class="peligro" id="btn-descartar">Borrarla y empezar otra</button>
+    </div>
+  </div>
+
+  <div class="card" id="c-subir">
+    <h2><span class="n">1</span>El PDF original</h2>
+    <div class="cuerpo">
+      <p class="hint">Se lee en este navegador: el archivo no se sube a ningún lado.</p>
+      <div class="soltar" id="soltar" tabindex="0" role="button"><b>Toca para elegir el PDF</b><br>o arrástralo aquí</div>
+      <input type="file" id="archivo" accept="application/pdf,.pdf" hidden>
+      <div id="leyendo" class="hint" hidden></div>
+      <div class="progreso" id="prog-leer" hidden><div></div></div>
+      <div class="chips" id="medido"></div>
+      <div id="aviso-licencia"></div>
+      <div class="minis" id="miniaturas"></div>
+    </div>
+  </div>
+
+  <div class="card cerrado" id="c-analisis">
+    <h2><span class="n">2</span>Análisis</h2>
+    <div class="cuerpo">
+      <p class="hint">La IA mira las páginas distintas, entiende qué producto es y propone una colección propia en español. Cuesta uno o dos centavos.</p>
+      <div class="fila">
+        <div>
+          <label for="publico">Para qué público</label>
+          <select id="publico">
+            <option value="Latinoamérica, español neutro">Latinoamérica (español neutro)</option>
+            <option value="Colombia">Colombia</option>
+            <option value="México">México</option>
+            <option value="Perú">Perú</option>
+            <option value="Ecuador">Ecuador</option>
+            <option value="Guatemala">Guatemala</option>
+            <option value="Bolivia">Bolivia</option>
+            <option value="Venezuela">Venezuela</option>
+          </select>
+        </div>
+        <div>
+          <label for="cantidad">Cuántas artes</label>
+          <input type="number" id="cantidad" min="1" max="24" placeholder="Igual que el original">
+        </div>
+      </div>
+      <label for="notas">Indicaciones (opcional)</label>
+      <textarea id="notas" placeholder="Por ejemplo: tema navideño, para regalar en el colegio; colores rojo y dorado; incluir frases cristianas."></textarea>
+      <div class="botones">
+        <button class="primario" id="btn-analizar">Analizar</button>
+        <span class="costo">Uno o dos centavos</span>
+      </div>
+      <div id="analisis" class="analisis"></div>
+    </div>
+  </div>
+
+  <div class="card cerrado" id="c-plan">
+    <h2><span class="n">3</span>La colección nueva</h2>
+    <div class="cuerpo">
+      <p class="hint">Todo se puede corregir antes de gastar: el nombre, las frases y lo que se dibuja en cada arte.</p>
+      <div class="fila">
+        <div><label for="p-titulo">Nombre de la colección</label><input id="p-titulo" maxlength="80"></div>
+        <div><label for="p-subtitulo">Frase de la portada</label><input id="p-subtitulo" maxlength="140"></div>
+      </div>
+      <div class="fila">
+        <div>
+          <label for="p-letra">Letra de los títulos</label>
+          <select id="p-letra">
+            <option value="script">Caligráfica elegante</option>
+            <option value="serif">Clásica</option>
+            <option value="redonda">Redonda y alegre</option>
+          </select>
+        </div>
+        <div>
+          <label for="p-aspecto">Forma de las ilustraciones</label>
+          <select id="p-aspecto">
+            <option value="1:1">Cuadrada</option>
+            <option value="3:4">Vertical</option>
+            <option value="4:3">Horizontal</option>
+          </select>
+        </div>
+      </div>
+      <label for="p-estilo">Estilo de dibujo (en inglés, se suma a todas las artes para que combinen)</label>
+      <textarea id="p-estilo" maxlength="400"></textarea>
+      <div class="artes" id="artes"></div>
+      <div class="botones"><button class="fantasma" id="btn-agregar">+ Agregar arte</button></div>
+
+      <div class="fila" style="margin-top:8px">
+        <div>
+          <label for="modelo">Modelo de las ilustraciones</label>
+          <select id="modelo"><option value="">Cargando modelos…</option></select>
+        </div>
+        <div>
+          <label>Costo</label>
+          <div class="costo" id="estimado" style="min-height:40px;display:flex;align-items:center"></div>
+        </div>
+      </div>
+      <div class="botones">
+        <button class="primario" id="btn-generar">Generar las ilustraciones</button>
+        <button class="fantasma" id="btn-parar" hidden>Parar</button>
+        <span class="costo" id="gastado"></span>
+      </div>
+      <div class="progreso" id="prog-img" hidden><div></div></div>
+      <div id="aviso-img"></div>
+    </div>
+  </div>
+
+  <div class="card cerrado" id="c-pdf">
+    <h2><span class="n">4</span>El entregable</h2>
+    <div class="cuerpo">
+      <p class="hint">Se arma aquí mismo, gratis, a 300 puntos por pulgada. Las frases se ponen con letras de verdad, sin errores.</p>
+      <div class="opciones">
+        <label><input type="checkbox" id="o-portada" checked>Portada</label>
+        <label><input type="checkbox" id="o-instrucciones" checked>Instrucciones</label>
+        <label><input type="checkbox" id="o-espejo">Versión espejo (papel transfer)</label>
+        <label><input type="checkbox" id="o-tarjetas">Tarjetas para recortar</label>
+      </div>
+      <div class="fila">
+        <div>
+          <label for="o-papel">Papel</label>
+          <select id="o-papel"><option value="carta">Carta</option><option value="a4">A4</option></select>
+        </div>
+      </div>
+      <label for="o-pasos">Instrucciones para el cliente (una por línea)</label>
+      <textarea id="o-pasos" rows="5"></textarea>
+      <div class="aviso ojo" id="aviso-impresos" hidden></div>
+      <div class="botones">
+        <button class="primario" id="btn-armar">Armar el PDF</button>
+        <a class="descarga" id="descargar" hidden>Descargar el PDF</a>
+        <span class="hint" id="pdf-info" style="margin:0"></span>
+      </div>
+      <div class="progreso" id="prog-pdf" hidden><div></div></div>
+      <div class="hojas" id="hojas"></div>
+    </div>
+  </div>
+
+  <p class="pie">Modelar no es copiar: todas las ilustraciones son nuevas y solo las frases se traducen del original. Si el PDF original prohíbe la reventa, se avisa arriba con su frase exacta. La colección queda guardada en este navegador hasta que la borres.</p>
+</div>
+
+<script>
+__MODELAR_MOTOR_JS__
+</script>
+<script>
+__EBOOK_PDF_JS__
+</script>
+<script>
+(function () {
+  'use strict';
+  var Motor = window.ModelarMotor, Pdf = window.EbookPdf;
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Estado. Las ilustraciones van por id de arte (no por posicion): quitar la arte 2 no le cambia la foto a la 3.
+  var est = {
+    archivo: '', medido: null, paginas: [], analisis: null, plan: null,
+    imagenes: {},          // id de arte -> { b64, modelo }
+    modelos: [], gasto: {}, gastoTotal: 0, parar: false, ocupado: false,
+  };
+  var ESTILO_POR = 'Soft hand-painted watercolor illustration, delicate ink outlines, warm natural light, cozy and elegant';
+
+  function el(tag, props, hijos) {
+    var e = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (k) {
+      if (k === 'texto') e.textContent = props[k];
+      else if (k === 'clase') e.className = props[k];
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), props[k]);
+      else e.setAttribute(k, props[k]);
+    });
+    (hijos || []).forEach(function (h) { if (h) e.appendChild(typeof h === 'string' ? document.createTextNode(h) : h); });
+    return e;
+  }
+  function aviso(donde, tipo, texto) {
+    var c = $(donde); c.textContent = '';
+    if (texto) c.appendChild(el('div', { clase: 'aviso ' + tipo, texto: texto }));
+  }
+  function abrir(id, abierto) { $(id).classList.toggle('cerrado', !abierto); }
+  function listo(id, si) { $(id).classList.toggle('listo', !!si); }
+  function barra(id, frac) {
+    var b = $(id); b.hidden = frac == null;
+    if (frac != null) b.firstElementChild.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%';
+  }
+  function idNuevo() { return 'a' + Math.random().toString(36).slice(2, 9); }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Guardado en este navegador (IndexedDB): las ilustraciones ya pagadas no se pierden si se cierra la pestaña.
+  var BD = (function () {
+    var NOMBRE = 'modelar-pdf', TIENDA = 'proyecto';
+    function abrirBd() {
+      return new Promise(function (ok, mal) {
+        if (!window.indexedDB) { mal(new Error('sin IndexedDB')); return; }
+        var r = indexedDB.open(NOMBRE, 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore(TIENDA); };
+        r.onsuccess = function () { ok(r.result); };
+        r.onerror = function () { mal(r.error); };
+      });
+    }
+    function hacer(modo, fn) {
+      return abrirBd().then(function (db) {
+        return new Promise(function (ok, mal) {
+          var t = db.transaction(TIENDA, modo), req = fn(t.objectStore(TIENDA));
+          t.oncomplete = function () { db.close(); ok(req && req.result); };
+          t.onerror = function () { db.close(); mal(t.error); };
+        });
+      });
+    }
+    return {
+      leer: function () { return hacer('readonly', function (s) { return s.get('actual'); }); },
+      guardar: function (v) { return hacer('readwrite', function (s) { return s.put(v, 'actual'); }); },
+      borrar: function () { return hacer('readwrite', function (s) { return s.delete('actual'); }); },
+    };
+  })();
+  var tGuardar = null;
+  function guardar() {
+    clearTimeout(tGuardar);
+    tGuardar = setTimeout(function () {
+      if (!est.plan) return;
+      BD.guardar({
+        v: 1, fecha: new Date().toISOString(), archivo: est.archivo, medido: est.medido, analisis: est.analisis,
+        plan: est.plan, imagenes: est.imagenes, gasto: est.gasto, gastoTotal: est.gastoTotal, opciones: leerOpciones(),
+      }).catch(function () {});
+    }, 800);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // 1. Leer el PDF con pdf.js (en /vendor, mismo origen: la politica de seguridad del sitio no deja cargar codigo de otro dominio).
+  // pdf.js lee el PDF en un trabajador aparte (Worker) para no trabar la pagina. Pero un Worker puede no arrancar: en el navegador de prueba la
+  // descarga de su script fallaba a veces con «An unknown error occurred when fetching the script» y la lectura quedaba colgada para siempre.
+  // Por eso la pagina lo crea ella misma y espera su «ready» unos segundos; si no llega, carga el mismo codigo en la pagina (window.pdfjsWorker,
+  // el modo que pdf.js trae para esto). Mas lento con PDF enormes, pero siempre lee. Se decide una sola vez y sirve para todos los PDF.
+  var pdfjs = null;
+  var RUTA_TRABAJADOR = '/vendor/pdfjs/pdf.worker.min.js';
+  function trabajadorListo(ms) {
+    return new Promise(function (ok) {
+      var w;
+      try { w = new Worker(RUTA_TRABAJADOR, { type: 'module' }); } catch (e) { ok(null); return; }
+      var t = setTimeout(function () { try { w.terminate(); } catch (e) {} ok(null); }, ms);
+      w.addEventListener('message', function oir(ev) {
+        if (ev.data && ev.data.action === 'ready') { clearTimeout(t); w.removeEventListener('message', oir); ok(w); }
+      });
+      w.addEventListener('error', function () { clearTimeout(t); try { w.terminate(); } catch (e) {} ok(null); });
+    });
+  }
+  function cargarPdfjs() {
+    if (!pdfjs) pdfjs = import('/vendor/pdfjs/pdf.min.js').then(function (m) {
+      return trabajadorListo(5000).then(function (w) {
+        if (w) { m.GlobalWorkerOptions.workerPort = w; return m; }
+        return import(RUTA_TRABAJADOR).then(function (wm) {
+          window.pdfjsWorker = wm;
+          m.GlobalWorkerOptions.workerSrc = RUTA_TRABAJADOR;
+          return m;
+        });
+      });
+    });
+    pdfjs.catch(function () { pdfjs = null; });     // un fallo de red no deja la pagina sin lector hasta recargar
+    return pdfjs;
+  }
+  function conPlazo(promesa, ms, mensaje) {
+    return Promise.race([promesa, new Promise(function (ok, mal) { setTimeout(function () { mal(new Error(mensaje)); }, ms); })]);
+  }
+  var MAX_MINIS = 80;
+
+  function firmaDe(canvas) {
+    var c = document.createElement('canvas'); c.width = Motor.FW; c.height = Motor.FH;
+    var g = c.getContext('2d', { willReadFrequently: true });
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(canvas, 0, 0, c.width, c.height);
+    var d = g.getImageData(0, 0, c.width, c.height).data, out = new Array(Motor.FW * Motor.FH);
+    for (var i = 0; i < out.length; i++) out[i] = Math.round(d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114);
+    return out;
+  }
+
+  function leerPdf(file) {
+    if (est.ocupado) return;
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { aviso('aviso-licencia', 'malo', 'Ese archivo no es un PDF.'); return; }
+    est.ocupado = true;
+    est.archivo = file.name; est.paginas = []; est.medido = null;
+    $('medido').textContent = ''; $('miniaturas').textContent = ''; aviso('aviso-licencia', '', '');
+    $('leyendo').hidden = false; $('leyendo').textContent = 'Leyendo ' + file.name + '…'; barra('prog-leer', 0);
+    var doc, tarea;
+    conPlazo(cargarPdfjs(), 30000, 'el lector de PDF no cargó; recarga la página').then(function (lib) {
+      return file.arrayBuffer().then(function (buf) {
+        tarea = lib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false, useWasm: false, enableXfa: false });
+        return conPlazo(tarea.promise, 60000, 'el PDF no abrió en un minuto');
+      });
+    }).then(function (d) {
+      doc = d;
+      var n = doc.numPages, i = 0;
+      function siguiente() {
+        i++;
+        if (i > n) return Promise.resolve();
+        return doc.getPage(i).then(function (page) {
+          var v1 = page.getViewport({ scale: 1 });
+          var info = { n: i, wPt: v1.width, hPt: v1.height, texto: '', jpeg: '', firma: null };
+          var conImagen = i <= MAX_MINIS;
+          var pintar = conImagen ? (function () {
+            var k = 640 / Math.max(v1.width, v1.height), v = page.getViewport({ scale: k });
+            var c = document.createElement('canvas'); c.width = Math.ceil(v.width); c.height = Math.ceil(v.height);
+            // intent 'print': pdf.js dibuja de corrido. Con el modo de pantalla espera cada cuadro de animacion (requestAnimationFrame), que el
+            // navegador congela si la pestaña no se esta mirando: la lectura se quedaba en «Leyendo…» para siempre con el panel oculto.
+            return page.render({ canvas: c, viewport: v, intent: 'print' }).promise.then(function () {
+              info.jpeg = c.toDataURL('image/jpeg', 0.72);
+              info.firma = firmaDe(c);
+            });
+          })() : Promise.resolve();
+          return pintar.then(function () { return page.getTextContent(); }).then(function (tc) {
+            info.texto = tc.items.map(function (it) { return it.str || ''; }).join(' ').replace(/\s+/g, ' ').trim();
+            est.paginas.push(info);
+            page.cleanup();
+            barra('prog-leer', i / n);
+            $('leyendo').textContent = 'Leyendo página ' + i + ' de ' + n + '…';
+          });
+        }).then(siguiente);
+      }
+      return siguiente();
+    }).then(function () {
+      medir();
+      pintarMedido();
+      $('leyendo').hidden = true; barra('prog-leer', null);
+      listo('c-subir', true); abrir('c-analisis', true);
+      $('c-analisis').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }).catch(function (e) {
+      $('leyendo').hidden = true; barra('prog-leer', null);
+      var msg = e && e.name === 'PasswordException' ? 'Ese PDF tiene contraseña. Ábrelo, guárdalo sin contraseña y vuelve a subirlo.'
+        : 'No se pudo leer el PDF (' + ((e && e.message) || e) + ').';
+      aviso('aviso-licencia', 'malo', msg);
+    }).then(function () {
+      est.ocupado = false;
+      // Se suelta el documento (no el trabajador, que es de la pagina y sirve para el proximo PDF).
+      if (tarea) tarea.destroy().catch(function () {});
+    });
+  }
+
+  // Lo que se mide sin IA: papel, texto real, espejos, repetidas y la licencia.
+  function medir() {
+    var p = est.paginas;
+    var papeles = {};
+    p.forEach(function (x) { var k = Motor.nombrePapel(x.wPt, x.hPt); papeles[k] = (papeles[k] || 0) + 1; });
+    var papel = Object.keys(papeles).sort(function (a, b) { return papeles[b] - papeles[a]; })[0] || '';
+    var comp = Motor.compararPaginas(p.map(function (x) { return x.firma; }));
+    var conTexto = p.filter(function (x) { return x.texto.length >= 40; }).length;
+    var lic = Motor.buscarLicencia(p.map(function (x) { return x.texto; }));
+    est.medido = {
+      paginas: p.length, papel: papel, conTexto: conTexto > 0, paginasConTexto: conTexto,
+      espejos: comp.espejos.map(function (e) { return e.pagina + '=espejo de ' + e.de; }),
+      repetidas: comp.repetidas.map(function (e) { return e.pagina + '=igual a ' + e.de; }),
+      espejosLista: comp.espejos, repetidasLista: comp.repetidas,
+      licencia: lic, licenciaEnTexto: lic.length ? lic[0].frase : '',
+    };
+  }
+  function pintarMedido() {
+    var m = est.medido, c = $('medido'); c.textContent = '';
+    var chip = function (t, ojo) { c.appendChild(el('span', { clase: 'chip' + (ojo ? ' ojo' : ''), texto: t })); };
+    chip(m.paginas + (m.paginas === 1 ? ' página' : ' páginas'));
+    if (m.papel) chip('Papel: ' + m.papel);
+    chip(m.conTexto ? 'Texto real en ' + m.paginasConTexto + ' páginas' : 'Solo imágenes (el texto va dentro del dibujo)');
+    if (m.espejosLista.length) chip(m.espejosLista.length + ' páginas en espejo');
+    if (m.repetidasLista.length) chip(m.repetidasLista.length + ' repetidas');
+    if (m.paginas > MAX_MINIS) chip('Se muestran las primeras ' + MAX_MINIS, true);
+    if (m.licencia.length) {
+      aviso('aviso-licencia', 'ojo', 'Este PDF tiene una cláusula de licencia (página ' + m.licencia[0].pagina + '): «' + m.licencia[0].frase +
+        '». Aquí las ilustraciones salen nuevas y solo se traducen las frases; ese archivo no se revende.');
+    } else if (!m.conTexto) {
+      aviso('aviso-licencia', 'ojo', 'Las páginas son solo imagen, así que la licencia no se puede leer sin IA: el análisis la busca dentro de las imágenes.');
+    }
+    var marca = {};
+    m.espejosLista.forEach(function (e) { marca[e.pagina] = 'espejo de la ' + e.de; });
+    m.repetidasLista.forEach(function (e) { marca[e.pagina] = 'igual a la ' + e.de; });
+    var g = $('miniaturas'); g.textContent = '';
+    est.paginas.forEach(function (x) {
+      if (!x.jpeg) return;
+      g.appendChild(el('div', { clase: 'mini' }, [el('img', { src: x.jpeg, alt: 'Página ' + x.n, loading: 'lazy' }),
+        el('span', { texto: String(x.n) }), marca[x.n] ? el('em', { texto: marca[x.n] }) : null]));
+    });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Llamadas al servidor. Todas en modo lote: el gasto vuelve en cada respuesta y se anota UNA vez al final (/api/gasto).
+  function pedir(cuerpo) {
+    cuerpo.gastoLote = true;
+    return fetch('/api/modelar-pdf', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    }).then(function (r) {
+      if (r.status === 401) throw new Error('Tu sesión caducó: recarga la página y entra de nuevo.');
+      return r.json().catch(function () { throw new Error('El servidor contestó ' + r.status + '.'); });
+    }).then(function (j) {
+      sumarGasto(j.gasto);
+      return j;
+    });
+  }
+  function sumarGasto(g) {
+    if (!g) return;
+    Object.keys(g).forEach(function (p) {
+      var u = Number(g[p]) || 0;
+      est.gasto[p] = (est.gasto[p] || 0) + u; est.gastoTotal += u;
+    });
+    $('gastado').textContent = est.gastoTotal > 0 ? 'Gastado en esta colección: ' + Motor.dolares(est.gastoTotal) : '';
+  }
+  function anotarGasto() {
+    var envio = {}, hay = false;
+    Object.keys(est.gasto).forEach(function (p) { if (est.gasto[p] > 0) { envio[p] = Math.round(est.gasto[p] * 1e6) / 1e6; hay = true; } });
+    if (!hay) return;
+    var t = 'Modelar PDF: ' + ((est.plan && est.plan.titulo) || est.archivo || 'colección');
+    fetch('/api/gasto', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gasto: envio, detalle: t }) }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.ok) { est.gasto = {}; guardar(); }
+    }).catch(function () {});
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // 2. Analizar
+  function analizar() {
+    if (!est.paginas.length || est.ocupado) return;
+    var m = est.medido;
+    var apartadas = m.espejosLista.map(function (e) { return e.pagina; }).concat(m.repetidasLista.map(function (e) { return e.pagina; }));
+    var elegidas = Motor.paginasParaAnalisis(Math.min(m.paginas, MAX_MINIS), apartadas, 16);
+    var paginas = elegidas.map(function (n) {
+      var x = est.paginas[n - 1];
+      return { n: n, base64: x.jpeg.split(',')[1] };
+    }).filter(function (p) { return p.base64; });
+    var texto = est.paginas.map(function (x) { return x.texto ? '[Página ' + x.n + '] ' + x.texto : ''; }).filter(Boolean).join('\n').slice(0, 8000);
+    est.ocupado = true;
+    $('btn-analizar').disabled = true; $('btn-analizar').textContent = 'Analizando…';
+    $('analisis').textContent = '';
+    pedir({
+      accion: 'analizar', paginas: paginas, texto: texto,
+      medido: { paginas: m.paginas, papel: m.papel, conTexto: m.conTexto, espejos: m.espejos, repetidas: m.repetidas, licenciaEnTexto: m.licenciaEnTexto },
+      publico: $('publico').value, cantidad: $('cantidad').value, notas: $('notas').value,
+    }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'No se pudo analizar.');
+      est.analisis = j.analisis;
+      est.plan = j.plan;
+      est.plan.artes.forEach(function (a) { a.id = idNuevo(); });
+      if (!est.plan.estiloVisual) est.plan.estiloVisual = ESTILO_POR;
+      est.imagenes = {};
+      pintarAnalisis();
+      ponerOpciones({ espejo: est.plan.espejo, tarjetas: est.plan.tarjetas, pasos: est.plan.instrucciones });
+      pintarPlan();
+      listo('c-analisis', true); abrir('c-plan', true);
+      anotarGasto(); guardar();
+    }).catch(function (e) {
+      $('analisis').textContent = '';
+      $('analisis').appendChild(el('div', { clase: 'aviso malo', texto: e.message || String(e) }));
+    }).then(function () {
+      est.ocupado = false;
+      $('btn-analizar').disabled = false; $('btn-analizar').textContent = est.analisis ? 'Analizar de nuevo' : 'Analizar';
+      // El plan se pinto mientras estaba ocupado y el boton de generar quedo apagado: se recalcula ya libre.
+      actualizarCosto();
+    });
+  }
+
+  function pintarAnalisis() {
+    var a = est.analisis, c = $('analisis'); c.textContent = '';
+    if (!a) return;
+    if (a.licencia && (a.licencia.prohibeReventa || a.licencia.hay)) {
+      c.appendChild(el('div', { clase: 'aviso ojo' }, [el('b', { texto: a.licencia.prohibeReventa ? 'El original prohíbe la reventa. ' : 'El original trae licencia. ' }),
+        (a.licencia.cita ? '«' + a.licencia.cita + '» ' : '') + (a.licencia.explicacion || '') + ' La colección de abajo lleva ilustraciones nuevas; solo las frases salen del original, traducidas.']));
+    }
+    var fila = function (k, v) { return v ? [el('dt', { texto: k }), el('dd', { texto: v })] : []; };
+    var dl = el('dl');
+    [].concat(fila('Qué es', a.producto), fila('Cómo se usa', a.uso), fila('Para quién', a.publico), fila('Estilo', a.estilo),
+      fila('Por qué vende', (a.porQueVende || []).join(' · ')), fila('Calidad', a.calidad)).forEach(function (n) { dl.appendChild(n); });
+    c.appendChild(dl);
+    if (a.paginas && a.paginas.length) {
+      var ol = el('ul', { clase: 'estructura' });
+      a.paginas.slice(0, 40).forEach(function (p) {
+        ol.appendChild(el('li', { texto: 'Pág. ' + p.pagina + ' · ' + p.tipo + (p.resumen ? ': ' + p.resumen : '') + dicePagina(p, ' — ') }));
+      });
+      c.appendChild(el('details', {}, [el('summary', { texto: 'Página por página' }), ol]));
+    }
+  }
+
+  // Lo que dice una pagina del original y su traduccion, para ponerlos lado a lado. Los analisis guardados antes del 2026-11-07 no traen
+  // `original`: ahi solo se muestra el texto que haya.
+  function dicePagina(p, antes) {
+    if (!p) return '';
+    if (p.original && p.texto && p.original !== p.texto) return antes + 'dice «' + p.original + '», en español «' + p.texto + '»';
+    var t = p.texto || p.original;
+    return t ? antes + '«' + t + '»' : '';
+  }
+  // Lo que no debe llegar al PDF: portugues sin traducir, o el enlace, usuario o telefono de otro vendedor. Devuelve el aviso, o ''.
+  function problemaImpreso(t) {
+    if (Motor.pareceContacto(t)) return 'Trae un enlace, un usuario o un teléfono, que serían los de otro vendedor, y se imprime tal cual: quítalo antes de armar el PDF.';
+    if (Motor.pareceNoEspanol(t)) return 'Esta frase parece seguir en portugués y se imprime tal cual: corrígela antes de armar el PDF.';
+    return '';
+  }
+  // La portada y las instrucciones tambien se imprimen: un solo aviso junto a sus campos.
+  function revisarImpresos() {
+    var malas = [];
+    if (problemaImpreso($('p-titulo').value) || problemaImpreso($('p-subtitulo').value)) malas.push('la portada');
+    if ($('o-pasos').value.split('\n').some(problemaImpreso)) malas.push('las instrucciones');
+    var c = $('aviso-impresos');
+    c.textContent = malas.length ? 'Revisa ' + malas.join(' y ') + ': parece quedar portugués, o un enlace, usuario o teléfono de otro vendedor, y se imprime tal cual.' : '';
+    c.hidden = !malas.length;
+  }
+  function paginaDelOriginal(n) {
+    var ps = (est.analisis && est.analisis.paginas) || [];
+    for (var i = 0; i < ps.length; i++) if (ps[i].pagina === n) return ps[i];
+    return null;
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // 3. El plan, editable, con la ilustracion de cada arte al lado
+  function pintarPlan() {
+    var p = est.plan;
+    $('p-titulo').value = p.titulo || ''; $('p-subtitulo').value = (p.portada && p.portada.subtitulo) || p.subtitulo || '';
+    $('p-letra').value = p.letra || 'script'; $('p-aspecto').value = ['1:1', '3:4', '4:3'].indexOf(p.aspecto) !== -1 ? p.aspecto : '1:1';
+    $('p-estilo').value = p.estiloVisual || '';
+    pintarArtes();
+    revisarImpresos();
+  }
+  function pintarArtes() {
+    var c = $('artes'); c.textContent = '';
+    est.plan.artes.forEach(function (a, i) { c.appendChild(filaArte(a, i)); });
+    actualizarCosto();
+  }
+  function filaArte(a, i) {
+    var img = est.imagenes[a.id];
+    var foto = el('div', { clase: 'foto', id: 'foto-' + a.id }, [img ? el('img', { src: 'data:image/png;base64,' + img.b64, alt: a.titulo }) : 'Sin ilustración']);
+    var titulo = el('input', { maxlength: '60', value: a.titulo, 'aria-label': 'Frase de la arte ' + (i + 1) });
+    // La segunda linea SE IMPRIME debajo de la frase: el texto de ayuda lo dice, para que nadie la llene con una descripcion del dibujo.
+    var detalle = el('input', { maxlength: '90', value: a.detalle || '', placeholder: 'Segunda línea impresa (opcional)', 'aria-label': 'Segunda línea impresa de la arte ' + (i + 1) });
+    // Si la frase o la segunda linea siguen en portugues, se avisa en la tarjeta: van al PDF tal cual.
+    var alerta = el('div', { clase: 'aviso ojo' });
+    var revisarIdioma = function () {
+      var m = problemaImpreso(a.titulo) || problemaImpreso(a.detalle);
+      alerta.textContent = m; alerta.hidden = !m;
+      revisarImpresos();
+    };
+    revisarIdioma();
+    titulo.addEventListener('input', function () { a.titulo = titulo.value; revisarIdioma(); guardar(); });
+    detalle.addEventListener('input', function () { a.detalle = detalle.value; revisarIdioma(); guardar(); });
+    // De que pagina del original sale esta arte y que decia, ya en espanol: la frase nueva se compara con eso de un vistazo.
+    var ref = a.basadaEn ? paginaDelOriginal(a.basadaEn) : null;
+    var dice = dicePagina(ref, ', que ');
+    var referencia = dice ? el('div', { clase: 'ref', texto: 'Sale de la pág. ' + ref.pagina + ' del original' + dice + '.' }) : null;
+    var prompt = el('textarea', { maxlength: '900', rows: '4', 'aria-label': 'Qué se dibuja en la arte ' + (i + 1) });
+    prompt.value = a.prompt;
+    prompt.addEventListener('input', function () { a.prompt = prompt.value; guardar(); });
+    var acciones = el('div', { clase: 'acciones' }, [
+      el('button', { clase: 'fantasma', texto: img ? 'Rehacer ilustración' : 'Generar esta', onclick: function () {
+        var p = precioElegido();
+        if (img && !confirm('Rehacer esta ilustración cuesta ' + (p != null ? 'unos ' + Motor.dolares(p) : 'otra imagen') + '. ¿Seguir?')) return;
+        generar([a]);
+      } }),
+      el('button', { clase: 'peligro', texto: 'Quitar', onclick: function () {
+        if (img && !confirm('Esta arte ya tiene ilustración pagada. ¿Quitarla de todos modos?')) return;
+        est.plan.artes.splice(est.plan.artes.indexOf(a), 1); delete est.imagenes[a.id]; pintarArtes(); guardar();
+      } }),
+    ]);
+    return el('div', { clase: 'arte' }, [foto, el('div', {}, [
+      el('div', { clase: 'num', texto: 'Arte ' + (i + 1) }), titulo, el('div', { style: 'height:6px' }), detalle, referencia, alerta,
+      el('details', {}, [el('summary', { texto: 'Qué se dibuja (en inglés)' }), prompt]), acciones,
+    ])]);
+  }
+  function ponerFoto(a) {
+    var f = $('foto-' + a.id); if (!f) return;
+    f.classList.remove('cargando'); f.textContent = '';
+    var img = est.imagenes[a.id];
+    f.appendChild(img ? el('img', { src: 'data:image/png;base64,' + img.b64, alt: a.titulo }) : document.createTextNode('Sin ilustración'));
+  }
+
+  // El catalogo de modelos con su precio. Por defecto, el mas barato que tenga precio conocido.
+  function cargarModelos() {
+    fetch('/api/modelos-imagen', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) {
+      var s = $('modelo'); s.textContent = '';
+      var ms = (j && j.modelos) || [];
+      var conPrecio = ms.filter(function (m) { return m.precio != null; }).sort(function (a, b) { return a.precio - b.precio; });
+      var sinPrecio = ms.filter(function (m) { return m.precio == null; });
+      est.modelos = conPrecio.concat(sinPrecio);
+      if (!est.modelos.length) {
+        s.appendChild(el('option', { value: '', texto: j && j.error ? j.error : 'El que está puesto en APIs' }));
+      }
+      est.modelos.forEach(function (m, i) {
+        s.appendChild(el('option', { value: m.id, texto: m.id + (m.precio != null ? ' · ' + Motor.dolares(m.precio) + ' por imagen' : ' · sin precio') + (i === 0 && m.precio != null ? ' (el más barato)' : '') }));
+      });
+      actualizarCosto();
+    }).catch(function () {
+      var s = $('modelo'); s.textContent = '';
+      s.appendChild(el('option', { value: '', texto: 'El que está puesto en APIs' }));
+    });
+  }
+  function precioElegido() {
+    var id = $('modelo').value, m = est.modelos.filter(function (x) { return x.id === id; })[0];
+    return m ? m.precio : null;
+  }
+  function actualizarCosto() {
+    if (!est.plan) return;
+    var hechas = est.plan.artes.filter(function (a) { return est.imagenes[a.id]; }).length;
+    var e = Motor.estimar(est.plan.artes.length, precioElegido(), hechas);
+    $('estimado').textContent = e.faltan === 0 ? 'Todas las ilustraciones están listas.'
+      : e.faltan + (e.faltan === 1 ? ' ilustración' : ' ilustraciones') + ' por hacer: ' + (e.imagenes == null ? 'precio desconocido' : 'unos ' + Motor.dolares(e.imagenes));
+    $('btn-generar').textContent = e.faltan ? 'Generar ' + (e.faltan === 1 ? 'la que falta' : 'las ' + e.faltan + ' que faltan') : 'Todas listas';
+    $('btn-generar').disabled = !e.faltan || est.ocupado;
+    var completo = est.plan.artes.length > 0 && e.faltan === 0;
+    listo('c-plan', completo); abrir('c-pdf', hechas > 0);
+  }
+
+  // Genera las ilustraciones que se pidan, de a dos a la vez. Si el proveedor tarda mas de lo que aguanta una peticion, la imagen se RETOMA
+  // con el id de su tarea: no se paga otra.
+  function generar(lista) {
+    if (est.ocupado || !lista.length) return;
+    est.ocupado = true; est.parar = false;
+    $('btn-generar').disabled = true; $('btn-parar').hidden = false;
+    aviso('aviso-img', '', '');
+    var cola = lista.slice(), total = cola.length, hechas = 0, errores = [];
+    barra('prog-img', 0);
+    function una(a) {
+      var f = $('foto-' + a.id); if (f) { f.classList.add('cargando'); f.textContent = 'Dibujando…'; }
+      var intento = function (tarea, vuelta) {
+        return pedir({ accion: 'imagen', prompt: a.prompt, estilo: est.plan.estiloVisual, modelo: $('modelo').value, aspecto: est.plan.aspecto, tareaImagen: tarea })
+          .then(function (j) {
+            if (j.ok) return j;
+            if (j.tareaImagen && vuelta < 4) {
+              if (f) f.textContent = 'Sigue en el proveedor, esperando…';
+              return new Promise(function (ok) { setTimeout(ok, 15000); }).then(function () { return intento(j.tareaImagen, vuelta + 1); });
+            }
+            throw new Error(j.error || 'No salió la imagen');
+          });
+      };
+      return intento(undefined, 0).then(function (j) {
+        est.imagenes[a.id] = { b64: j.base64, modelo: j.modelo };
+        guardar();
+      }).catch(function (e) { errores.push('Arte «' + a.titulo + '»: ' + (e.message || e)); })
+        .then(function () { hechas++; barra('prog-img', hechas / total); ponerFoto(a); });
+    }
+    function trabajador() {
+      if (est.parar || !cola.length) return Promise.resolve();
+      return una(cola.shift()).then(trabajador);
+    }
+    Promise.all([trabajador(), trabajador()]).then(function () {
+      est.ocupado = false; $('btn-parar').hidden = true; barra('prog-img', null);
+      if (errores.length) aviso('aviso-img', 'malo', errores.join(' · '));
+      else if (!est.parar) aviso('aviso-img', 'bueno', 'Listo. Ya puedes armar el PDF abajo.');
+      pintarArtes(); anotarGasto(); guardar();
+    });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // 4. Armar el PDF en el navegador: 300 puntos por pulgada, letras de verdad, espejo, portada, instrucciones y tarjetas.
+  var PAPEL = { carta: { w: 2550, h: 3300, pt: [612, 792], nombre: 'carta' }, a4: { w: 2480, h: 3508, pt: [595.28, 841.89], nombre: 'A4' } };
+  var FUENTES = [
+    ['MP Script', '/vendor/fuentes/great-vibes-400.woff2', '400'],
+    ['MP Serif', '/vendor/fuentes/playfair-display-700.woff2', '700'],
+    ['MP Redonda', '/vendor/fuentes/fredoka-600.woff2', '600'],
+    ['MP Texto', '/vendor/fuentes/nunito-600.woff2', '600'],
+    ['MP Texto', '/vendor/fuentes/nunito-800.woff2', '800'],
+  ];
+  var fuentesListas = null;
+  function cargarFuentes() {
+    if (!fuentesListas) fuentesListas = Promise.all(FUENTES.map(function (f) {
+      var ff = new FontFace(f[0], 'url(' + f[1] + ')', { weight: f[2] });
+      return ff.load().then(function (x) { document.fonts.add(x); }).catch(function () {});
+    }));
+    return fuentesListas;
+  }
+  function letraTitulo(plan) {
+    return plan.letra === 'serif' ? { fam: '700 {t}px "MP Serif", Georgia, serif', esc: 1 }
+      : plan.letra === 'redonda' ? { fam: '600 {t}px "MP Redonda", "MP Texto", sans-serif', esc: 1 }
+      : { fam: '400 {t}px "MP Script", "Brush Script MT", cursive', esc: 1.45 };
+  }
+  function fuente(plantilla, tam) { return plantilla.replace('{t}', Math.round(tam)); }
+  function cargarImagen(b64) {
+    return new Promise(function (ok, mal) {
+      var i = new Image();
+      i.onload = function () { ok(limpiarFondo(i)); }; i.onerror = function () { mal(new Error('Una ilustración no se pudo abrir.')); };
+      i.src = 'data:image/png;base64,' + b64;
+    });
+  }
+  // Los modelos devuelven el «fondo blanco» que se les pide como un gris clarito (245, 248...): impreso, se ve el rectangulo de la foto sobre
+  // el papel. Aqui lo casi blanco pasa a blanco de verdad, con una rampa suave para no dejar un borde duro alrededor del dibujo.
+  function limpiarFondo(img) {
+    var c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    var g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+    try {
+      var datos = g.getImageData(0, 0, c.width, c.height), d = datos.data;
+      for (var k = 0; k < d.length; k += 4) {
+        var m = Math.min(d[k], d[k + 1], d[k + 2]);
+        if (m < 232) continue;
+        var t = Math.min(1, (m - 232) / 14);
+        d[k] += (255 - d[k]) * t; d[k + 1] += (255 - d[k + 1]) * t; d[k + 2] += (255 - d[k + 2]) * t;
+      }
+      g.putImageData(datos, 0, 0);
+    } catch (e) { /* sin acceso a los pixeles se usa tal cual */ }
+    c.naturalWidth = c.width; c.naturalHeight = c.height;
+    return c;
+  }
+  // Si la ilustracion no trae el fondo blanco que se pidio, sus bordes se difuminan hacia el papel para que no se vea como una foto pegada.
+  function bordeOscuro(img) {
+    var c = document.createElement('canvas'); c.width = 32; c.height = 32;
+    var g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, 32, 32);
+    var d = g.getImageData(0, 0, 32, 32).data, s = 0, n = 0;
+    for (var y = 0; y < 32; y++) for (var x = 0; x < 32; x++) {
+      if (x > 1 && x < 30 && y > 1 && y < 30) continue;
+      var k = (y * 32 + x) * 4; s += (d[k] + d[k + 1] + d[k + 2]) / 3; n++;
+    }
+    return s / n < 238;
+  }
+  function dibujarArte(g, img, caja) {
+    var r = Motor.encajar(img.naturalWidth, img.naturalHeight, caja);
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(img, r.x, r.y, r.w, r.h);
+    if (bordeOscuro(img)) {
+      var a = Math.min(r.w, r.h) * 0.07;
+      [['x', r.x, r.y, r.x + a, r.y], ['x', r.x + r.w, r.y, r.x + r.w - a, r.y], ['y', r.x, r.y, r.x, r.y + a], ['y', r.x, r.y + r.h, r.x, r.y + r.h - a]].forEach(function (b) {
+        var gr = g.createLinearGradient(b[1], b[2], b[3], b[4]);
+        gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr;
+        if (b[0] === 'x') g.fillRect(Math.min(b[1], b[3]), r.y, a, r.h); else g.fillRect(r.x, Math.min(b[2], b[4]), r.w, a);
+      });
+    }
+    return r;
+  }
+  function lienzo(P, fondo) {
+    var c = document.createElement('canvas'); c.width = P.w; c.height = P.h;
+    var g = c.getContext('2d'); g.fillStyle = fondo || '#fff'; g.fillRect(0, 0, P.w, P.h);
+    return { c: c, g: g };
+  }
+  function ornamento(g, cx, y, color, ancho) {
+    var a = ancho || 300;
+    g.save(); g.strokeStyle = color; g.fillStyle = color; g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(cx - a, y); g.lineTo(cx - 46, y); g.moveTo(cx + 46, y); g.lineTo(cx + a, y); g.stroke();
+    g.beginPath(); g.moveTo(cx, y - 20); g.lineTo(cx + 20, y); g.lineTo(cx, y + 20); g.lineTo(cx - 20, y); g.closePath(); g.fill();
+    [-1, 1].forEach(function (s) { g.beginPath(); g.arc(cx + s * (a + 22), y, 8, 0, Math.PI * 2); g.fill(); });
+    g.restore();
+  }
+  // Escribe un texto centrado ajustado al ancho; devuelve la y donde termino.
+  function escribir(g, texto, plantilla, tamMax, tamMin, ancho, cx, y, color, maxLineas, interlinea) {
+    var ajuste = Motor.ajustarTexto(texto, function (t, tam) { g.font = fuente(plantilla, tam); return g.measureText(t).width; }, ancho, tamMax, tamMin, maxLineas);
+    g.font = fuente(plantilla, ajuste.tam); g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    var paso = ajuste.tam * (interlinea || 1.15);
+    ajuste.lineas.forEach(function (l, i) { g.fillText(l, cx, y + ajuste.tam * 0.9 + i * paso); });
+    return y + ajuste.tam * 0.9 + (ajuste.lineas.length - 1) * paso + ajuste.tam * 0.3;
+  }
+
+  function paginaArte(P, plan, a, img) {
+    var L = lienzo(P), g = L.g, M = Math.round(P.w * 0.06), cx = P.w / 2;
+    var lt = letraTitulo(plan), pal = plan.paleta;
+    var y = escribir(g, a.titulo, lt.fam, 200 * lt.esc, 90, P.w - 2 * M, cx, M + 20, pal[0], 2, plan.letra === 'script' ? 0.95 : 1.1);
+    ornamento(g, cx, y + 40, pal[1], 280);
+    y += 80;
+    if (a.detalle) y = escribir(g, a.detalle, '600 {t}px "MP Texto", sans-serif', 62, 40, P.w - 2 * M - 200, cx, y, pal[2], 2, 1.25) + 10;
+    dibujarArte(g, img, { x: M, y: y + 50, w: P.w - 2 * M, h: P.h - M - (y + 50) });
+    return L.c;
+  }
+  function espejar(c) {
+    var o = document.createElement('canvas'); o.width = c.width; o.height = c.height;
+    var g = o.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0);
+    return o;
+  }
+  function paginaPortada(P, plan, imgs, nArtes, papelNombre) {
+    var pal = plan.paleta, L = lienzo(P, pal[3] || '#fbf4ea'), g = L.g, M = Math.round(P.w * 0.07), cx = P.w / 2;
+    var lt = letraTitulo(plan);
+    var y = escribir(g, plan.titulo, lt.fam, 260 * lt.esc, 110, P.w - 2 * M, cx, M + 40, pal[0], 2, plan.letra === 'script' ? 0.95 : 1.08);
+    ornamento(g, cx, y + 50, pal[1], 360);
+    y += 110;
+    var sub = (plan.portada && plan.portada.subtitulo) || plan.subtitulo;
+    if (sub) y = escribir(g, sub, '800 {t}px "MP Texto", sans-serif', 78, 46, P.w - 2 * M - 120, cx, y, pal[2], 2, 1.25);
+    // Mosaico de hasta 6 artes en tarjetas blancas.
+    var n = Math.min(6, imgs.length), cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, filas = Math.ceil(n / cols);
+    var pie = 200, top = y + 90, alto = P.h - M - pie - top, gap = 60;
+    var w = (P.w - 2 * M - (cols - 1) * gap) / cols, h = Math.min(w * 1.08, (alto - (filas - 1) * gap) / filas);
+    var anchoTotal = cols * w + (cols - 1) * gap, x0 = (P.w - anchoTotal) / 2, y0 = top + (alto - (filas * h + (filas - 1) * gap)) / 2;
+    for (var i = 0; i < n; i++) {
+      var cxx = x0 + (i % cols) * (w + gap), cyy = y0 + Math.floor(i / cols) * (h + gap);
+      g.save(); g.shadowColor = 'rgba(60,40,20,.18)'; g.shadowBlur = 40; g.shadowOffsetY = 14; g.fillStyle = '#fff';
+      redondeado(g, cxx, cyy, w, h, 34); g.fill(); g.restore();
+      g.save(); redondeado(g, cxx, cyy, w, h, 34); g.clip();
+      dibujarArte(g, imgs[i], { x: cxx + 26, y: cyy + 26, w: w - 52, h: h - 52 }); g.restore();
+    }
+    escribir(g, 'Colección digital imprimible · ' + nArtes + (nArtes === 1 ? ' arte' : ' artes') + ' · tamaño ' + papelNombre,
+      '600 {t}px "MP Texto", sans-serif', 54, 34, P.w - 2 * M, cx, P.h - M - 110, pal[2], 1);
+    return L.c;
+  }
+  function redondeado(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function paginaInstrucciones(P, plan, pasos, orden, imgMuestra) {
+    var pal = plan.paleta, L = lienzo(P), g = L.g, M = Math.round(P.w * 0.08), cx = P.w / 2;
+    var lt = letraTitulo(plan);
+    var y = escribir(g, 'Cómo usar tus artes', lt.fam, 170 * lt.esc, 90, P.w - 2 * M, cx, M, pal[0], 1);
+    ornamento(g, cx, y + 40, pal[1], 260);
+    y += 130;
+    var texto = '600 {t}px "MP Texto", sans-serif', tam = 58, x = M + 120, ancho = P.w - M - x;
+    pasos.forEach(function (p, i) {
+      g.fillStyle = pal[1]; g.beginPath(); g.arc(M + 45, y + 30, 45, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.font = '800 52px "MP Texto", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(i + 1), M + 45, y + 32);
+      g.font = fuente(texto, tam); g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillStyle = '#3a332d';
+      var lineas = Motor.ajustarTexto(p, function (t, s) { g.font = fuente(texto, s); return g.measureText(t).width; }, ancho, tam, tam, 6).lineas;
+      g.font = fuente(texto, tam);
+      lineas.forEach(function (l, k) { g.fillText(l, x, y + 52 + k * tam * 1.38); });
+      y += Math.max(110, lineas.length * tam * 1.38 + 50);
+    });
+    // Que trae el archivo
+    y += 40;
+    g.fillStyle = pal[0]; g.font = '800 64px "MP Texto", sans-serif'; g.textAlign = 'left'; g.fillText('Qué trae este archivo', M, y + 60);
+    y += 110;
+    var items = [];
+    var cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+    var nArtes = orden.filter(function (p) { return p.tipo === 'arte'; }).length;
+    items.push(cap(Motor.rango(orden, 'arte')) + ': ' + nArtes + (nArtes === 1 ? ' arte lista' : ' artes listas') + ' para imprimir.');
+    if (orden.some(function (p) { return p.tipo === 'espejo'; })) items.push(cap(Motor.rango(orden, 'espejo')) + ': las mismas artes en espejo, para papel transfer (al plancharlas quedan al derecho).');
+    if (orden.some(function (p) { return p.tipo === 'tarjetas'; })) items.push(cap(Motor.rango(orden, 'tarjetas')) + ': tarjetas para recortar por la línea punteada.');
+    items.push('Imprime en tamaño real (100 %), sin «ajustar a la página», para que las medidas no cambien.');
+    g.font = fuente(texto, 52); g.fillStyle = '#3a332d';
+    items.forEach(function (t) {
+      var ls = Motor.ajustarTexto(t, function (s, z) { g.font = fuente(texto, z); return g.measureText(s).width; }, P.w - 2 * M - 60, 52, 52, 4).lineas;
+      g.font = fuente(texto, 52); g.fillStyle = pal[1]; g.fillText('•', M, y); g.fillStyle = '#3a332d';
+      ls.forEach(function (l, k) { g.fillText(l, M + 60, y + k * 72); });
+      y += ls.length * 72 + 26;
+    });
+    if (imgMuestra) {
+      var resto = P.h - M - y - 40;
+      if (resto > 500) dibujarArte(g, imgMuestra, { x: M, y: y + 40, w: P.w - 2 * M, h: resto });
+    }
+    return L.c;
+  }
+  function paginaTarjetas(P, plan, artes, imgs) {
+    var pal = plan.paleta, L = lienzo(P), g = L.g, M = Math.round(P.w * 0.05);
+    var cols = 2, filas = 3, gap = 40;
+    var w = (P.w - 2 * M - gap) / cols, h = (P.h - 2 * M - 2 * gap) / filas, lt = letraTitulo(plan);
+    artes.forEach(function (a, i) {
+      var x = M + (i % cols) * (w + gap), y = M + Math.floor(i / cols) * (h + gap);
+      g.save(); g.setLineDash([22, 16]); g.strokeStyle = '#b9b2a8'; g.lineWidth = 4; redondeado(g, x, y, w, h, 30); g.stroke(); g.restore();
+      var img = imgs[i];
+      if (img) dibujarArte(g, img, { x: x + 40, y: y + 40, w: w - 80, h: h * 0.68 });
+      escribir(g, a.titulo, lt.fam, 100 * lt.esc, 40, w - 80, x + w / 2, y + h * 0.72 + 30, pal[0], 1);
+    });
+    return L.c;
+  }
+  function aJpeg(c, calidad) {
+    return new Promise(function (ok, mal) {
+      c.toBlob(function (b) {
+        if (!b) { mal(new Error('El navegador no pudo guardar una página.')); return; }
+        b.arrayBuffer().then(function (buf) { ok({ bytes: new Uint8Array(buf), ancho: c.width, alto: c.height }); }, mal);
+      }, 'image/jpeg', calidad || 0.9);
+    });
+  }
+  function miniatura(c) {
+    var k = 300 / c.width, m = document.createElement('canvas'); m.width = 300; m.height = Math.round(c.height * k);
+    var g = m.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(c, 0, 0, m.width, m.height);
+    return m.toDataURL('image/jpeg', 0.8);
+  }
+
+  function leerOpciones() {
+    return { portada: $('o-portada').checked, instrucciones: $('o-instrucciones').checked, espejo: $('o-espejo').checked,
+      tarjetas: $('o-tarjetas').checked, papel: $('o-papel').value, pasos: $('o-pasos').value };
+  }
+  function ponerOpciones(o) {
+    if (!o) return;
+    if ('portada' in o) $('o-portada').checked = !!o.portada;
+    if ('instrucciones' in o) $('o-instrucciones').checked = !!o.instrucciones;
+    if ('espejo' in o) $('o-espejo').checked = !!o.espejo;
+    if ('tarjetas' in o) $('o-tarjetas').checked = !!o.tarjetas;
+    if (o.papel) $('o-papel').value = o.papel;
+    if (Array.isArray(o.pasos)) $('o-pasos').value = o.pasos.join('\n'); else if (typeof o.pasos === 'string') $('o-pasos').value = o.pasos;
+  }
+
+  var urlPdf = null;
+  function armar() {
+    if (est.ocupado || !est.plan) return;
+    var plan = est.plan, op = leerOpciones(), P = PAPEL[op.papel] || PAPEL.carta;
+    var artes = plan.artes.filter(function (a) { return est.imagenes[a.id]; });
+    if (!artes.length) return;
+    var faltan = plan.artes.length - artes.length;
+    if (faltan && !confirm(faltan + (faltan === 1 ? ' arte no tiene' : ' artes no tienen') + ' ilustración y no entrarán al PDF. ¿Armarlo así?')) return;
+    est.ocupado = true; $('btn-armar').disabled = true; $('btn-armar').textContent = 'Armando…';
+    $('hojas').textContent = ''; $('descargar').hidden = true; $('pdf-info').textContent = '';
+    if (urlPdf) { URL.revokeObjectURL(urlPdf); urlPdf = null; }
+    var pasos = op.pasos.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 8);
+    var orden = Motor.ordenPaginas({ portada: op.portada, instrucciones: op.instrucciones && pasos.length > 0, artes: artes.length, espejo: op.espejo, tarjetas: op.tarjetas });
+    var imgs = [], salida = [], hechas = 0;
+    barra('prog-pdf', 0);
+    cargarFuentes().then(function () {
+      return Promise.all(artes.map(function (a) { return cargarImagen(est.imagenes[a.id].b64); }));
+    }).then(function (lista) {
+      imgs = lista;
+      var cacheArte = {};
+      var paso = function (k) {
+        if (k >= orden.length) return Promise.resolve();
+        var p = orden[k], c;
+        if (p.tipo === 'portada') c = paginaPortada(P, plan, imgs, artes.length, P.nombre);
+        else if (p.tipo === 'instrucciones') c = paginaInstrucciones(P, plan, pasos, orden, imgs[0]);
+        else if (p.tipo === 'arte') { c = paginaArte(P, plan, artes[p.arte], imgs[p.arte]); cacheArte[p.arte] = c; }
+        else if (p.tipo === 'espejo') c = espejar(cacheArte[p.arte] || paginaArte(P, plan, artes[p.arte], imgs[p.arte]));
+        else if (p.tipo === 'tarjetas') c = paginaTarjetas(P, plan, artes.slice(p.desde, p.hasta), imgs.slice(p.desde, p.hasta));
+        var nombre = p.tipo === 'arte' ? 'Arte ' + (p.arte + 1) : p.tipo === 'espejo' ? 'Espejo ' + (p.arte + 1) : p.tipo.charAt(0).toUpperCase() + p.tipo.slice(1);
+        $('hojas').appendChild(el('figure', {}, [el('img', { src: miniatura(c), alt: nombre }), el('figcaption', { texto: p.n + ' · ' + nombre })]));
+        return aJpeg(c, 0.9).then(function (j) {
+          salida.push(j); hechas++; barra('prog-pdf', hechas / orden.length);
+          // La pagina de una arte se guarda para su espejo; despues se suelta para no llenar la memoria del telefono.
+          if (p.tipo === 'espejo') delete cacheArte[p.arte];
+          if (p.tipo === 'arte' && !op.espejo) delete cacheArte[p.arte];
+          return new Promise(function (ok) { setTimeout(ok, 0); });
+        }).then(function () { return paso(k + 1); });
+      };
+      return paso(0);
+    }).then(function () {
+      var bytes = Pdf.armarPdf(salida, { titulo: plan.titulo, anchoPt: P.pt[0], altoPt: P.pt[1] });
+      var blob = new Blob([bytes], { type: 'application/pdf' });
+      urlPdf = URL.createObjectURL(blob);
+      var a = $('descargar'); a.href = urlPdf; a.download = Motor.nombreArchivo(plan.titulo); a.hidden = false;
+      $('pdf-info').textContent = orden.length + ' páginas · ' + (blob.size / 1048576).toFixed(1).replace('.', ',') + ' MB';
+      listo('c-pdf', true); guardar();
+    }).catch(function (e) {
+      $('pdf-info').textContent = 'No se pudo armar: ' + (e.message || e);
+    }).then(function () {
+      est.ocupado = false; barra('prog-pdf', null);
+      $('btn-armar').disabled = false; $('btn-armar').textContent = 'Armar el PDF de nuevo';
+    });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Eventos
+  var soltar = $('soltar');
+  soltar.addEventListener('click', function () { $('archivo').click(); });
+  soltar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('archivo').click(); } });
+  soltar.addEventListener('dragover', function (e) { e.preventDefault(); soltar.classList.add('encima'); });
+  soltar.addEventListener('dragleave', function () { soltar.classList.remove('encima'); });
+  soltar.addEventListener('drop', function (e) {
+    e.preventDefault(); soltar.classList.remove('encima');
+    var f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) leerPdf(f);
+  });
+  $('archivo').addEventListener('change', function () { var f = this.files && this.files[0]; if (f) leerPdf(f); this.value = ''; });
+  $('btn-analizar').addEventListener('click', analizar);
+  $('p-titulo').addEventListener('input', function () { est.plan.titulo = this.value; guardar(); });
+  $('p-subtitulo').addEventListener('input', function () { est.plan.subtitulo = this.value; est.plan.portada = est.plan.portada || {}; est.plan.portada.subtitulo = this.value; guardar(); });
+  $('p-letra').addEventListener('change', function () { est.plan.letra = this.value; guardar(); });
+  $('p-aspecto').addEventListener('change', function () { est.plan.aspecto = this.value; guardar(); });
+  $('p-estilo').addEventListener('input', function () { est.plan.estiloVisual = this.value; guardar(); });
+  $('btn-agregar').addEventListener('click', function () {
+    if (!est.plan || est.plan.artes.length >= 24) return;
+    est.plan.artes.push({ id: idNuevo(), titulo: 'Nueva arte', detalle: '', prompt: 'Describe in English one original illustration for this collection' });
+    pintarArtes(); guardar();
+  });
+  $('modelo').addEventListener('change', actualizarCosto);
+  $('btn-generar').addEventListener('click', function () {
+    var faltan = est.plan.artes.filter(function (a) { return !est.imagenes[a.id]; });
+    var e = Motor.estimar(faltan.length, precioElegido(), 0);
+    var msg = 'Se van a generar ' + faltan.length + (faltan.length === 1 ? ' ilustración' : ' ilustraciones') + ' con ' + ($('modelo').value || 'el modelo puesto en APIs') +
+      (e.imagenes != null ? ' por unos ' + Motor.dolares(e.imagenes) : '') + '. ¿Seguir?';
+    if (confirm(msg)) generar(faltan);
+  });
+  $('btn-parar').addEventListener('click', function () { est.parar = true; $('btn-parar').hidden = true; aviso('aviso-img', 'ojo', 'Se detiene al terminar las que ya están en camino.'); });
+  $('btn-armar').addEventListener('click', armar);
+  ['o-portada', 'o-instrucciones', 'o-espejo', 'o-tarjetas', 'o-papel', 'o-pasos'].forEach(function (id) { $(id).addEventListener('change', guardar); });
+  $('o-pasos').addEventListener('input', guardar);
+  ['p-titulo', 'p-subtitulo', 'o-pasos'].forEach(function (id) { $(id).addEventListener('input', revisarImpresos); });
+
+  // Retomar lo guardado
+  BD.leer().then(function (g) {
+    if (!g || !g.plan || !g.plan.artes) return;
+    var listas = g.plan.artes.filter(function (a) { return g.imagenes && g.imagenes[a.id]; }).length;
+    $('retomar-txt').textContent = '«' + (g.plan.titulo || 'Sin nombre') + '», del archivo ' + (g.archivo || 'sin nombre') + ': ' + listas + ' de ' + g.plan.artes.length + ' ilustraciones listas.';
+    $('retomar').hidden = false;
+    $('btn-retomar').onclick = function () {
+      est.archivo = g.archivo || ''; est.medido = g.medido || null; est.analisis = g.analisis || null; est.plan = g.plan;
+      est.imagenes = g.imagenes || {}; est.gasto = g.gasto || {}; est.gastoTotal = g.gastoTotal || 0;
+      $('retomar').hidden = true;
+      pintarAnalisis(); ponerOpciones(g.opciones); pintarPlan(); sumarGasto(null);
+      $('gastado').textContent = est.gastoTotal > 0 ? 'Gastado en esta colección: ' + Motor.dolares(est.gastoTotal) : '';
+      listo('c-subir', true); listo('c-analisis', !!est.analisis); abrir('c-analisis', true); abrir('c-plan', true);
+      anotarGasto();
+    };
+    $('btn-descartar').onclick = function () {
+      if (!confirm('Se borran la colección y sus ilustraciones de este navegador. ¿Seguro?')) return;
+      BD.borrar().then(function () { $('retomar').hidden = true; });
+    };
+  }).catch(function () {});
+
+  cargarModelos();
+})();
+</script>

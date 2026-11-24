@@ -1,0 +1,11 @@
+[Unit]
+Description=Corredor de anuncios: mira cada hora si hay un pedido nuevo en la Fabrica (a los :40, hora de Bogota; cada vuelta le cuesta al dash 3 listados de KV de los 1.000 al dia de toda la suite; la vigilancia de la Fabrica corre a los :10, el b-roll semanal el domingo a las 5:15 y el radar a las 03, 07, 11, 15, 19 y 23)
+
+[Timer]
+OnCalendar=*-*-* *:40:00 America/Bogota
+# Si el servidor estaba apagado a esa hora, corre al volver a encender
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

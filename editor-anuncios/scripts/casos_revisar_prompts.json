@@ -1,0 +1,661 @@
+{
+ "_nota": "Casos compartidos de la revision de prompts: los corren autoprueba_revisar_prompts.py (editor) y scripts/probar-revisar-prompts.mjs (dash). «espera» son los codigos de lo que falta (vacio = cumple). Si cambias una regla en una copia, cambiala en la otra y agrega su caso aqui.",
+ "reglas_version": 1,
+ "casos": [
+  {
+   "nombre": "avatar: cuadro ancla (plantilla 1) con la foto del avatar",
+   "tipo": "imagen",
+   "refs": 1,
+   "prompt": "Same woman as the reference photo: keep her face, skin tone, eyes, hair and body exactly the same. She wears a sage green cotton blouse and light blue jeans. Place: a small bright Colombian kitchen with a wooden table, a window with plants and colorful mugs on a shelf. Scene: Three-quarter angle, medium shot, at the wooden kitchen table, she is arranging felt ornaments and a pair of scissors, smiling warmly at the camera. Candid still from a home video filmed on a phone, real UGC look, she is in the middle of doing something, not posing, natural light, real skin texture, no beauty filter, slightly imperfect framing. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "avatar: cuadro 2 con el producto (plantilla 2) y 3 referencias",
+   "tipo": "imagen",
+   "refs": 3,
+   "prompt": "Same woman as the reference photos: keep her face, skin tone, eyes, hair and body exactly the same, wearing exactly the same outfit as in the second reference, same hairstyle, same home. Scene: Side view, waist up, at the kitchen counter next to the stove, she is holding the printed guide open toward the lens, a proud smile. Product: a printed ebook with a red cover and felt ornaments on the pages. Candid still from a home video filmed on a phone, real UGC look, she is in the middle of doing something, not posing, natural light, real skin texture, no beauty filter, slightly imperfect framing. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "avatar: cuadro 2 con el producto pero sin referencias",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Same woman as the reference photos: keep her face, skin tone, eyes, hair and body exactly the same, wearing exactly the same outfit as in the second reference, same hairstyle, same home. Scene: Side view, waist up, at the kitchen counter next to the stove, she is holding the printed guide open toward the lens, a proud smile. Product: a printed ebook with a red cover and felt ornaments on the pages. Candid still from a home video filmed on a phone, real UGC look, she is in the middle of doing something, not posing, natural light, real skin texture, no beauty filter, slightly imperfect framing. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "producto_sin_ref",
+    "referencias"
+   ]
+  },
+  {
+   "nombre": "avatar: cuadro 2 con solo 1 referencia (nombra la segunda)",
+   "tipo": "imagen",
+   "refs": 1,
+   "prompt": "Same woman as the reference photos: keep her face, skin tone, eyes, hair and body exactly the same, wearing exactly the same outfit as in the second reference, same hairstyle, same home. Scene: Side view, waist up, at the kitchen counter next to the stove, she is holding the printed guide open toward the lens, a proud smile. Product: a printed ebook with a red cover and felt ornaments on the pages. Candid still from a home video filmed on a phone, real UGC look, she is in the middle of doing something, not posing, natural light, real skin texture, no beauty filter, slightly imperfect framing. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "referencias"
+   ]
+  },
+  {
+   "nombre": "gancho: toma de manos, primera, sin referencias",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands gluing red felt pieces onto a paper star template on a wooden kitchen table, scissors and a glue gun beside. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "gancho: toma de manos con el cuadro ancla",
+   "tipo": "imagen",
+   "refs": 1,
+   "prompt": "Same hands, skin tone, clothing, place and light as the first reference image. Scene: Close-up from above of hands gluing red felt pieces onto a paper star template on a wooden kitchen table, scissors and a glue gun beside. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "gancho: toma de manos con el ancla pero sin pasarla",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Same hands, skin tone, clothing, place and light as the first reference image. Scene: Close-up from above of hands gluing red felt pieces onto a paper star template on a wooden kitchen table, scissors and a glue gun beside. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "referencias"
+   ]
+  },
+  {
+   "nombre": "gancho: el ebook en el celular con la portada",
+   "tipo": "imagen",
+   "refs": 1,
+   "prompt": "Scene: Close-up, slightly from above, of a phone leaning against a sugar jar on the kitchen table, a hand pointing at the screen. The ebook cover is shown on a phone screen: reproduce the reference cover exactly as it is. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "gancho: el ebook en el celular sin la portada",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up, slightly from above, of a phone leaning against a sugar jar on the kitchen table, a hand pointing at the screen. The ebook cover is shown on a phone screen: reproduce the reference cover exactly as it is. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "producto_sin_ref",
+    "referencias"
+   ]
+  },
+  {
+   "nombre": "imagen completa escrita a mano",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "el prompt vago de siempre",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "A woman in her kitchen talking about the ebook, cinematic 4K, with a sign that says 'Navidad'",
+   "espera": [
+    "accion",
+    "angulo",
+    "comillas",
+    "encuadre",
+    "expresion",
+    "palabras_ia",
+    "producto_sin_ref",
+    "sin_no_text",
+    "texto"
+   ]
+  },
+  {
+   "nombre": "sin angulo",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "angulo"
+   ]
+  },
+  {
+   "nombre": "sin encuadre",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "encuadre"
+   ]
+  },
+  {
+   "nombre": "sin lugar",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "lugar"
+   ]
+  },
+  {
+   "nombre": "lugar con la etiqueta Place:",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark. Place: her grandmother's cozy patio with potted ferns.",
+   "espera": []
+  },
+  {
+   "nombre": "sin expresion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "expresion"
+   ]
+  },
+  {
+   "nombre": "posando: de pie junto al mueble",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is standing next to the counter, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "accion sin objeto concreto (something)",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is holding something, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "accion en presente (she slices)",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she slices fresh bread on the board, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "una tabla de picar no es una accion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, a wooden cutting board behind her, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "solo manos: no hace falta la expresion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, her hands are pouring hot chocolate into a red mug. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark. Nobody's face is visible.",
+   "espera": []
+  },
+  {
+   "nombre": "sin personas: bodegon",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "No people in the shot. Overhead close-up of a plate of golden bunuelos on a wooden table next to a cup of hot chocolate. Candid still from a home video filmed on a phone, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "top view cuenta como angulo",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Top view, close-up of colorful embroidery threads spread on a wooden table, one hand picking a red skein, natural daylight. Nobody's face is visible. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "flat lay sin personas",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Flat lay, close-up of felt ornaments, scissors and a glue gun on a wooden kitchen table. No people in the shot. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "manos escribiendo",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is writing a recipe in a notebook with a pen, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "escribir"
+   ]
+  },
+  {
+   "nombre": "mano quieta con el lapiz: si vale",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is resting a pencil still above an open notebook, not writing, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "palabras de estudio y bokeh",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, studio lighting, soft bokeh. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "palabras_ia"
+   ]
+  },
+  {
+   "nombre": "pide una etiqueta con texto",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug next to a jar with a label reading Miel, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "texto"
+   ]
+  },
+  {
+   "nombre": "comillas dobles en la imagen",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red \"Navidad\" mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "comillas"
+   ]
+  },
+  {
+   "nombre": "escrito en español",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Una mujer en la cocina de su casa, plano medio, de lado, está sirviendo chocolate en una taza roja sobre la mesa y sonríe a la cámara. No text.",
+   "espera": [
+    "accion",
+    "angulo",
+    "encuadre",
+    "expresion",
+    "idioma",
+    "lugar"
+   ]
+  },
+  {
+   "nombre": "sin la frase No text",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Three-quarter angle, medium shot, in her small kitchen next to the stove, she is pouring hot chocolate into a red mug, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light.",
+   "espera": [
+    "sin_no_text"
+   ]
+  },
+  {
+   "nombre": "vacio",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "   ",
+   "espera": [
+    "vacio"
+   ]
+  },
+  {
+   "nombre": "avatar: clip 1 de 29 palabras (plantilla 3)",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Walking into the frame holding a felt star. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una sola puntada.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "avatar: clip 2 de 26 palabras",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Lifting the guide toward the camera. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "avatar hombre",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Walking into the frame holding a felt star. He looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una sola puntada.\" (Spanish, lip-synced). He finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, he keeps doing the action with his hands while he talks and glances between his hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: his body movement, gestures and speech continue as described.\nVOICE: a calm male voice in his forties, medium-low pitch. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, he starts speaking right away; after the last word he keeps doing the action silently with his mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "plantilla 3 a mano, 26 palabras",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "20 palabras en 8 s",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser nada este año.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_largo"
+   ]
+  },
+  {
+   "nombre": "20 palabras en 6 s: si",
+   "tipo": "video",
+   "duracion": 6,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser nada este año.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "29 palabras en 6 s",
+   "tipo": "video",
+   "duracion": 6,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una sola puntada.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_largo"
+   ]
+  },
+  {
+   "nombre": "35 palabras en 8 s",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos. Escríbeme ahora y te lo mando ya mismo por WhatsApp.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_largo"
+   ]
+  },
+  {
+   "nombre": "corta la frase a la mitad",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos y\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_fin"
+   ]
+  },
+  {
+   "nombre": "termina en pregunta",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"¿Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos?\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "cifras en el dialogo",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo 100% mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_cifras"
+   ]
+  },
+  {
+   "nombre": "sin los bloques fijos",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nRESTRICTIONS: lip-synced dialogue only in Spanish, no captions or on-screen text.",
+   "espera": [
+    "bloques"
+   ]
+  },
+  {
+   "nombre": "VOICE vacio",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: warm.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "bloques"
+   ]
+  },
+  {
+   "nombre": "palabra entre comillas simples fuera del dialogo",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is holding a card with the word 'adornos' on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "comillas",
+    "texto"
+   ]
+  },
+  {
+   "nombre": "dos dialogos sin las dos tomas",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.\nShe also says \"hola.\"",
+   "espera": [
+    "comillas"
+   ]
+  },
+  {
+   "nombre": "comillas sin cerrar",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines. \"",
+   "espera": [
+    "comillas"
+   ]
+  },
+  {
+   "nombre": "dos tomas (plantilla 4) 13 + 14",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "SHOT 1 (00:00-00:04) She looks at the camera while she lifts a felt star from the table. She says: \"Mira, con unos retazos de fieltro y una tijera hice estos adornos hoy.\" (Spanish, lip-synced)\nSHOT 2 (00:04-00:08) HARD CUT, no transition, no fade. Close-up of her hands pressing the felt onto the template, face not visible. She continues: \"Los moldes vienen listos y en una tarde llenas el árbol de adornos bonitos.\" (Spanish)\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": []
+  },
+  {
+   "nombre": "dos tomas con una toma corta",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "SHOT 1 (00:00-00:04) She looks at the camera while she lifts a felt star from the table. She says: \"Los moldes vienen listos y llenas el árbol hoy.\" (Spanish, lip-synced)\nSHOT 2 (00:04-00:08) HARD CUT, no transition, no fade. Close-up of her hands pressing the felt onto the template, face not visible. She continues: \"Los moldes vienen listos y en una tarde llenas el árbol de adornos bonitos.\" (Spanish)\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_largo"
+   ]
+  },
+  {
+   "nombre": "dos tomas 12 + 12 (24, una menos)",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "SHOT 1 (00:00-00:04) She looks at the camera while she lifts a felt star from the table. She says: \"Mira, con unos retazos de fieltro y una tijera hice estos adornos.\" (Spanish, lip-synced)\nSHOT 2 (00:04-00:08) HARD CUT, no transition, no fade. Close-up of her hands pressing the felt onto the template, face not visible. She continues: \"Mira, con unos retazos de fieltro y una tijera hice estos adornos.\" (Spanish)\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_largo"
+   ]
+  },
+  {
+   "nombre": "clip con cinematic",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, cinematic light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "palabras_ia"
+   ]
+  },
+  {
+   "nombre": "clip sin no captions",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no extra words beyond the quoted lines.",
+   "espera": [
+    "sin_no_captions"
+   ]
+  },
+  {
+   "nombre": "clip que no dice Spanish",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) She is already folding a felt star on the table. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Y lo mejor es que no necesitas experiencia: los moldes vienen listos para imprimir y en una tarde tienes tu árbol lleno de adornos bonitos.\". She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "bloques"
+   ]
+  },
+  {
+   "nombre": "gancho: clip mudo (plantilla 5)",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "CAMERA: same framing as the still, filmed on a phone, slight natural handheld sway, soft daylight. MICRO-ACTION: the hands slowly press the felt piece onto the template; no faces in view. STABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. RESTRICTIONS: absolute silence for the entire clip: zero speech, zero voice-over; nobody speaks, mouths stay closed. Only natural room tone. No music, no captions or on-screen text.",
+   "espera": []
+  },
+  {
+   "nombre": "plantilla 5 a mano",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "CAMERA: medium close-up, filmed on a phone, slight natural handheld sway, soft window daylight.\nMICRO-ACTION: she slowly pours warm milk into a red mug, natural blinks and breathing.\nSTABLE OBJECT CONSISTENCY: the mug and the milk keep their shape and color.\nRESTRICTIONS: absolute silence for the entire clip: zero speech, zero voice-over. Her lips stay closed; her mouth never moves as if talking. Only natural room tone. No music, no captions or on-screen text.",
+   "espera": []
+  },
+  {
+   "nombre": "mudo sin decir silencio",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "CAMERA: medium close-up, filmed on a phone, slight natural handheld sway, soft window daylight.\nMICRO-ACTION: she slowly pours warm milk into a red mug, natural blinks and breathing.\nSTABLE OBJECT CONSISTENCY: the mug and the milk keep their shape and color.\nRESTRICTIONS: Only natural room tone. No music, no captions or on-screen text.",
+   "espera": [
+    "silencio"
+   ]
+  },
+  {
+   "nombre": "mudo sin CAMERA",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "medium close-up, filmed on a phone, slight natural handheld sway, soft window daylight.\nMICRO-ACTION: she slowly pours warm milk into a red mug, natural blinks and breathing.\nSTABLE OBJECT CONSISTENCY: the mug and the milk keep their shape and color.\nRESTRICTIONS: absolute silence for the entire clip: zero speech, zero voice-over. Her lips stay closed; her mouth never moves as if talking. Only natural room tone. No music, no captions or on-screen text.",
+   "espera": [
+    "bloques"
+   ]
+  },
+  {
+   "nombre": "mudo con manos escribiendo",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "CAMERA: medium close-up, filmed on a phone, slight natural handheld sway, soft window daylight.\nMICRO-ACTION: her hand is writing a list, natural blinks and breathing.\nSTABLE OBJECT CONSISTENCY: the mug and the milk keep their shape and color.\nRESTRICTIONS: absolute silence for the entire clip: zero speech, zero voice-over. Her lips stay closed; her mouth never moves as if talking. Only natural room tone. No music, no captions or on-screen text.",
+   "espera": [
+    "escribir"
+   ]
+  },
+  {
+   "nombre": "mudo con MICRO-ACTION vacio",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "CAMERA: medium close-up, filmed on a phone, slight natural handheld sway, soft window daylight.\nMICRO-ACTION: pours.\nSTABLE OBJECT CONSISTENCY: the mug and the milk keep their shape and color.\nRESTRICTIONS: absolute silence for the entire clip: zero speech, zero voice-over. Her lips stay closed; her mouth never moves as if talking. Only natural room tone. No music, no captions or on-screen text.",
+   "espera": [
+    "bloques"
+   ]
+  },
+  {
+   "nombre": "un prompt de 4.001 letras es demasiado largo (el tope del dash)",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+   "espera": [
+    "largo"
+   ]
+  },
+  {
+   "nombre": "un clip de 4.001 letras es demasiado largo",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+   "espera": [
+    "largo"
+   ]
+  },
+  {
+   "nombre": "estirando la espalda es una accion (back no es relleno)",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot from a side angle of a pregnant woman kneeling on a yoga mat in her living room, stretching her back slowly, calm and focused. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "un escritorio (writing desk) no es escribir",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands folding a red paper star on a wooden writing desk in a small bedroom, scissors and glue beside. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "comillas tipograficas sin cerrar en una imagen",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: “Warm Close-up from above of hands gluing red felt pieces onto a paper star template on a wooden kitchen table, scissors and a glue gun beside. Candid still from a home video filmed on a phone, real UGC look, natural light, real textures, no beauty filter, slightly imperfect framing, caught in the middle of the action. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "comillas"
+   ]
+  },
+  {
+   "nombre": "medio (½) en el dialogo es una cifra",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Walking into the frame holding a felt star. She looks into the lens and says, warmly and naturally, with small hand gestures: \" ½ Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una sola puntada.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_cifras"
+   ]
+  },
+  {
+   "nombre": "signos numericos raros (⅓ ² ⑩ Ⅻ) en el dialogo: son cifras, no palabras",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Walking into the frame holding a felt star. She looks into the lens and says, warmly and naturally, with small hand gestures: \" ⅓ ² ⑩ Ⅻ Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una sola puntada, amiga.\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_cifras"
+   ]
+  },
+  {
+   "nombre": "numero pegado a una palabra (m²) y digito de ancho completo (１) en el dialogo",
+   "tipo": "video",
+   "duracion": 8,
+   "prompt": "(00:00-00:01) Walking into the frame holding a felt star. She looks into the lens and says, warmly and naturally, with small hand gestures: \"Mira, te cuento algo que me cambió la Navidad: con unos retazos de fieltro y una tijera hice todos los adornos del árbol sin coser ni una puntada en １ m².\" (Spanish, lip-synced). She finishes about half a second before the end and holds a soft smile.\nUGC LOOK: real home video filmed on a phone, slight natural handheld sway, natural light, real skin texture, no beauty filter, natural blinks and breathing, she keeps doing the action with her hands while she talks and glances between her hands and the camera.\nSTABLE OBJECT CONSISTENCY: whatever product or object is being held or shown must keep its shape, color and content 100% consistent throughout the clip, never morphing or deforming. This only protects the object: her body movement, gestures and speech continue as described.\nVOICE: a warm, friendly female voice in her thirties, medium pitch, relaxed. The voice is exactly the same in the whole clip.\nACCENT: Colombian Spanish with a clear paisa accent from Medellin, Antioquia.\nPACE: natural, slightly brisk conversational pace, she starts speaking right away; after the last word she keeps doing the action silently with her mouth closed.\nRESTRICTIONS: lip-synced dialogue only in Spanish, natural room tone, no background music, no captions or on-screen text, no extra words beyond the quoted lines.",
+   "espera": [
+    "dialogo_cifras"
+   ]
+  },
+  {
+   "nombre": "retroceder (stepping back) no es una accion con objeto",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot from a side angle of a woman in her living room. She is stepping back, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "she steps back tampoco es una accion con objeto",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot from a side angle of a woman in her living room. She steps back, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "frotarse la espalda (rubbing his back) si es una accion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot from a side angle of a tired man on the sofa in his living room, rubbing his back slowly, relieved. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "escritorios (writing desks) no es escribir",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands folding red paper stars on two old writing desks in a small classroom, scissors and glue beside. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "un escritorio con guion (writing-desk) no es escribir",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands folding a red paper star on a wooden writing-desk in a small bedroom, scissors and glue beside. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": []
+  },
+  {
+   "nombre": "sentada al escritorio (writing desk) no es una accion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot, three-quarter angle, in her small bedroom: she sits at the old writing desk, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  },
+  {
+   "nombre": "escribir en un cuaderno sobre el writing-desk si es escribir",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands writing in a notebook on a wooden writing-desk in a small bedroom, a cup of tea beside. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "escribir"
+   ]
+  },
+  {
+   "nombre": "escribir tablas de numeros (writing tables of numbers) si es escribir",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Close-up from above of hands writing tables of numbers in a notebook on the kitchen table. Nobody's face is visible: only hands and objects are in view. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "escribir"
+   ]
+  },
+  {
+   "nombre": "sentada al escritorio con dos espacios (writing  desk) no es una accion",
+   "tipo": "imagen",
+   "refs": 0,
+   "prompt": "Scene: Medium shot, three-quarter angle, in her small bedroom: she sits at the old writing  desk, smiling at the camera. Candid still from a home video filmed on a phone, real UGC look, natural light. No text, no readable brand names, no logos, no watermark.",
+   "espera": [
+    "accion"
+   ]
+  }
+ ]
+}

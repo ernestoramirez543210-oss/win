@@ -1,0 +1,21 @@
+{
+  "_nota": "PLANTILLA. Claude la llena leyendo el ebook (paso de ficha del producto). El número de recetas, capítulos o bonos se cuenta en el ebook, no se inventa; el precio se pregunta.",
+  "nombre": "",
+  "que_es": "",
+  "para_quien": "",
+  "promesa_principal": "",
+  "incluye": {
+    "recetas": 0,
+    "capitulos": 0,
+    "bonos": 0,
+    "detalle": ""
+  },
+  "precio": {
+    "valor": 0,
+    "moneda": "",
+    "texto": ""
+  },
+  "mejores_paginas_ebook": [],
+  "paginas_foto_producto": [],
+  "descripcion_ia": "Frase fija EN INGLÉS que dice qué es físicamente el producto (forma, tamaño, color, empaque), sin nombres locales que la IA no entienda."
+}

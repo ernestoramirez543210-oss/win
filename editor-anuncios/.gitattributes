@@ -1,0 +1,10 @@
+# Los .cmd y .ps1 se quedan con fin de linea de Windows (un .cmd con LF puede fallar con parentesis y etiquetas).
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Lo que viaja al servidor Linux (VPS) va siempre con fin de linea LF, tambien en Windows (un .sh con CRLF falla con «\r»).
+vps/* text eol=lf
+scripts/*.py text eol=lf
+
+# Lo que corre en el servidor (manual, despliegue con la IP, ofertas con ids de Drive) no viaja en el kit del equipo (git archive lo deja fuera).
+vps export-ignore

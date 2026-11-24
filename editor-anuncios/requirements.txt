@@ -1,0 +1,31 @@
+# Herramientas de IA local del editor de anuncios (Python 3.12). Versiones probadas el 2026-10-14.
+#
+# Transcripcion palabra por palabra: faster-whisper en vez de openai-whisper. Este PC es un
+# i7 de 2 nucleos sin GPU NVIDIA; faster-whisper (CTranslate2, int8) corre varias veces mas
+# rapido en CPU con la misma calidad, no necesita torch y descarga un modelo mas liviano.
+# Si algun dia se cambia a un PC con GPU, se puede volver a openai-whisper sin tocar nada mas:
+# scripts/transcribir.py devuelve el mismo JSON.
+faster-whisper==1.2.1
+pymupdf==1.28.2
+rembg[cpu]==2.0.85
+pillow==12.3.0
+numpy==2.5.4
+scipy==1.18.1
+requests==2.34.2
+# B-roll de TikTok (scripts/broll_tiktok.py). yt-dlp baja los videos sin marca de agua; curl_cffi le da la huella de un navegador real
+# (sin ella TikTok contesta 403). TikTok cambia sus paginas seguido: si un dia deja de bajar, python -m pip install -U yt-dlp
+# y se sube aqui la version que funcione.
+yt-dlp==2026.8.19
+curl_cffi==0.16.3
+# Anuncio automatico (scripts/clip_local.py, emparejar_tomas.py, montaje_auto.py; 2026-10-20). CLIP corre con onnxruntime (ya viene por rembg) y tokenizers (ya viene por
+# faster-whisper): se fijan aqui porque el codigo los usa directo. Los modelos de CLIP (~300 MB) NO son paquetes: los baja el instalador con
+# `python scripts/emparejar_tomas.py --solo-descargar`, fijados por SHA-256.
+onnxruntime==1.31.0
+tokenizers==0.23.3
+# Detector de texto quemado (RapidOCR sobre onnxruntime), el mismo del servidor (vps/requirements-vps.txt): marca los fotogramas del b-roll con subtitulos o carteles
+# y comprueba en el video final que haya subtitulos y nada en los 280 px de abajo. Pesa ~135 MB en disco; sin el, el analisis estima el texto solo con CLIP
+# (menos fiable) y el control de calidad de pixeles queda sin verificar.
+rapidocr-onnxruntime==1.4.4
+opencv-python==5.0.0.93
+shapely==2.2.0
+pyclipper==1.4.0

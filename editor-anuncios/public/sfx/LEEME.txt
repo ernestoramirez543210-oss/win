@@ -1,0 +1,2 @@
+EFECTOS DE SONIDO (los genera Claude; aquí no subes nada). Son mp3 cortos: whoosh, whoosh_corto, pop, pop_suave, click, ding, hit, kaching, click_camara.
+De dónde salió cada uno y su licencia está en LICENCIAS.txt. Si alguno no te gusta, pídele otro a Claude o suelta un mp3 tuyo con el mismo nombre.

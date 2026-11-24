@@ -1,0 +1,13 @@
+{
+  "_nota": "PLANTILLA. Una persona la llena (o Claude, mirando las fotos). aspecto, voz, acento y casa_base van en inglés y se copian IDÉNTICOS en todos los prompts del avatar. Pon \"autorizado\": true SOLO si la persona de las fotos autorizó que su cara y su voz salgan en anuncios: sin eso el servidor no hace el anuncio.",
+  "nombre": "avatar-ejemplo",
+  "genero": "mujer",
+  "fotos": [
+    "foto1.jpg"
+  ],
+  "autorizado": false,
+  "aspecto": "apparent age, hair, facial features (in English)",
+  "voz": "a female voice in her mid-30s, medium pitch, calm and confident, warm",
+  "acento": "Spanish with a clear, neutral Colombian accent",
+  "casa_base": "el lugar donde graba, con objetos concretos (por ejemplo: cocina con mesón de madera, estufa a la izquierda, ventana con luz natural)"
+}

@@ -1,0 +1,42 @@
+[Unit]
+# PLANTILLA (se instala como /etc/systemd/system/editor-promover@.service; una instancia por persona: editor-promover@beto.service).
+# Instala en el editor de produccion lo que la persona publica con `puerta publicar` (scripts/editor_promover.py). Corre como ROOT porque escribe en /opt/anuncios, pero lee el paquete COMO DATOS
+# (nunca ejecuta nada suyo, nunca sigue rutas de la persona) y el codigo nuevo solo se ejecuta dentro de una caja de systemd (usuario nobody, sin red, sin llaves).
+Description=Puerta de mejoras del editor para %i: revisa, prueba e instala lo que publica, con copia de respaldo
+After=network-online.target
+# Como mucho 12 arranques por hora por persona (un bucle por error no puede acabar con el servidor)
+StartLimitIntervalSec=1h
+StartLimitBurst=12
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/anuncios
+Environment=TZ=America/Bogota
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/broll-tiktok/venv/bin/python -I -B -X utf8 /opt/anuncios/scripts/editor_promover.py servir --persona %i
+# Puede esperar a que termine un anuncio en curso (hasta 90 min) antes de instalar
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=idle
+CPUWeight=20
+MemoryMax=1G
+UMask=0022
+# Aislamiento: solo escribe en /opt/anuncios y /srv/editor; no ve /home ni las llaves de otros servicios
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+SystemCallArchitectures=native
+ReadWritePaths=/opt/anuncios /srv/editor
+InaccessiblePaths=-/opt/radar-de-ofertas -/opt/actions-runner -/root -/run/docker.sock -/opt/broll-tiktok/secretos

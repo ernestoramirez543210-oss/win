@@ -1,0 +1,58 @@
+[Unit]
+Description=B-roll de TikTok: baja videos de referencia y los deja en la carpeta B-rolls de cada oferta en Drive
+After=network-online.target
+Wants=network-online.target
+# Maximo 3 arranques por dia (el del horario + 2 reintentos): no insiste sin fin
+StartLimitIntervalSec=24h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=broll
+Group=broll
+WorkingDirectory=/opt/broll-tiktok
+# Las fechas de los registros salen en hora de Bogota, no en UTC
+Environment=TZ=America/Bogota
+Environment=HOME=/opt/broll-tiktok/estado
+Environment=XDG_CACHE_HOME=/opt/broll-tiktok/estado/cache
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/broll-tiktok/correr_broll.sh
+TimeoutStartSec=75min
+# Es un trabajo de fondo: no le quita aire al radar ni al runner de GitHub que viven en el mismo servidor
+Nice=10
+IOSchedulingClass=idle
+CPUQuota=150%
+MemoryMax=3G
+TasksMax=512
+# Si TikTok bloqueo toda la corrida (codigo 3) reintenta 3 horas despues. No reintenta con 1 (configuracion mala) ni con 4 (Drive sin permiso:
+# hay que volver a autorizar). El 2 (la corrida termino pero alguna fuente fallo, por ejemplo una cuenta que TikTok mando a esperar) cuenta como bien.
+Restart=on-failure
+RestartSec=3h
+RestartPreventExitStatus=1 4
+SuccessExitStatus=2
+# Aislamiento: solo escribe en sus carpetas de datos; el codigo, el entorno de Python y las llaves los ve de solo lectura.
+# Baja y abre archivos de terceros (videos de TikTok): si algo fallara en ffmpeg o yt-dlp, no puede reescribir el codigo.
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/opt/broll-tiktok/public /opt/broll-tiktok/logs /opt/broll-tiktok/estado
+# No ve las carpetas de los otros servicios del servidor (el "-" ignora la que no exista)
+InaccessiblePaths=-/opt/radar-de-ofertas -/opt/actions-runner -/root
